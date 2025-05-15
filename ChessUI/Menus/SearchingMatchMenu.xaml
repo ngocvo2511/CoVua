@@ -1,0 +1,29 @@
+﻿<UserControl x:Class="ChessUI.Menus.SearchingMatchMenu"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:local="clr-namespace:ChessUI.Menus"
+             mc:Ignorable="d" 
+             d:DesignHeight="720" d:DesignWidth="1200">
+    <Border Background="#80000000" BorderThickness="0" CornerRadius="10">
+        <Grid>
+            <Border Width="400" Height="250"
+                    Style="{StaticResource BorderStyle1}">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="Đang tìm đối thủ..." FontSize="30"
+                               Style="{StaticResource TextStyle2}"
+                               Margin="0,50,0,50"/>
+
+                    <Button x:Name="BackButton"
+                            Style="{StaticResource ButtonStyle2}"
+                            Click="BackButton_Click"
+                            Width="70" Height="70">
+                        <iconPacks:PackIconMaterial Kind="ArrowLeft" Height="50" Width="50"/>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>

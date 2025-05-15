@@ -1,0 +1,63 @@
+﻿<UserControl x:Class="ChessUI.Menus.SelectGameModeMenu"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:local="clr-namespace:ChessUI"
+             mc:Ignorable="d" 
+             d:DesignHeight="720" d:DesignWidth="1200">
+    <Border Background="#80000000" BorderThickness="0" CornerRadius="10">
+        <Border Width="500"
+                Height="450"
+                Style="{StaticResource BorderStyle1}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Button x:Name="PlayWithBotButton" Grid.Row="1"
+                        Style="{StaticResource ButtonStyle1}"
+                        Click="PlayWithBotButton_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconFontAwesome Kind="RobotSolid" Width="30" Height="30" Margin="0,0,20,0" />
+                        <TextBlock Text="Chơi với máy" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+
+                <Button x:Name="TwoPlayerButton" Grid.Row="2"
+                        Style="{StaticResource ButtonStyle1}"
+                        Click="TwoPlayerButton_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconMaterial Kind="AccountMultiple" Width="30" Height="30" Margin="0,0,20,0" />
+                        <TextBlock Text="2 người chơi" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+
+                <Button x:Name="PlayOnlineButton" Grid.Row="3"
+                        Style="{StaticResource ButtonStyle1}"
+                        Click="PlayOnlineButton_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconMaterial Kind="Wifi" Width="30" Height="30" Margin="0,0,20,0" />
+                        <TextBlock Text="Chơi trực tuyến" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+
+                <Button x:Name="CloseButton" Grid.RowSpan="2"
+                        HorizontalAlignment="Right" VerticalAlignment="Top"
+                        Background="Transparent"
+                        Foreground="Black"
+                        BorderThickness="0"
+                        Width="30" Height="30" 
+                        Margin="0,10,10,0"
+                        Click="CloseButton_Click">
+                    <iconPacks:PackIconMaterial Kind="Close" Height="20" Width="20"/>
+                </Button>
+            </Grid>
+        </Border>
+    </Border>
+</UserControl>

@@ -1,0 +1,159 @@
+﻿<UserControl x:Class="ChessUI.Menus.MainMenu"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:local="clr-namespace:ChessUI"
+             mc:Ignorable="d" 
+             d:DesignHeight="720" d:DesignWidth="1200">
+    <Border BorderBrush="Transparent"
+            BorderThickness="0"
+            CornerRadius="10">
+        <Border.Background>
+            <ImageBrush ImageSource="/Assets/Images/gameBackground.jpg"/>
+        </Border.Background>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="17*"/>
+                <RowDefinition Height="223*"/>
+            </Grid.RowDefinitions>
+
+            <Border x:Name="TitleBar" Grid.Row="0" 
+                    CornerRadius="20" Background="Transparent"
+                    MouseDown="TitleBar_MouseDown"/>
+
+            <StackPanel Margin="0,0,30,0"
+                        HorizontalAlignment="Right"
+                        Orientation="Horizontal">
+
+                <Button x:Name="MinimizeAppButton"
+                        Background="Transparent"
+                        Foreground="White"
+                        BorderThickness="0"
+                        Margin="0,0,10,0"
+                        Width="30" Height="30" 
+                        Click="MinimizeAppButton_Click">
+                    <iconPacks:PackIconMaterial Kind="WindowMinimize" Width="20" Height="20" />
+                </Button>
+
+                <Button x:Name="MaximizeAppButton"
+                        Background="Transparent"
+                        Foreground="White"
+                        BorderThickness="0"
+                        Margin="0,0,10,0"
+                        Width="30" Height="30" 
+                        Click="MaximizeAppButton_Click">
+                    <iconPacks:PackIconMaterial Kind="WindowMaximize" Width="20" Height="20" />
+                </Button>
+
+                <Button x:Name="CloseAppButton"
+                        Background="Transparent"
+                        Foreground="White"
+                        BorderThickness="0"
+                        Width="30" Height="30" 
+                        Click="CloseAppButton_Click">
+                    <iconPacks:PackIconMaterial Kind="Close" Width="20" Height="20" />
+                </Button>
+            </StackPanel>
+            
+            <Border Grid.RowSpan="2"
+                    Style="{StaticResource BorderStyle2}"
+                    Margin="200,100"
+                    Opacity="0.6"
+                    />
+            <StackPanel Grid.RowSpan="2"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center">
+
+                <TextBlock Text="CỜ VUA"
+                           Style="{StaticResource TextStyle1}"
+                           FontSize="180"  >
+                    <TextBlock.Effect>
+                        <DropShadowEffect ShadowDepth="15" Color="White" BlurRadius="0"/>
+                    </TextBlock.Effect>
+                </TextBlock>
+
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Center">
+                    <Button x:Name="InstructionsButton" 
+                            Style="{StaticResource ButtonStyle2}"
+                            Margin="5"
+                            Click="InstructionsButton_Click">                        
+                        <iconPacks:PackIconMaterial Kind="BookOpenVariant"
+                                                    Width="40" Height="40" />
+                        <Button.ToolTip>
+                            <TextBlock Text="Hướng dẫn chơi"
+                                       FontSize="16"
+                                       Style="{StaticResource TextStyle1}"/>
+                        </Button.ToolTip>
+                        <ToolTipService.HorizontalOffset>-45</ToolTipService.HorizontalOffset>
+                        <ToolTipService.InitialShowDelay>0</ToolTipService.InitialShowDelay>
+                    </Button>
+
+                    <Button x:Name="SettingsButton"
+                            Style="{StaticResource ButtonStyle2}"
+                            Margin="5"
+                            Click="SettingsButton_Click">
+                        <iconPacks:PackIconFontAwesome Kind="GearSolid"
+                                                       Width="40" Height="40" />
+                        <Button.ToolTip>
+                            <TextBlock Text="Cài đặt"
+                                       FontSize="16"
+                                       Style="{StaticResource TextStyle1}"/>
+                        </Button.ToolTip>
+                        <ToolTipService.HorizontalOffset>-10</ToolTipService.HorizontalOffset>
+                        <ToolTipService.InitialShowDelay>0</ToolTipService.InitialShowDelay>
+                    </Button>
+
+                    <Button x:Name="PlayButton"
+                            Style="{StaticResource ButtonStyle2}"
+                            Margin="5" Width="100" Height="100"
+                            Click="PlayButton_Click">
+                        <iconPacks:PackIconFontAwesome Kind="PlaySolid" Margin="10,0,0,0" 
+                                                       Width="50" Height="50" />
+                        <Button.ToolTip>
+                            <TextBlock Text="Chơi"
+                                       FontSize="16"
+                                       Style="{StaticResource TextStyle1}"/>
+                        </Button.ToolTip>
+                        <ToolTipService.HorizontalOffset>20</ToolTipService.HorizontalOffset>
+                        <ToolTipService.InitialShowDelay>0</ToolTipService.InitialShowDelay>
+                    </Button>
+
+                    <Button x:Name="HistoryButton"
+                            Style="{StaticResource ButtonStyle2}"
+                            Margin="5"
+                            Click="HistoryButton_Click">
+                        <iconPacks:PackIconMaterial Kind="History" Margin="0,0,5,0" 
+                                                    Width="40" Height="40" />
+                        <Button.ToolTip>
+                            <TextBlock Text="Lịch sử chơi"
+                                       FontSize="16"
+                                       Style="{StaticResource TextStyle1}"/>
+                        </Button.ToolTip>
+                        <ToolTipService.HorizontalOffset>-30</ToolTipService.HorizontalOffset>
+                        <ToolTipService.InitialShowDelay>0</ToolTipService.InitialShowDelay>
+                    </Button>
+
+                    <Button x:Name="DownloadButton" 
+                            Style="{StaticResource ButtonStyle2}"
+                            Margin="5"
+                            Click="LoadButton_Click">
+                        <iconPacks:PackIconFontAwesome Kind="DownloadSolid"
+                                                       Width="40" Height="40"/>
+                        <Button.ToolTip>
+                            <TextBlock Text="Tải"
+                                       FontSize="16"
+                                       Style="{StaticResource TextStyle1}"/>
+                        </Button.ToolTip>
+                        <ToolTipService.HorizontalOffset>10</ToolTipService.HorizontalOffset>
+                        <ToolTipService.InitialShowDelay>0</ToolTipService.InitialShowDelay>
+                    </Button>
+
+                </StackPanel>
+                                
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

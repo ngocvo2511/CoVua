@@ -1,0 +1,41 @@
+﻿<UserControl x:Class="ChessUI.Menus.ConfirmMenu"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:local="clr-namespace:ChessUI.Menus"
+             mc:Ignorable="d" 
+             d:DesignHeight="720" d:DesignWidth="1200">
+    <Border Background="#80000000" BorderThickness="0" CornerRadius="10">
+        <Border Width="600"
+                Height="450"
+                Style="{StaticResource BorderStyle1}">
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           Text="Bạn có chắc chắn muốn thoát?"
+                           Style="{StaticResource TextStyle1}"
+                           FontSize="40" Width="480"
+                           Margin="0,40,0,50"
+                           />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button x:Name="YesButton"
+                            Style="{StaticResource ButtonStyle2}"
+                            Width="70" Height="70" 
+                            Margin="0,0,100,0" 
+                            Click="YesButton_Click">
+                        <iconPacks:Material Kind="CheckCircle" Height="50" Width="50"/>
+                    </Button>
+
+                    <Button x:Name="NoButton"
+                            Style="{StaticResource ButtonStyle2}"
+                            Width="70" Height="70"
+                            Click="NoButton_Click">
+                        <iconPacks:Material Kind="CloseCircle" Height="50" Width="50"/>
+                    </Button>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Border>
+</UserControl>
