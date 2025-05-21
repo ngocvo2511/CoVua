@@ -1,0 +1,2 @@
+﻿greeting(ngoc).
+greeting(vo).

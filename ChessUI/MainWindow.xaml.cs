@@ -50,12 +50,29 @@ namespace ChessUI
             mainMenu.PlayButtonClicked += MainMenu_PlayButtonClicked;
             mainMenu.InstructionsButtonClicked += MainMenu_InstructionsButtonClicked;
             mainMenu.SettingsButtonClicked += SettingsButtonClicked;
-            //mainMenu.HistoryButtonClicked += MainMenu_HistoryButtonClicked;
+            mainMenu.HistoryButtonClicked += MainMenu_HistoryButtonClicked;
             //mainMenu.LoadButtonClicked += MainMenu_LoadButton_Clicked;
             mainMenu.CloseAppButtonClicked += CloseAppButtonClicked;
 
             mainWindowGrid.Children.Clear();
             mainWindowGrid.Children.Add(mainMenu);
+        }
+
+        private void MainMenu_HistoryButtonClicked(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string rootPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\.."));
+                string prologPath = System.IO.Path.Combine(rootPath, "ChessLogic", "Prolog", "test.pl");
+                PrologEngine.Initialize(prologPath);
+
+                var results = PrologEngine.QuerySingleVariable("greeting(X)", "X");
+                MessageBox.Show(string.Join(Environment.NewLine, results));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi: " + ex.Message);
+            }
         }
 
         private void MainMenu_PlayButtonClicked(object sender, RoutedEventArgs e)
