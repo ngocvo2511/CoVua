@@ -165,7 +165,7 @@
                 <Image Source="Assets/Images/icon.ico"
                    HorizontalAlignment="Left"
                    Width="25" Height="25"/>
-                <TextBlock Text="Cờ tướng" Margin="15,0,0,0"
+                <TextBlock Text="Cờ vua" Margin="15,0,0,0"
                            FontSize="20"
                            Style="{StaticResource TextStyle1}"/>
             </StackPanel>
