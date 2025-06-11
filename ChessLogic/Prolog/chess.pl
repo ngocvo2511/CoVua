@@ -164,7 +164,6 @@ is_legal_move(From, To, Color, Position) :-
 	% First check if the basic move is valid
 	find_piece_type(From, Type, Position, Color),
 	legal_move_for_piece(From, To, Type, Color, Position),
-	write(To), nl,
 	% Then simulate the move and check if king is still safe
 	simulate_move(From, To, Color, Position, NewPosition),
 	not(in_check(Color, NewPosition)).
@@ -536,15 +535,15 @@ place_piece(From, To) :-
 	% Check for game ending conditions
 	(   is_checkmate(NextColor, NewPosition) ->
 	    % Current player wins by checkmate
-	    write(Color), write(' wins by checkmate!'), nl,
+	    write('CHECKMATE'), nl,
 	    reset
 	;   is_stalemate(NextColor, NewPosition) ->
 	    % Game ends in stalemate
-	    write('Game ends in stalemate!'), nl,
+	    write('STALEMATE'), nl,
 	    reset
 	;   % Game continues normally
 	    (   in_check(NextColor, NewPosition) ->
-	        write(NextColor), write(' is in check!'), nl
+	        write('CHECK'), nl
 	    ;   true
 	    ),
 	    % Update the board
@@ -552,7 +551,7 @@ place_piece(From, To) :-
 	    asserta(board(NewPosition, NextColor))
 	).
 
-switch :- board(Position, Color),invert(Color, NextColor),
+skip_turn:- board(Position, Color),invert(Color, NextColor),
 		retract(board(Position, Color)),
 	    asserta(board(Position, NextColor)).
 
@@ -562,14 +561,14 @@ check_game_status :-
 	(   in_check(Color, Position) ->
 	    (   is_checkmate(Color, Position) ->
 	        invert(Color, Winner),
-	        write(Winner), write(' wins by checkmate!'), nl,
+	        write('CHECKMATE'), nl,
 	        reset
-	    ;   write(Color), write(' is in check!'), nl
+	    ;   write('CHECK'), nl
 	    )
 	;   is_stalemate(Color, Position) ->
-	    write('Game ends in stalemate!'), nl,
+	    write('STALEMATE'), nl,
 	    reset
-	;   write(Color), write(' to move.'), nl
+	;   write(' to move.'), nl
 	).
 
 % =================================
