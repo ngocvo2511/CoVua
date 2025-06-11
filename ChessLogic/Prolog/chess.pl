@@ -91,6 +91,53 @@ find_piece_type(Pos,Type,Position,Color) :-
 	exist(Pos,Half,Type).
 
 % =================================
+% Pawn Promotion predicates
+% =================================
+
+% is_promotion_rank: check if position is on promotion rank
+is_promotion_rank(Pos, white) :-
+	Pos >= 56, Pos =< 63.  % 8th rank for white
+is_promotion_rank(Pos, black) :-
+	Pos >= 0, Pos =< 7.    % 1st rank for black
+
+% is_promotion_move: check if a pawn move results in promotion
+is_promotion_move(From, To, Color, Position) :-
+	find_piece_type(From, pawn, Position, Color),
+	is_promotion_rank(To, Color).
+
+% promote_pawn: remove pawn and add promoted piece
+promote_pawn(Position, Color, PawnPos, PromotionPiece, NewPosition) :-
+	% Remove the pawn
+	get_half(Position, Half, Color),
+	extract(Half, pawn, PawnList),
+	remove(PawnPos, PawnList, NewPawnList),
+	combine(Half, pawn, NewPawnList, TempHalf),
+	
+	% Add the promoted piece
+	extract(TempHalf, PromotionPiece, PieceList),
+	combine(TempHalf, PromotionPiece, [PawnPos|PieceList], NewHalf),
+	
+	% Update the position
+	update_half(Position, NewHalf, Color, NewPosition).
+
+% get_promotion_choice: get user's choice for promotion (default to queen)
+get_promotion_choice(PromotionPiece) :-
+	write('Pawn promotion! Choose piece (q/r/b/n): '),
+	read_line_to_string(user_input, Input),
+	string_lower(Input, LowerInput),
+	(   LowerInput = "q" -> PromotionPiece = queen
+	;   LowerInput = "r" -> PromotionPiece = rook
+	;   LowerInput = "b" -> PromotionPiece = bishop
+	;   LowerInput = "n" -> PromotionPiece = knight
+	;   % Default to queen if invalid input
+	    (write('Invalid choice, promoting to queen.'), nl,
+	     PromotionPiece = queen)
+	).
+
+% auto_promotion_choice: automatic promotion for computer players (always queen)
+auto_promotion_choice(queen).
+
+% =================================
 % Check and Attack Detection
 % =================================
 
@@ -176,6 +223,19 @@ simulate_move(From, To, Color, Position, NewPosition) :-
 	(   (Type = king, is_castling_move(Color, From, To)) ->
 	    % Handle castling
 	    castle_move(Position, Color, From, To, NewPosition)
+	;   % Check if this is a pawn promotion
+	    (Type = pawn, is_promotion_move(From, To, Color, Position)) ->
+	    % Handle pawn promotion (default to queen for simulation)
+	    (   occupied(To, OpponentColor, Position),
+	        invert(Color, OpponentColor) ->
+	        % Promotion with capture
+	        capture_piece(Position, OpponentColor, To, TempPosition),
+	        move_piece(TempPosition, Color, From, To, TempPosition2),
+	        promote_pawn(TempPosition2, Color, To, queen, NewPosition)
+	    ;   % Promotion without capture
+	        move_piece(Position, Color, From, To, TempPosition),
+	        promote_pawn(TempPosition, Color, To, queen, NewPosition)
+	    )
 	;   % Check if there's an opponent piece to capture
 	    (   occupied(To, OpponentColor, Position),
 	        invert(Color, OpponentColor) ->
@@ -186,6 +246,7 @@ simulate_move(From, To, Color, Position, NewPosition) :-
 	        move_piece(Position, Color, From, To, NewPosition)
 	    )
 	).
+
 
 % get_all_legal_moves: get all legal moves for a color
 get_all_legal_moves(Color, Position, LegalMoves) :-
@@ -585,8 +646,16 @@ test_check :-
 	(in_check(white, Pos) -> write('Yes') ; write('No')), nl,
 	write('Black king in check: '),
 	(in_check(black, Pos) -> write('Yes') ; write('No')), nl.
+	
+test_pawn_promotion :-
+	only_king_and_pawns(Position),
+	set_position(Position,white).
 
 
 only_king_and_rooks(position(H1, H2, 0)) :-
     H1 = half_position([], [0, 7], [], [], [], [4], notmoved),
     H2 = half_position([], [56, 63], [], [], [], [60], notmoved).
+	
+only_king_and_pawns(position(H1, H2, 0)) :-
+    H1 = half_position([51], [], [], [], [], [5], notmoved),
+    H2 = half_position([11], [], [], [], [], [61], notmoved).
