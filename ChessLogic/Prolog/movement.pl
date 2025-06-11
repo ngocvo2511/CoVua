@@ -1,0 +1,325 @@
+% =================================
+% Pawn promotion
+% =================================
+
+% is_promotion_rank: check if position is on promotion rank
+is_promotion_rank(Pos, white) :-
+	Pos >= 56, Pos =< 63.  % 8th rank for white
+is_promotion_rank(Pos, black) :-
+	Pos >= 0, Pos =< 7.    % 1st rank for black
+
+% is_promotion_move: check if a pawn move results in promotion
+is_promotion_move(From, To, Color, Position) :-
+	find_piece_type(From, pawn, Position, Color),
+	is_promotion_rank(To, Color).
+
+% promote_pawn: remove pawn and add promoted piece
+promote_pawn(Position, Color, PawnPos, PromotionPiece, NewPosition) :-
+	% Remove the pawn
+	get_half(Position, Half, Color),
+	extract(Half, pawn, PawnList),
+	remove(PawnPos, PawnList, NewPawnList),
+	combine(Half, pawn, NewPawnList, TempHalf),
+	
+	% Add the promoted piece
+	extract(TempHalf, PromotionPiece, PieceList),
+	combine(TempHalf, PromotionPiece, [PawnPos|PieceList], NewHalf),
+	
+	% Update the position
+	update_half(Position, NewHalf, Color, NewPosition).
+
+% get user's choice for promotion
+get_promotion_choice(PromotionPiece) :-
+    state(place),
+    write('Choose promotion piece (q/r/b/n): '),
+    get_char(Input),
+    (   Input = 'q' -> PromotionPiece = queen
+    ;   Input = 'r' -> PromotionPiece = rook  
+    ;   Input = 'b' -> PromotionPiece = bishop
+    ;   Input = 'k' -> PromotionPiece = knight
+    ;   (write('Invalid choice, promoting to queen.'), nl,
+        PromotionPiece = queen)
+    ).
+	
+% auto_promotion_choice: automatic promotion for computer players (always queen)
+auto_promotion_choice(queen).
+
+
+% =================================
+% Legal move
+% =================================
+
+% is_legal_move: check if a move is legal (doesn't leave king in check)
+is_legal_move(From, To, Color, Position) :-
+	% First check if the basic move is valid
+	find_piece_type(From, Type, Position, Color),
+	legal_move_for_piece(From, To, Type, Color, Position),
+	% Then simulate the move and check if king is still safe
+
+	simulate_move(From, To, Color, Position, NewPosition),
+	
+	not(in_check(Color, NewPosition)).
+
+% legal_move_for_piece: generate individual legal moves based on piece type
+legal_move_for_piece(From, To, pawn, Color, Position) :-
+	pawn_move(From, Color, Position, To).
+
+legal_move_for_piece(From, To, rook, Color, Position) :-
+	long_move(From, Color, rook, Position, To).
+
+legal_move_for_piece(From, To, knight, Color, Position) :-
+	short_move(From, Color, knight, Position, To).
+
+legal_move_for_piece(From, To, bishop, Color, Position) :-
+	long_move(From, Color, bishop, Position, To).
+
+legal_move_for_piece(From, To, queen, Color, Position) :-
+	long_move(From, Color, queen, Position, To).
+
+legal_move_for_piece(From, To, king, Color, Position) :-
+	short_move(From, Color, king, Position, To).
+
+% Add castling moves for king
+legal_move_for_piece(From, To, king, Color, Position) :-
+	castling_move(From, Color, Position, To).
+
+% simulate_move: create a new position after making a move
+simulate_move(From, To, Color, Position, NewPosition) :-
+	find_piece_type(From, Type, Position, Color),
+	% Check if this is a castling move
+	(   (Type = king, is_castling_move(Color, From, To)) ->
+	    % Handle castling
+	    castle_move(Position, Color, From, To, NewPosition)
+	;   % Check if this is a pawn promotion
+	    (Type = pawn, is_promotion_move(From, To, Color, Position), 
+			get_promotion_choice(PromotionPiece)) ->
+	    % Handle pawn promotion
+	    (   occupied(To, OpponentColor, Position),
+	        invert(Color, OpponentColor) ->
+	        % Promotion with capture
+	        capture_piece(Position, OpponentColor, To, TempPosition),
+	        move_piece(TempPosition, Color, From, To, TempPosition2),
+	        promote_pawn(TempPosition2, Color, To, PromotionPiece, NewPosition)
+	    ;   % Promotion without capture
+	        move_piece(Position, Color, From, To, TempPosition),
+	        promote_pawn(TempPosition, Color, To, PromotionPiece, NewPosition)
+	    )
+	;   % Check if there's an opponent piece to capture
+	    (   occupied(To, OpponentColor, Position),
+	        invert(Color, OpponentColor) ->
+	        % Capture move: remove opponent piece first, then move our piece
+	        capture_piece(Position, OpponentColor, To, TempPosition),
+	        move_piece(TempPosition, Color, From, To, NewPosition)
+	    ;   % Normal move: just move our piece
+	        move_piece(Position, Color, From, To, NewPosition)
+	    )
+	).
+
+
+% get_all_legal_moves: get all legal moves for a color
+get_all_legal_moves(Color, Position, LegalMoves) :-
+	findall([From,To], 
+	        (get_half(Position, Half, Color),
+	         get_piece_position(Half, From, _),
+	         find_piece_type(From, Type, Position, Color),
+	         legal_move_for_piece(From, To, Type, Color, Position),
+	         is_legal_move(From, To, Color, Position)),
+	        LegalMoves).
+
+% get_piece_position: get all piece positions from half position
+get_piece_position(half_position(Pawns,_,_,_,_,_,_), Pos, pawn) :- member(Pos, Pawns).
+get_piece_position(half_position(_,Rooks,_,_,_,_,_), Pos, rook) :- member(Pos, Rooks).
+get_piece_position(half_position(_,_,Knights,_,_,_,_), Pos, knight) :- member(Pos, Knights).
+get_piece_position(half_position(_,_,_,Bishops,_,_,_), Pos, bishop) :- member(Pos, Bishops).
+get_piece_position(half_position(_,_,_,_,Queens,_,_), Pos, queen) :- member(Pos, Queens).
+get_piece_position(half_position(_,_,_,_,_,Kings,_), Pos, king) :- member(Pos, Kings).
+
+% check if the given color is in checkmate
+is_checkmate(Color, Position) :-
+	in_check(Color, Position),
+	get_all_legal_moves(Color, Position, []).  % No legal moves available
+
+% is_stalemate: check if the given color is in stalemate
+is_stalemate(Color, Position) :-
+	not(in_check(Color, Position)),
+	get_all_legal_moves(Color, Position, []).  % No legal moves but not in check
+
+% =================================
+% Piece movement on board
+% =================================
+
+% Direction vectors for different pieces (adjusted for 0-63 board)
+% poss_move: (piece, move value) - adjusted for 0-63 board
+poss_move(rook,8).    % up
+poss_move(rook,-8).   % down
+poss_move(rook,1).    % right
+poss_move(rook,-1).   % left
+poss_move(bishop,7).  % up-left diagonal
+poss_move(bishop,9).  % up-right diagonal
+poss_move(bishop,-7). % down-right diagonal
+poss_move(bishop,-9). % down-left diagonal
+poss_move(knight,15). % 2 up, 1 left
+poss_move(knight,17). % 2 up, 1 right
+poss_move(knight,6).  % 1 up, 2 left
+poss_move(knight,10). % 1 up, 2 right
+poss_move(knight,-6). % 1 down, 2 right
+poss_move(knight,-10).% 1 down, 2 left
+poss_move(knight,-15).% 2 down, 1 right
+poss_move(knight,-17).% 2 down, 1 left
+poss_move(queen,X):-
+	poss_move(rook,X).
+poss_move(queen,X):-
+	poss_move(bishop,X).
+poss_move(king,X):-
+	poss_move(queen,X).
+
+% Check if move crosses board edge (for 0-63 board)
+crosses_edge(From,To,Direction) :-
+	FromCol is From mod 8,
+	ToCol is To mod 8,
+	(   (Direction = 1, FromCol = 7) ;  % moving right from rightmost column
+	    (Direction = -1, FromCol = 0) ; % moving left from leftmost column
+	    (Direction = 7, FromCol = 0) ;  % diagonal moves that cross edges
+	    (Direction = 9, FromCol = 7) ;
+	    (Direction = -7, FromCol = 7) ;
+	    (Direction = -9, FromCol = 0) ;
+	    (member(Direction,[6,10,-10,-6]), abs(FromCol - ToCol) > 2) ; % knight moves crossing edges
+	    (member(Direction,[15,17,-15,-17]), abs(FromCol - ToCol) > 2)
+	).
+
+% one_step: from Field to Next through one step
+one_step(Field,Direction,Next,Color,Position):-	
+	Next is Field + Direction,
+	not(invalid_field(Next)),
+	not(crosses_edge(Field,Next,Direction)),
+	not(occupied(Next,Color,Position)).
+
+% multiple_steps: from Field to Next through one or multiple steps
+multiple_steps(Field,Direction,Next,Color,Position):-
+	one_step(Field,Direction,Next,Color,Position).
+multiple_steps(Field,Direction,Next,Color,Position):-
+	one_step(Field,Direction,FieldNew,Color,Position),
+	invert(Color,Oppo),
+	not(occupied(FieldNew,Oppo,Position)),
+	multiple_steps(FieldNew,Direction,Next,Color,Position).
+
+% Pawn movement rules (adjusted for 0-63 board)
+pawn_move(From,white,Position,To):-
+	To is From + 7,  % capture diagonal left
+	not(invalid_field(To)),
+	not(crosses_edge(From,To,7)),
+	occupied(To,black,Position).
+pawn_move(From,white,Position,To):-
+	To is From + 8,  % move forward
+	not(invalid_field(To)),
+	unoccupied(To,Position).
+pawn_move(From,white,Position,To):-
+	To is From + 9,  % capture diagonal right
+	not(invalid_field(To)),
+	not(crosses_edge(From,To,9)),
+	occupied(To,black,Position).
+pawn_move(From,white,Position,To):-
+	To is From + 16, % double move from starting position
+	not(invalid_field(To)),
+	unoccupied(To,Position),
+	unoccupied(From + 8,Position),
+	From >= 8, From =< 15. % starting row for white pawns
+
+pawn_move(From,black,Position,To):-
+	To is From - 7,  % capture diagonal right
+	not(invalid_field(To)),
+	not(crosses_edge(From,To,-7)),
+	occupied(To,white,Position).
+pawn_move(From,black,Position,To):-
+	To is From - 8,  % move forward
+	not(invalid_field(To)),
+	unoccupied(To,Position).
+pawn_move(From,black,Position,To):-
+	To is From - 9,  % capture diagonal left
+	not(invalid_field(To)),
+	not(crosses_edge(From,To,-9)),
+	occupied(To,white,Position).
+pawn_move(From,black,Position,To):-
+	To is From - 16, % double move from starting position
+	not(invalid_field(To)),
+	unoccupied(To,Position),
+	unoccupied(From - 8,Position),
+	From >= 48, From =< 55. % starting row for black pawns
+
+% =================================
+% Castling 
+% =================================
+
+% Check if piece hasn't moved (still has 'notmoved' status)
+piece_not_moved(Position, Color) :-
+	get_half(Position, half_position(_,_,_,_,_,_,notmoved), Color).
+
+% Kingside castling (short castling)
+castling_move(From, Color, Position, To) :-
+	Color = white,
+	From = 4,  % White king starting position
+	To = 6,    % King moves to g1 (position 6)
+	piece_not_moved(Position, white),  % King hasn't moved
+	get_half(Position, half_position(_,Rooks,_,_,_,_,_), white),
+	member(7, Rooks),  % Kingside rook is still there (h1 = position 7)
+	unoccupied(5, Position),  % f1 is empty
+	unoccupied(6, Position),  % g1 is empty
+	% Additional check: king and squares it passes through are not under attack
+	not(is_under_attack(4, white, Position)),  % King not in check
+	not(is_under_attack(5, white, Position)),  % f1 not under attack
+	not(is_under_attack(6, white, Position)).  % g1 not under attack
+
+castling_move(From, Color, Position, To) :-
+	Color = black,
+	From = 60,  % Black king starting position
+	To = 62,    % King moves to g8 (position 62)
+	piece_not_moved(Position, black),  % King hasn't moved
+	get_half(Position, half_position(_,Rooks,_,_,_,_,_), black),
+	member(63, Rooks),  % Kingside rook is still there (h8 = position 63)
+	unoccupied(61, Position),  % f8 is empty
+	unoccupied(62, Position),  % g8 is empty
+	% Additional check: king and squares it passes through are not under attack
+	not(is_under_attack(60, black, Position)),  % King not in check
+	not(is_under_attack(61, black, Position)),  % f8 not under attack
+	not(is_under_attack(62, black, Position)).  % g8 not under attack
+
+% Queenside castling (long castling)
+castling_move(From, Color, Position, To) :-
+	Color = white,
+	From = 4,  % White king starting position
+	To = 2,    % King moves to c1 (position 2)
+	piece_not_moved(Position, white),  % King hasn't moved
+	get_half(Position, half_position(_,Rooks,_,_,_,_,_), white),
+	member(0, Rooks),  % Queenside rook is still there (a1 = position 0)
+	unoccupied(1, Position),  % b1 is empty
+	unoccupied(2, Position),  % c1 is empty
+	unoccupied(3, Position),  % d1 is empty
+	% Additional check: king and squares it passes through are not under attack
+	not(is_under_attack(4, white, Position)),  % King not in check
+	not(is_under_attack(3, white, Position)),  % d1 not under attack
+	not(is_under_attack(2, white, Position)).  % c1 not under attack
+
+castling_move(From, Color, Position, To) :-
+	Color = black,
+	From = 60,  % Black king starting position
+	To = 58,    % King moves to c8 (position 58)
+	piece_not_moved(Position, black),  % King hasn't moved
+	get_half(Position, half_position(_,Rooks,_,_,_,_,_), black),
+	member(56, Rooks),  % Queenside rook is still there (a8 = position 56)
+	unoccupied(57, Position),  % b8 is empty
+	unoccupied(58, Position),  % c8 is empty
+	unoccupied(59, Position),  % d8 is empty
+	% Additional check: king and squares it passes through are not under attack
+	not(is_under_attack(60, black, Position)),  % King not in check
+	not(is_under_attack(59, black, Position)),  % d8 not under attack
+	not(is_under_attack(58, black, Position)).  % c8 not under attack
+
+% long_move: move for long distance (rook, bishop, queen)
+long_move(From,Color,Type,Position,To):-
+	poss_move(Type,Direction),
+	multiple_steps(From,Direction,To,Color,Position).
+
+% short_move: move for one step (king, knight)
+short_move(From,Color,Type,Position,To):-
+	poss_move(Type,Direction),
+	one_step(From,Direction,To,Color,Position).
