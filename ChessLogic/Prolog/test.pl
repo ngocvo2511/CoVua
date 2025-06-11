@@ -1,2 +1,0 @@
-﻿greeting(ngoc).
-greeting(vo).
