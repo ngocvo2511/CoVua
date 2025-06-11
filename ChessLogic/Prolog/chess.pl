@@ -15,10 +15,10 @@ initial_pos(position(H1,H2,0)):-
 % human vs computer
 % computer vs human
 % computer vs computer
-game_mode(0) :- asserta(human(white)), asserta(human(black)) ,!.
-game_mode(1) :- asserta(human(white)), !.
-game_mode(2) :- asserta(human(black)), !.
-game_mode(3) :- !.
+game_mode(hxh) :- asserta(human(white)), asserta(human(black)) ,!.
+game_mode(hxc) :- asserta(human(white)), !.
+game_mode(cxh) :- asserta(human(black)), !.
+game_mode(cxc) :- !.
 
 % update the whole board, can be use for reset
 set_position(begin) :-
