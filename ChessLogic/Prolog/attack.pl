@@ -1,6 +1,6 @@
 % find_king: find the position of king for given color
 find_king(Position, Color, KingPos) :-
-	get_half(Position, half_position(_,_,_,_,_,[KingPos],_), Color).
+	get_half(Position, half_position(_,_,_,_,_,[KingPos],_,_,_), Color).
 
 % is_attacked_by_pawn: check if position is attacked by enemy pawn
 is_attacked_by_pawn(Pos, Color, Position) :-

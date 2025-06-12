@@ -3,12 +3,6 @@
 	board/2, % board state, color
 	state/1. % picking piece or placing piece
 
-initial_pos(position(H1,H2,0)):-
-	PawnWhite = [9,10,12,13,14,15],
-	H1 = half_position(PawnWhite,[0,7],[1,6],[2,5],[3],[4],notmoved),
-	PawnBlack = [48,49,50,51,52,53,54,55],
-	H2 = half_position(PawnBlack,[56,63],[57,62],[58,61],[59],[60],notmoved).
-
 % =================================
 % player queries
 % =================================
@@ -22,26 +16,21 @@ game_mode(cxh) :- asserta(human(black)), !.
 game_mode(cxc) :- !.
 
 % update the whole board, can be use for reset
-set_position(begin) :-
-	retractall(board(_,_)),
-	initial_pos(Position),
-	asserta(board(Position,white)),!.
-set_position(Position,Color) :- 
-	retractall(board(_,_)), 
-	asserta(board(Position,Color)),!.
 
 :- [board].
 :- [attack].
 :- [movement].
+:- [helper].
+
+start :-
+	set_position(begin).
 
 % returns list of all legal moves for piece at Pos
 pick_piece(Pos, LegalMoves) :-
-	asserta(state(pick)),
 	board(Position, Color),
 	find_piece_color(Pos, Color, Position),
 	% find_piece_type(Pos, Type, Position, Color),
-	findall(To, is_legal_move(Pos, To, Color, Position), LegalMoves),
-	retract(state(pick)).
+	findall(To, is_legal_move(Pos, To, Color, Position), LegalMoves).
 
 % move piece from From to To with full validation
 place_piece(From, To) :-
@@ -50,7 +39,7 @@ place_piece(From, To) :-
 	% Check if it's a legal move
 	is_legal_move(From, To, Color, Position),
 	
-	% Make the move
+	% Make the move, wrap this with state(place) to make sure only this allow to print to screen
 	asserta(state(place)),
 	simulate_move(From, To, Color, Position, NewPosition),
 	retract(state(place)),
@@ -59,24 +48,10 @@ place_piece(From, To) :-
 	invert(Color, NextColor),
 	
 	% Check for game ending conditions
-	(   is_checkmate(NextColor, NewPosition) ->
-	    % Current player wins by checkmate
-	    write('CHECKMATE'), nl,
-	    reset
-	;   is_stalemate(NextColor, NewPosition) ->
-	    % Game ends in stalemate
-	    write('STALEMATE'), nl,
-	    reset
-	;   % Game continues normally
-	    (   in_check(NextColor, NewPosition) ->
-	        write('CHECK'), nl
-	    ;   true
-	    ),
-		% Update the board
-		retract(board(Position, Color)),
-		asserta(board(NewPosition, NextColor))
-	).
+	check_game_status(NewPosition, NextColor),
+	
+	retract(board(Position, Color)),
+	asserta(board(NewPosition, NextColor)).
 		    
 	
 :- [test].
-:- [helper].

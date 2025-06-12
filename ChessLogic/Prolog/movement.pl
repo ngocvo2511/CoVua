@@ -31,7 +31,7 @@ promote_pawn(Position, Color, PawnPos, PromotionPiece, NewPosition) :-
 % get user's choice for promotion
 get_promotion_choice(PromotionPiece) :-
     state(place),
-    write('Choose promotion piece (q/r/b/n): '),
+    write('Choose promotion piece (q/r/b/k): '),
     get_char(Input),
     (   Input = 'q' -> PromotionPiece = queen
     ;   Input = 'r' -> PromotionPiece = rook  
@@ -40,24 +40,18 @@ get_promotion_choice(PromotionPiece) :-
     ;   (write('Invalid choice, promoting to queen.'), nl,
         PromotionPiece = queen)
     ).
-	
-% auto_promotion_choice: automatic promotion for computer players (always queen)
-auto_promotion_choice(queen).
-
 
 % =================================
 % Legal move
 % =================================
 
-% is_legal_move: check if a move is legal (doesn't leave king in check)
+% is_legal_move: check if a move is legal (no getting checked, follow chess rule)
 is_legal_move(From, To, Color, Position) :-
 	% First check if the basic move is valid
 	find_piece_type(From, Type, Position, Color),
 	legal_move_for_piece(From, To, Type, Color, Position),
 	% Then simulate the move and check if king is still safe
-
 	simulate_move(From, To, Color, Position, NewPosition),
-	
 	not(in_check(Color, NewPosition)).
 
 % legal_move_for_piece: generate individual legal moves based on piece type
@@ -88,7 +82,7 @@ simulate_move(From, To, Color, Position, NewPosition) :-
 	find_piece_type(From, Type, Position, Color),
 	% Check if this is a castling move
 	(   (Type = king, is_castling_move(Color, From, To)) ->
-	    % Handle castling
+	    % Handle castlings
 	    castle_move(Position, Color, From, To, NewPosition)
 	;   % Check if this is a pawn promotion
 	    (Type = pawn, is_promotion_move(From, To, Color, Position), 
@@ -127,12 +121,12 @@ get_all_legal_moves(Color, Position, LegalMoves) :-
 	        LegalMoves).
 
 % get_piece_position: get all piece positions from half position
-get_piece_position(half_position(Pawns,_,_,_,_,_,_), Pos, pawn) :- member(Pos, Pawns).
-get_piece_position(half_position(_,Rooks,_,_,_,_,_), Pos, rook) :- member(Pos, Rooks).
-get_piece_position(half_position(_,_,Knights,_,_,_,_), Pos, knight) :- member(Pos, Knights).
-get_piece_position(half_position(_,_,_,Bishops,_,_,_), Pos, bishop) :- member(Pos, Bishops).
-get_piece_position(half_position(_,_,_,_,Queens,_,_), Pos, queen) :- member(Pos, Queens).
-get_piece_position(half_position(_,_,_,_,_,Kings,_), Pos, king) :- member(Pos, Kings).
+get_piece_position(half_position(Pawns,_,_,_,_,_,_,_,_), Pos, pawn) :- member(Pos, Pawns).
+get_piece_position(half_position(_,Rooks,_,_,_,_,_,_,_), Pos, rook) :- member(Pos, Rooks).
+get_piece_position(half_position(_,_,Knights,_,_,_,_,_,_), Pos, knight) :- member(Pos, Knights).
+get_piece_position(half_position(_,_,_,Bishops,_,_,_,_,_), Pos, bishop) :- member(Pos, Bishops).
+get_piece_position(half_position(_,_,_,_,Queens,_,_,_,_), Pos, queen) :- member(Pos, Queens).
+get_piece_position(half_position(_,_,_,_,_,Kings,_,_,_), Pos, king) :- member(Pos, Kings).
 
 % check if the given color is in checkmate
 is_checkmate(Color, Position) :-
@@ -250,21 +244,16 @@ pawn_move(From,black,Position,To):-
 % Castling 
 % =================================
 
-% Check if piece hasn't moved (still has 'notmoved' status)
-piece_not_moved(Position, Color) :-
-	get_half(Position, half_position(_,_,_,_,_,_,notmoved), Color).
-
 % Kingside castling (short castling)
 castling_move(From, Color, Position, To) :-
 	Color = white,
 	From = 4,  % White king starting position
 	To = 6,    % King moves to g1 (position 6)
-	piece_not_moved(Position, white),  % King hasn't moved
-	get_half(Position, half_position(_,Rooks,_,_,_,_,_), white),
-	member(7, Rooks),  % Kingside rook is still there (h1 = position 7)
+	get_half(Position, half_position(_,_,_,_,_,_,Castle,_,_), white),
+	member(kingside,Castle),
 	unoccupied(5, Position),  % f1 is empty
 	unoccupied(6, Position),  % g1 is empty
-	% Additional check: king and squares it passes through are not under attack
+	% king and squares it passes through are not under attack
 	not(is_under_attack(4, white, Position)),  % King not in check
 	not(is_under_attack(5, white, Position)),  % f1 not under attack
 	not(is_under_attack(6, white, Position)).  % g1 not under attack
@@ -273,12 +262,11 @@ castling_move(From, Color, Position, To) :-
 	Color = black,
 	From = 60,  % Black king starting position
 	To = 62,    % King moves to g8 (position 62)
-	piece_not_moved(Position, black),  % King hasn't moved
-	get_half(Position, half_position(_,Rooks,_,_,_,_,_), black),
-	member(63, Rooks),  % Kingside rook is still there (h8 = position 63)
+	get_half(Position, half_position(_,_,_,_,_,_,Castle,_,_), black),
+	member(kingside,Castle),
 	unoccupied(61, Position),  % f8 is empty
 	unoccupied(62, Position),  % g8 is empty
-	% Additional check: king and squares it passes through are not under attack
+	% king and squares it passes through are not under attack
 	not(is_under_attack(60, black, Position)),  % King not in check
 	not(is_under_attack(61, black, Position)),  % f8 not under attack
 	not(is_under_attack(62, black, Position)).  % g8 not under attack
@@ -288,9 +276,8 @@ castling_move(From, Color, Position, To) :-
 	Color = white,
 	From = 4,  % White king starting position
 	To = 2,    % King moves to c1 (position 2)
-	piece_not_moved(Position, white),  % King hasn't moved
-	get_half(Position, half_position(_,Rooks,_,_,_,_,_), white),
-	member(0, Rooks),  % Queenside rook is still there (a1 = position 0)
+	get_half(Position, half_position(_,_,_,_,_,_,Castle,_,_), black),
+	member(queenside,Castle),
 	unoccupied(1, Position),  % b1 is empty
 	unoccupied(2, Position),  % c1 is empty
 	unoccupied(3, Position),  % d1 is empty
@@ -303,9 +290,8 @@ castling_move(From, Color, Position, To) :-
 	Color = black,
 	From = 60,  % Black king starting position
 	To = 58,    % King moves to c8 (position 58)
-	piece_not_moved(Position, black),  % King hasn't moved
-	get_half(Position, half_position(_,Rooks,_,_,_,_,_), black),
-	member(56, Rooks),  % Queenside rook is still there (a8 = position 56)
+	get_half(Position, half_position(_,_,_,_,_,_,Castle,_,_), black),
+	member(queenside,Castle),
 	unoccupied(57, Position),  % b8 is empty
 	unoccupied(58, Position),  % c8 is empty
 	unoccupied(59, Position),  % d8 is empty
