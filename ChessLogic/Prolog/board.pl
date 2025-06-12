@@ -13,17 +13,17 @@ get_half(position(Half,_,_),Half,white).
 get_half(position(_,Half,_),Half,black).
 
 % exist: check if there is a piece of certain type in the field
-exist(Field,half_position(X,_,_,_,_,_,_,_,_),pawn):-
+exist(Field,half_position(X,_,_,_,_,_,_,_),pawn):-
 	member(Field,X).
-exist(Field,half_position(_,X,_,_,_,_,_,_,_),rook):-
+exist(Field,half_position(_,X,_,_,_,_,_,_),rook):-
 	member(Field,X).
-exist(Field,half_position(_,_,X,_,_,_,_,_,_),knight):-
+exist(Field,half_position(_,_,X,_,_,_,_,_),knight):-
 	member(Field,X).
-exist(Field,half_position(_,_,_,X,_,_,_,_,_),bishop):-
+exist(Field,half_position(_,_,_,X,_,_,_,_),bishop):-
 	member(Field,X).
-exist(Field,half_position(_,_,_,_,X,_,_,_,_),queen):-
+exist(Field,half_position(_,_,_,_,X,_,_,_),queen):-
 	member(Field,X).
-exist(Field,half_position(_,_,_,_,_,X,_,_,_),king):-
+exist(Field,half_position(_,_,_,_,_,X,_,_),king):-
 	member(Field,X).
 
 % occupied: true if there is a piece in the Field
@@ -60,26 +60,26 @@ find_piece_type(Pos,Type,Position,Color) :-
 % =================================
 
 % extract type of pieces from half position
-extract(half_position(X,_,_,_,_,_,_,_,_),pawn,X).
-extract(half_position(_,X,_,_,_,_,_,_,_),rook,X).
-extract(half_position(_,_,X,_,_,_,_,_,_),knight,X).
-extract(half_position(_,_,_,X,_,_,_,_,_),bishop,X).
-extract(half_position(_,_,_,_,X,_,_,_,_),queen,X).
-extract(half_position(_,_,_,_,_,X,_,_,_),king,X).
+extract(half_position(X,_,_,_,_,_,_,_),pawn,X).
+extract(half_position(_,X,_,_,_,_,_,_),rook,X).
+extract(half_position(_,_,X,_,_,_,_,_),knight,X).
+extract(half_position(_,_,_,X,_,_,_,_),bishop,X).
+extract(half_position(_,_,_,_,X,_,_,_),queen,X).
+extract(half_position(_,_,_,_,_,X,_,_),king,X).
 % extract type of right from half position
-extract(half_position(_,_,_,_,_,_,X,_,_),castle,X).
-extract(half_position(_,_,_,_,_,_,_,X,_),enpassant,X).
+extract(half_position(_,_,_,_,_,_,X,_),castle,X).
+extract(half_position(_,_,_,_,_,_,_,X),enpassant,X).
 
 % combine: combine new piece list with original half position
-combine(half_position(_,B,C,D,E,F,G,H,I),pawn,N,half_position(N,B,C,D,E,F,G,H,I)).
-combine(half_position(A,_,C,D,E,F,G,H,I),rook,N,half_position(A,N,C,D,E,F,G,H,I)).
-combine(half_position(A,B,_,D,E,F,G,H,I),knight,N,half_position(A,B,N,D,E,F,G,H,I)).
-combine(half_position(A,B,C,_,E,F,G,H,I),bishop,N,half_position(A,B,C,N,E,F,G,H,I)).
-combine(half_position(A,B,C,D,_,F,G,H,I),queen,N,half_position(A,B,C,D,N,F,G,H,I)).
-combine(half_position(A,B,C,D,E,_,G,H,I),king,N,half_position(A,B,C,D,E,N,G,H,I)).
+combine(half_position(_,B,C,D,E,F,G,H),pawn,N,half_position(N,B,C,D,E,F,G,H)).
+combine(half_position(A,_,C,D,E,F,G,H),rook,N,half_position(A,N,C,D,E,F,G,H)).
+combine(half_position(A,B,_,D,E,F,G,H),knight,N,half_position(A,B,N,D,E,F,G,H)).
+combine(half_position(A,B,C,_,E,F,G,H),bishop,N,half_position(A,B,C,N,E,F,G,H)).
+combine(half_position(A,B,C,D,_,F,G,H),queen,N,half_position(A,B,C,D,N,F,G,H)).
+combine(half_position(A,B,C,D,E,_,G,H),king,N,half_position(A,B,C,D,E,N,G,H)).
 % combine: combine new right list with original right
-combine(half_position(A,B,C,D,E,F,_,H,I),castle,N,half_position(A,B,C,D,E,F,N,H,I)).
-combine(half_position(A,B,C,D,E,F,G,_,I),enpassant,N,half_position(A,B,C,D,E,F,G,N,I)).
+combine(half_position(A,B,C,D,E,F,_,H),castle,N,half_position(A,B,C,D,E,F,N,H)).
+combine(half_position(A,B,C,D,E,F,G,_),enpassant,N,half_position(A,B,C,D,E,F,G,N)).
 
 % remove element from list
 remove(_,[],_).
@@ -91,17 +91,21 @@ remove(X,[A|Old],[A|New]):-
 update_half(position(_,Y,Z),Half,white,position(Half,Y,Z)).
 update_half(position(X,_,Z),Half,black,position(X,Half,Z)).
 
+combine_half(H1,H2,white,position(H1,H2,0)).
+combine_half(H1,H2,black,position(H2,H1,0)).
+
 % move_piece: move a piece from one position to another within same color
 move_piece(Position, Color, From, To, NewPosition) :-
+	invert(Color, OpponentColor),
     get_half(Position, Half, Color),
+    get_half(Position, OpponentHalf, OpponentColor),
     find_piece_type(From, Type, Position, Color),
     extract(Half, Type, PieceList),
     extract(Half, castle, CastleList),
-    extract(Half, enpassant, EnpassantList),
     remove(From, PieceList, TempList),
     combine(Half, Type, [To|TempList], Temp1Half),
-    (
-        (Type = king, (From = 4 ; From = 60)) ->
+	
+    (	(Type = king, (From = 4 ; From = 60)) ->
             combine(Temp1Half, castle, [], Temp2Half)
     ;   (Type = rook, (From = 0 ; From = 56)) ->
             remove(queenside, CastleList, TempCastleList),
@@ -111,9 +115,16 @@ move_piece(Position, Color, From, To, NewPosition) :-
             combine(Temp1Half, castle, TempCastleList, Temp2Half)
     ;   Temp2Half = Temp1Half
     ),
-    update_half(Position, Temp2Half, Color, NewPosition).
+	% Enpassant only last for 1 move
+	combine(Temp2Half, enpassant, [], Temp3Half),
 
-% castle_move: special handling for castling moves
+	(	(Type = pawn, abs(To-From) =:= 16) -> 
+		combine(OpponentHalf, enpassant, [To], OpponentNewHalf),
+		combine_half(Temp3Half, OpponentNewHalf, Color, NewPosition)
+	;	update_half(Position, Temp3Half, Color, NewPosition)
+	).
+
+% actually moving the piece for castling moves
 castle_move(Position, Color, KingFrom, KingTo, NewPosition) :-
 	
 	% Determine rook positions based on castling type
@@ -134,7 +145,7 @@ castle_move(Position, Color, KingFrom, KingTo, NewPosition) :-
 	% Then move rook
 	move_piece(TempPosition, Color, RookFrom, RookTo, NewPosition).
 
-% is_castling_move: check if a king move is a castling move
+% check if a king move is a castling move
 is_castling_move(Color, From, To) :-
 	Color = white,
 	From = 4,
@@ -144,13 +155,12 @@ is_castling_move(Color, From, To) :-
 	From = 60,
 	(To = 62 ; To = 58).  % Kingside or queenside castling
 
-% capture_piece: remove opponent piece from position
+% remove opponent piece from position (color is opponent)
 capture_piece(Position, Color, CapturePos, NewPosition) :-
     get_half(Position, Half, Color),
     find_piece_type(CapturePos, Type, Position, Color),
     extract(Half, Type, PieceList),
     extract(Half, castle, CastleList),
-    extract(Half, enpassant, EnpassantList),
     
     remove(CapturePos, PieceList, TempList),
     combine(Half, Type, TempList, Temp1Half),

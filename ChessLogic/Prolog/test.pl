@@ -11,12 +11,20 @@ test_check :-
 test_pawn_promotion :-
 	only_king_and_pawns(Position),
 	set_position(Position,white).
+	
+test_enpassant :-
+	enpassant_position(Position),
+	set_position(Position,white).
 
 
 only_king_and_rooks(position(H1, H2, 0)) :-
-    H1 = half_position([],[0, 7],[],[],[],[4],[queenside,kingside],[],notmoved),
-    H2 = half_position([],[56, 63],[],[],[],[60],[queenside,kingside],[],notmoved).
+    H1 = half_position([],[0, 7],[],[],[],[4],[queenside,kingside],[]),
+    H2 = half_position([],[56, 63],[],[],[],[60],[queenside,kingside],[]).
 	
 only_king_and_pawns(position(H1, H2, 0)) :-
-    H1 = half_position([51],[],[],[],[],[4],[queenside,kingside],[],notmoved),
-    H2 = half_position([11],[],[],[],[],[60],[queenside,kingside],[],notmoved).
+    H1 = half_position([51],[],[],[],[],[4],[queenside,kingside],[]),
+    H2 = half_position([11],[],[],[],[],[60],[queenside,kingside],[]).
+
+enpassant_position(position(H1, H2, 0)) :-
+    H1 = half_position([35],[],[],[],[],[4],[],[]),
+    H2 = half_position([52],[],[],[],[],[60],[],[]).

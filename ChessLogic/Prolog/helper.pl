@@ -1,8 +1,8 @@
 initial_pos(position(H1,H2,0)):-
 	PawnWhite = [8,9,10,11,12,13,14,15],
-	H1 = half_position(PawnWhite,[0,7],[1,6],[2,5],[3],[4],[queenside,kingside],[],notmoved),
+	H1 = half_position(PawnWhite,[0,7],[1,6],[2,5],[3],[4],[queenside,kingside],[]),
 	PawnBlack = [48,49,50,51,52,53,54,55],
-	H2 = half_position(PawnBlack,[56,63],[57,62],[58,61],[59],[60],[queenside,kingside],[],notmoved).
+	H2 = half_position(PawnBlack,[56,63],[57,62],[58,61],[59],[60],[queenside,kingside],[]).
 
 set_position(begin) :-
 	retractall(board(_,_)),
