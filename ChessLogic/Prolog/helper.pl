@@ -1,4 +1,4 @@
-initial_pos(position(H1,H2,0)):-
+initial_pos(position(H1,H2)):-
 	PawnWhite = [8,9,10,11,12,13,14,15],
 	H1 = half_position(PawnWhite,[0,7],[1,6],[2,5],[3],[4],[queenside,kingside],[]),
 	PawnBlack = [48,49,50,51,52,53,54,55],
@@ -7,30 +7,32 @@ initial_pos(position(H1,H2,0)):-
 set_position(begin) :-
 	retractall(board(_,_)),
 	initial_pos(Position),
-	asserta(board(Position,white)),!.
+	asserta(board(Position,white)),
+	init_history(Position,white),!.
 	
 set_position(Position,Color) :- 
-	retractall(board(_,_)), 
-	asserta(board(Position,Color)),!.
+	retractall(board(_,_)),
+	asserta(board(Position,Color)),
+	init_history(Position,Color),!.
 
 skip_turn:- board(Position, Color),invert(Color, NextColor),
 		retract(board(Position, Color)),
-	    asserta(board(Position, NextColor)).
+	    asserta(board(Position, NextColor)), !.
 
 reset:-	retractall(human(_)),
 		retractall(board(_,_)),
-		retractall(state(_)).
+		retractall(state(_)),
+		retractall(history(_)).
 		
 % check current game status
 check_game_status(Position,Color) :-
 	(   is_checkmate(Color, Position) ->
-	    % Current player wins by checkmate
 	    write('CHECKMATE'), nl
 	;   is_stalemate(Color, Position) ->
-	    % Game ends in stalemate
 	    write('STALEMATE'), nl
 	;   in_check(Color, Position) ->
-		% Game continues normally
 	    write('CHECK'), nl
-	;   write('SAFE'), nl
+	;	is_threefold_repetition(Position, Color) ->
+		write('DRAW'), nl
+	;	write('SAFE'), nl
 	).

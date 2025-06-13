@@ -9,8 +9,8 @@ invalid_field(X):-
 	X > 63,!.
 
 % get_half: get half position for one side
-get_half(position(Half,_,_),Half,white).
-get_half(position(_,Half,_),Half,black).
+get_half(position(Half,_),Half,white).
+get_half(position(_,Half),Half,black).
 
 % exist: check if there is a piece of certain type in the field
 exist(Field,half_position(X,_,_,_,_,_,_,_),pawn):-
@@ -27,9 +27,9 @@ exist(Field,half_position(_,_,_,_,_,X,_,_),king):-
 	member(Field,X).
 
 % occupied: true if there is a piece in the Field
-occupied(Field,white,position(Stones,_,_)):- exist(Field,Stones,_).	
+occupied(Field,white,position(Stones,_)):- exist(Field,Stones,_).	
 occupied(Field,black,Position):- 
-	Position = position(_,Stones,_),
+	Position = position(_,Stones),
 	exist(Field,Stones,_).
 
 % unoccupied: true if the position is valid and not occupied by any piece
@@ -82,17 +82,17 @@ combine(half_position(A,B,C,D,E,F,_,H),castle,N,half_position(A,B,C,D,E,F,N,H)).
 combine(half_position(A,B,C,D,E,F,G,_),enpassant,N,half_position(A,B,C,D,E,F,G,N)).
 
 % remove element from list
-remove(_,[],_).
+remove(_,[],[]).
 remove(X,[X|New],New):- !.
 remove(X,[A|Old],[A|New]):-
 	remove(X,Old,New).
 
 % update_half: update half position in full position
-update_half(position(_,Y,Z),Half,white,position(Half,Y,Z)).
-update_half(position(X,_,Z),Half,black,position(X,Half,Z)).
+update_half(position(_,Y),Half,white,position(Half,Y)).
+update_half(position(X,_),Half,black,position(X,Half)).
 
-combine_half(H1,H2,white,position(H1,H2,0)).
-combine_half(H1,H2,black,position(H2,H1,0)).
+combine_half(H1,H2,white,position(H1,H2)).
+combine_half(H1,H2,black,position(H2,H1)).
 
 % move_piece: move a piece from one position to another within same color
 move_piece(Position, Color, From, To, NewPosition) :-

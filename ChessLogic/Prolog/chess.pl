@@ -1,7 +1,8 @@
 :- dynamic 
 	human/1, % human player color, if predicate not exist then bot will play that turn
 	board/2, % board state, color
-	state/1. % picking piece or placing piece
+	state/1, % picking piece or placing piece
+	history/1. % moves history
 
 % =================================
 % player queries
@@ -17,6 +18,7 @@ game_mode(cxc) :- !.
 
 % update the whole board, can be use for reset
 
+:- [history].
 :- [board].
 :- [attack].
 :- [movement].
@@ -46,7 +48,7 @@ place_piece(From, To) :-
 	
 	% Switch to opposite player's turn
 	invert(Color, NextColor),
-	
+	add_to_history(NewPosition, NextColor),
 	% Check for game ending conditions
 	check_game_status(NewPosition, NextColor),
 	

@@ -16,15 +16,22 @@ test_enpassant :-
 	enpassant_position(Position),
 	set_position(Position,white).
 
+test_threefold :-
+	threefold_position(Position),
+	set_position(Position,white).
 
-only_king_and_rooks(position(H1, H2, 0)) :-
+only_king_and_rooks(position(H1, H2)) :-
     H1 = half_position([],[0, 7],[],[],[],[4],[queenside,kingside],[]),
     H2 = half_position([],[56, 63],[],[],[],[60],[queenside,kingside],[]).
 	
-only_king_and_pawns(position(H1, H2, 0)) :-
+only_king_and_pawns(position(H1, H2)) :-
     H1 = half_position([51],[],[],[],[],[4],[queenside,kingside],[]),
     H2 = half_position([11],[],[],[],[],[60],[queenside,kingside],[]).
 
-enpassant_position(position(H1, H2, 0)) :-
+enpassant_position(position(H1, H2)) :-
     H1 = half_position([35],[],[],[],[],[4],[],[]),
     H2 = half_position([52],[],[],[],[],[60],[],[]).
+	
+threefold_position(position(H1, H2)) :-
+	H1 = half_position([],[1],[],[],[],[4],[],[]),
+    H2 = half_position([],[],[],[],[],[56],[],[]).
