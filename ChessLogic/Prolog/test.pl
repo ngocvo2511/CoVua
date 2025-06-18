@@ -2,7 +2,7 @@ test_check :-
 	only_king_and_rooks(Position),
 	set_position(Position,white),
 	write('Testing check detection:'), nl,
-	board(Pos, _),
+	board(Pos, _, _),
 	write('White king in check: '),
 	(in_check(white, Pos) -> write('Yes') ; write('No')), nl,
 	write('Black king in check: '),

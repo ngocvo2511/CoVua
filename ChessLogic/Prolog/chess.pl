@@ -1,8 +1,19 @@
 :- dynamic 
 	human/1, % human player color, if predicate not exist then bot will play that turn
-	board/2, % board state, color
+	board/3, % board state, color, fifty-move counter
 	state/1, % picking piece or placing piece
-	history/1. % moves history
+	history/1, % moves history
+	depth/1.
+
+	
+:- [history].
+:- [board].
+:- [attack].
+:- [movement].
+:- [helper].
+:- [minimax].
+:- [evaluation].
+:- [test].
 
 % =================================
 % player queries
@@ -16,27 +27,17 @@ game_mode(hxc) :- asserta(human(white)), !.
 game_mode(cxh) :- asserta(human(black)), !.
 game_mode(cxc) :- !.
 
-% update the whole board, can be use for reset
-
-:- [history].
-:- [board].
-:- [attack].
-:- [movement].
-:- [helper].
-
-start :-
-	set_position(begin).
 
 % returns list of all legal moves for piece at Pos
 pick_piece(Pos, LegalMoves) :-
-	board(Position, Color),
+	board(Position, Color, _),
 	find_piece_color(Pos, Color, Position),
 	% find_piece_type(Pos, Type, Position, Color),
 	findall(To, is_legal_move(Pos, To, Color, Position), LegalMoves).
 
 % move piece from From to To with full validation
 place_piece(From, To) :-
-	board(Position, Color),
+	board(Position, Color, Counter),
 
 	% Check if it's a legal move
 	is_legal_move(From, To, Color, Position),
@@ -46,14 +47,53 @@ place_piece(From, To) :-
 	simulate_move(From, To, Color, Position, NewPosition),
 	retract(state(place)),
 	
+	% Update fifty-move counter
+	update_fifty_move_counter(From, To, Position, Color, Counter, NewCounter),
+	
 	% Switch to opposite player's turn
 	invert(Color, NextColor),
-	add_to_history(NewPosition, NextColor),
+	add_to_history(NewPosition, NextColor, NewCounter),
 	% Check for game ending conditions
-	check_game_status(NewPosition, NextColor),
+	check_game_status(NewPosition, NextColor, NewCounter),
 	
-	retract(board(Position, Color)),
-	asserta(board(NewPosition, NextColor)).
-		    
-	
-:- [test].
+	retract(board(Position, Color, Counter)),
+	asserta(board(NewPosition, NextColor, NewCounter)).
+
+main :- 
+	(not(board(_, _, _)) -> start),
+	game_mode(hxc),
+	repeat,
+	board(_, Color, _),
+	(
+		human(Color) -> 
+			% Human player's turn
+			read(Query),
+			(   Query = pick_piece(Pos) ->
+					(pick_piece(Pos, LegalMoves) ->
+                        (LegalMoves = [] -> write('[]') ; write(LegalMoves))
+                    ;   write('[]')
+                    ), nl
+			;   Query = place_piece(Pos, To) ->
+					place_piece(Pos, To)
+			; Query = skip_turn ->
+					skip_turn
+			; Query = reset ->
+					reset
+			; Query = undo ->
+					(can_undo -> undo)
+			; Query = get_position -> 
+					get_current_board(Position, _Color, _Counter),
+					write(Position), nl
+			; Query = exit -> 
+					write('Exiting...'), nl, !, fail
+			)
+	;	% Computer player's turn
+		bot_move
+	), fail.
+
+start :-
+	set_position(begin),
+	% Initialize default depth if not set
+	(depth(_) -> true ; asserta(depth(3))).
+
+

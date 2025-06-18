@@ -38,9 +38,9 @@ unoccupied(Field,Position):-
 	not(occupied(Field,black,Position)),
 	not(invalid_field(Field)).
 
-% invert: between black and white
-invert(white,black).
-invert(black,white).
+% Invert color
+invert(white, black).
+invert(black, white).
 
 % find_piece_color: determine which color owns the piece at given position
 find_piece_color(Pos,Color,Position) :-
@@ -174,3 +174,29 @@ capture_piece(Position, Color, CapturePos, NewPosition) :-
     ;   Temp2Half = Temp1Half
     ),
     update_half(Position, Temp2Half, Color, NewPosition).
+
+% is_fifty_move: check if fifty move rule applies (100 half-moves)
+is_fifty_move(Counter) :-
+    Counter >= 100.
+
+% reset_fifty_move_counter: reset counter when pawn moves or piece is captured
+reset_fifty_move_counter(0).
+
+% increment_fifty_move_counter: increment counter when no pawn move or capture
+increment_fifty_move_counter(OldCounter, NewCounter) :-
+    NewCounter is OldCounter + 1.
+
+% check_pawn_move: check if the moved piece is a pawn
+check_pawn_move(From, Position, Color) :-
+    find_piece_type(From, pawn, Position, Color).
+
+% check_capture: check if a piece was captured in the move
+check_capture(To, Position, Color) :-
+    invert(Color, OpponentColor),
+    occupied(To, OpponentColor, Position).
+
+% update_fifty_move_counter: update counter based on move type
+update_fifty_move_counter(From, To, Position, Color, OldCounter, NewCounter) :-
+    (check_pawn_move(From, Position, Color) ; check_capture(To, Position, Color)) ->
+        reset_fifty_move_counter(NewCounter)
+    ;   increment_fifty_move_counter(OldCounter, NewCounter).
