@@ -34,7 +34,7 @@ namespace ChessUI
         private CancellationTokenSource cts = new CancellationTokenSource();
         private Stack<Tuple<Move, Piece>> moveList;
         private bool isReview = false;
-        
+
         public GameUserControl(Player color, int timeLimit, bool isAI, int difficult = 1)
         {
             InitializeComponent();
@@ -49,6 +49,13 @@ namespace ChessUI
                 InitializeTimer();
                 SwitchTurn();
             }
+
+            // Khởi tạo Prolog engine
+            string rootPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\.."));
+            string prologPath = System.IO.Path.Combine(rootPath, "ChessLogic", "Prolog", "chess.pl");
+            PrologEngine.Initialize(prologPath);
+
+
             if (gameState is GameStateAI && color == Player.Black)
             {
                 StartAIMoveWithDelay();
@@ -443,18 +450,22 @@ namespace ChessUI
             int row = (int)(point.Y / squareSize);
             int col = (int)(point.X / squareSize);
 
-            //MessageBox.Show(row + " " + col);
             return new Position(row, col);
         }
 
         private void OnFromPositionSelected(Position pos)
         {
-            IEnumerable<Move> moves = gameState.LegalMovesForPiece(pos);
+            // Chuyển đổi tọa độ bàn cờ sang số 0-63
+            int fromPos = (7 - pos.Row) * 8 + pos.Column;
 
-            if (moves.Any())
+            // Lấy các nước đi hợp lệ từ Prolog
+            IEnumerable<Move> moves = gameState.LegalMovesForPiece(pos);
+            List<Move> legalMoves = PrologEngine.GetLegalMoves(fromPos);
+
+            if (legalMoves.Any())
             {
                 selectedPos = pos;
-                CacheMoves(moves);
+                CacheMoves(legalMoves);
                 ShowHighlights();
             }
         }
@@ -467,7 +478,29 @@ namespace ChessUI
             if (pos == null) return;
             if (moveCache.TryGetValue(pos, out Move move))
             {
-                HandleMove(move);
+                // Chuyển đổi tọa độ bàn cờ sang số 0-63
+                int fromPos = move.FromPos.Row * 8 + move.FromPos.Column;
+                int toPos = move.ToPos.Row * 8 + move.ToPos.Column;
+
+                // Thực hiện nước đi trong Prolog
+                if (PrologEngine.MakeMove(fromPos, toPos))
+                {
+                    HandleMove(move);
+
+                    // Kiểm tra trạng thái ván cờ sau khi đi
+                    string gameStatus = PrologEngine.GetGameStatus();
+                    WarningTextBlock.Text = gameStatus == "CHECK" ? "Chiếu tướng!" : null;
+
+                    if (gameStatus == "CHECKMATE" || gameStatus == "STALEMATE")
+                    {
+                        UnableClick();
+                        moveList = new Stack<Tuple<Move, Piece>>(gameState.Moved.ToArray());
+                        HideHighlights();
+                        CellGrid.IsEnabled = false;
+                        if (redTimer != null) StopTimer();
+                        RaiseGameOverEvent(gameState);
+                    }
+                }
             }
         }
         private void DrawCapturedGrid(Piece piece)

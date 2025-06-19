@@ -66,8 +66,6 @@ namespace ChessUI
                 string prologPath = System.IO.Path.Combine(rootPath, "ChessLogic", "Prolog", "test.pl");
                 PrologEngine.Initialize(prologPath);
 
-                var results = PrologEngine.QuerySingleVariable("greeting(X)", "X");
-                MessageBox.Show(string.Join(Environment.NewLine, results));
             }
             catch (Exception ex)
             {

@@ -75,7 +75,18 @@
     <Compile Include="ValuePiece.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Prolog\attack.pl" />
+    <None Include="Prolog\board.pl" />
+    <None Include="Prolog\chess.pl" />
+    <None Include="Prolog\evaluation.pl" />
+    <None Include="Prolog\helper.pl" />
+    <None Include="Prolog\history.pl" />
+    <None Include="Prolog\minimax.pl" />
+    <None Include="Prolog\movement.pl" />
     <None Include="Prolog\test.pl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Prolog\PFAvF.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
