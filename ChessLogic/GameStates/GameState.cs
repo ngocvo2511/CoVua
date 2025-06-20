@@ -6,7 +6,7 @@ namespace ChessLogic.GameStates.GameState
 {
     public abstract class GameState
     {
-        public Board Board { get; }
+        public Board Board { get; set; }
         public Stack<Tuple<Move, Piece>> Moved { get; set; }
         public Player CurrentPlayer { get; set; }
 
@@ -71,19 +71,19 @@ namespace ChessLogic.GameStates.GameState
                 if (CapturedPiece.Color == Player.Black) CapturedBlackPiece.Add(CapturedPiece);
                 else CapturedRedPiece.Add(CapturedPiece);
             }
-            bool capture = move.Execute(Board);
+            //bool capture = move.Execute(Board);
 
-            if (capture)
-            {
-                noCapture.Push(0);
-                stateString.Push("Clear");
-                stateHistory.Clear();
-            }
-            else
-            {
-                if (noCapture.Count == 0) noCapture.Push(1);
-                else noCapture.Push(noCapture.Peek() + 1);
-            }
+            //if (capture)
+            //{
+            //    noCapture.Push(0);
+            //    stateString.Push("Clear");
+            //    stateHistory.Clear();
+            //}
+            //else
+            //{
+            //    if (noCapture.Count == 0) noCapture.Push(1);
+            //    else noCapture.Push(noCapture.Peek() + 1);
+            //}
             CurrentPlayer = CurrentPlayer.Opponent();
             UpdateStateString();
             CheckForGameOver();
