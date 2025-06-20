@@ -102,11 +102,12 @@ namespace ChessLogic
 
         public bool IsInCheck(Player player) // kiem tra xem co bi chieu hay khong
         {
-            return PiecePositionsFor(player.Opponent()).Any(pos =>
-            {
-                Piece piece = this[pos];
-                return piece.CanCaptureOpponentKing(pos, this);
-            });
+            return false;
+            //return PiecePositionsFor(player.Opponent()).Any(pos =>
+            //{
+            //    Piece piece = this[pos];
+            //    return piece.CanCaptureOpponentKing(pos, this);
+            //});
         }
 
         public Board Copy()

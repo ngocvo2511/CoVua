@@ -461,7 +461,6 @@ namespace ChessUI
             int fromPos = (7 - pos.Row) * 8 + pos.Column;
 
             // Lấy các nước đi hợp lệ từ Prolog
-            IEnumerable<Move> moves = gameState.LegalMovesForPiece(pos);
             List<Move> legalMoves = PrologEngine.GetLegalMoves(fromPos);
 
             if (legalMoves.Any())
