@@ -59,8 +59,8 @@ place_piece(From, To) :-
 	retract(board(Position, Color, Counter)),
 	asserta(board(NewPosition, NextColor, NewCounter)).
 
-main :- 
-	(not(board(_, _, _)) -> start),
+start :- 
+	(not(board(_, _, _)) -> init),
 	game_mode(hxc),
 	repeat,
 	board(_, Color, _),
@@ -75,23 +75,30 @@ main :-
                     ), nl
 			;   Query = place_piece(Pos, To) ->
 					place_piece(Pos, To)
-			; Query = skip_turn ->
+			; 	Query = skip_turn ->
 					skip_turn
-			; Query = reset ->
+			; 	Query = reset ->
 					reset
-			; Query = undo ->
+			; 	Query = undo ->
 					(can_undo -> undo)
-			; Query = get_position -> 
+			; 	Query = get_position -> 
 					get_current_board(Position, _Color, _Counter),
 					write(Position), nl
-			; Query = exit -> 
+			; 	Query = exit -> 
 					write('Exiting...'), nl, !, fail
+			; 	Query = game_mode(Mode) ->
+					(   member(Mode, [hxh, hxc, cxh, cxc]) ->
+						game_mode(Mode)
+					;   write('Invalid game mode!'), nl
+					)
+			; Query = _ ->
+					write('Invalid command!'), nl
 			)
 	;	% Computer player's turn
 		bot_move
 	), fail.
 
-start :-
+init :-
 	set_position(begin),
 	% Initialize default depth if not set
 	(depth(_) -> true ; asserta(depth(3))).
