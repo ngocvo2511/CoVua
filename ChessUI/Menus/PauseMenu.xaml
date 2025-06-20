@@ -11,7 +11,7 @@
             BorderThickness="0"
             CornerRadius="10">
         <Border.Background>
-            <ImageBrush ImageSource="/Assets/Images/background.png"/>
+            <ImageBrush ImageSource="/Assets/Images/gameBackground.jpg"/>
         </Border.Background>
         <Grid>
             <Grid.RowDefinitions>

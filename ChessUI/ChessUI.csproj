@@ -331,5 +331,22 @@
   <ItemGroup>
     <Resource Include="Assets\Images\gameBackground.jpg" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\Images\quanCo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\Images\sapxepquanco.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\Sounds\buttonClickSound.mp3">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Sounds\gameOverSound.mp3">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Sounds\moveSound.mp3">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
