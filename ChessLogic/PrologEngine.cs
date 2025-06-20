@@ -11,7 +11,7 @@ namespace ChessLogic
     {
         private static bool _isInitialized = false;
 
-        public static void Initialize(string prologFile)
+        public static void Initialize(string prologFile, bool isAI, Player color)
         {
             if (!_isInitialized)
             {
@@ -25,6 +25,33 @@ namespace ChessLogic
             {
                 throw new Exception("Không thể load file Prolog.");
             }
+
+            if (isAI)
+            {
+                if(color == Player.White)
+                {
+                    if (!PlQuery.PlCall("game_mode(hxc)."))
+                    {
+                        throw new Exception("Không thể khởi tạo bàn cờ.");
+                    }
+                }
+                else
+                {
+                    if (!PlQuery.PlCall("game_mode(cxh)."))
+                    {
+                        throw new Exception("Không thể khởi tạo bàn cờ.");
+                    }
+                }
+
+            }
+            else
+            {
+                if (!PlQuery.PlCall("game_mode(hxh)."))
+                {
+                    throw new Exception("Không thể khởi tạo bàn cờ.");
+                }
+            }
+
 
             // Khởi tạo bàn cờ
             if (!PlQuery.PlCall("start."))
@@ -68,10 +95,25 @@ namespace ChessLogic
             return legalMoves;
         }
 
-        public static bool MakeMove(int fromPos, int toPos)
+        public static bool MakeMove(int fromPos, int toPos, out string status)
         {
-            // Gọi predicate place_piece để thực hiện nước đi
-            return PlQuery.PlCall($"place_piece({fromPos}, {toPos})");
+            status = null;
+            try
+            {
+                using (var q = new PlQuery($"place_piece({fromPos}, {toPos}, Status)"))
+                {
+                    if (q.NextSolution())
+                    {
+                        status = q.Variables["Status"].ToString().ToUpper(); // SAFE, CHECK, ...
+                        return true;
+                    }
+                }
+            }
+            catch
+            {
+                // Xử lý nếu có lỗi Prolog
+            }
+            return false;
         }
 
         public static bool IsGameOver()

@@ -64,7 +64,7 @@ namespace ChessUI
             {
                 string rootPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\.."));
                 string prologPath = System.IO.Path.Combine(rootPath, "ChessLogic", "Prolog", "test.pl");
-                PrologEngine.Initialize(prologPath);
+                //PrologEngine.Initialize(prologPath);
 
             }
             catch (Exception ex)

@@ -53,7 +53,7 @@ namespace ChessUI
             // Khởi tạo Prolog engine
             string rootPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\.."));
             string prologPath = System.IO.Path.Combine(rootPath, "ChessLogic", "Prolog", "chess.pl");
-            PrologEngine.Initialize(prologPath);
+            PrologEngine.Initialize(prologPath, isAI, color);
 
 
             if (gameState is GameStateAI && color == Player.Black)
@@ -479,16 +479,17 @@ namespace ChessUI
             if (moveCache.TryGetValue(pos, out Move move))
             {
                 // Chuyển đổi tọa độ bàn cờ sang số 0-63
-                int fromPos = move.FromPos.Row * 8 + move.FromPos.Column;
-                int toPos = move.ToPos.Row * 8 + move.ToPos.Column;
+                int fromPos = (7 - move.FromPos.Row) * 8 + move.FromPos.Column;
+
+                int toPos = (7 - move.ToPos.Row) * 8 + move.ToPos.Column;
 
                 // Thực hiện nước đi trong Prolog
-                if (PrologEngine.MakeMove(fromPos, toPos))
+                if (PrologEngine.MakeMove(fromPos, toPos, out var status))
                 {
                     HandleMove(move);
 
                     // Kiểm tra trạng thái ván cờ sau khi đi
-                    string gameStatus = PrologEngine.GetGameStatus();
+                    string gameStatus = status.ToUpper();
                     WarningTextBlock.Text = gameStatus == "CHECK" ? "Chiếu tướng!" : null;
 
                     if (gameStatus == "CHECKMATE" || gameStatus == "STALEMATE")

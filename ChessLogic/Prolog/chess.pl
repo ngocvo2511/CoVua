@@ -59,6 +59,29 @@ place_piece(From, To) :-
 	retract(board(Position, Color, Counter)),
 	asserta(board(NewPosition, NextColor, NewCounter)).
 
+place_piece(From, To, Status) :-
+	board(Position, Color, Counter),
+
+	% Check if it's a legal move
+	is_legal_move(From, To, Color, Position),
+	
+	% Make the move, wrap this with state(place) to make sure only this allow to print to screen
+	asserta(state(place)),
+	simulate_move(From, To, Color, Position, NewPosition),
+	retract(state(place)),
+	
+	% Update fifty-move counter
+	update_fifty_move_counter(From, To, Position, Color, Counter, NewCounter),
+	
+	% Switch to opposite player's turn
+	invert(Color, NextColor),
+	add_to_history(NewPosition, NextColor, NewCounter),
+	% Check for game ending conditions
+	check_game_status(NewPosition, NextColor, NewCounter, Status),
+	
+	retract(board(Position, Color, Counter)),
+	asserta(board(NewPosition, NextColor, NewCounter)).
+
 main :- 
 	(not(board(_, _, _)) -> start),
 	game_mode(hxc),
