@@ -85,8 +85,8 @@ namespace ChessLogic.GameStates.GameState
             //    else noCapture.Push(noCapture.Peek() + 1);
             //}
             CurrentPlayer = CurrentPlayer.Opponent();
-            UpdateStateString();
-            CheckForGameOver();
+            //UpdateStateString();
+            //CheckForGameOver();
         }
         public abstract void UndoMove();
 

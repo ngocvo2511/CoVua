@@ -246,22 +246,34 @@ namespace ChessUI
             DrawBoard(gameState.Board);
             ShowPrevMove(move);
             DrawCapturedGrid(gameState.CapturedPiece);
-            WarningTextBlock.Text = gameState.Board.IsInCheck(gameState.CurrentPlayer) ? "Chiếu tướng!" : null;
+            //WarningTextBlock.Text = gameState.Board.IsInCheck(gameState.CurrentPlayer) ? "Chiếu tướng!" : null;
             TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
             await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Render);
             if (gameState is GameStateAI AI)
             {
                 Move prevMove = gameState.Moved.First().Item1;
-                await Task.Run(() => AI.AiMove(cts.Token), cts.Token);
-                isRedTurn = !isRedTurn;
-                if (redTimer != null) SwitchTurn();
-                WarningTextBlock.Text = gameState.Board.IsInCheck(gameState.CurrentPlayer) ? "Chiếu tướng!" : null;
-                TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
-                DrawCapturedGrid(gameState.CapturedPiece);
-                DrawBoard(gameState.Board);
-                HidePrevMove(prevMove);
-                ShowPrevMove(gameState.Moved.First().Item1);
-                Sound.PlayMoveSound();
+                var result = PrologEngine.AiMove();
+                if (result.HasValue)
+                {
+                    var (status, from, to) = result.Value;
+                    //await Task.Run(() => AI.AiMove(cts.Token), cts.Token);
+                    gameState.MakeMove(new NormalMove(Position.IntToPosition(from), Position.IntToPosition(to)));
+                    gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
+                    isRedTurn = !isRedTurn;
+                    if (redTimer != null) SwitchTurn();
+
+                    WarningTextBlock.Text = status == "CHECK" ? "Chiếu tướng!" : null;
+                    TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
+                    DrawCapturedGrid(gameState.CapturedPiece);
+                    DrawBoard(gameState.Board);
+                    HidePrevMove(prevMove);
+                    ShowPrevMove(gameState.Moved.First().Item1);
+                    Sound.PlayMoveSound();
+                }
+                else
+                {
+                    Console.WriteLine("Không thể thực hiện bot_move.");
+                }
             }
 
             AbleClick();

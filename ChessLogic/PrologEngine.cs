@@ -116,6 +116,22 @@ namespace ChessLogic
             return false;
         }
 
+        public static (string status, int fromPos, int toPos)? AiMove()
+        {
+            using (var q = new PlQuery("bot_move(FromPos, ToPos, Status)."))
+            {
+                if (q.NextSolution())
+                {
+                    string status = q.Variables["Status"].ToString().ToUpper(); // e.g. SAFE, CHECK
+                    int fromPos = int.Parse(q.Variables["FromPos"].ToString());
+                    int toPos = int.Parse(q.Variables["ToPos"].ToString());
+                    return (status, fromPos, toPos);
+                }
+            }
+
+            return null; // Nếu không có kết quả
+        }
+
         public static bool Undo()
         {
             return PlQuery.PlCall("undo.");

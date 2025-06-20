@@ -16,6 +16,14 @@ bot_move :-
     place_piece(From, To),
     write('Bot played: '), write(From), write(' to '), write(To), nl.
 
+bot_move(FromPos, ToPos, Status) :-
+    init_minimax,
+    board(Position, Color, _),
+    depth(Depth),
+    minimax(Position, Color, Depth, BestMove, _BestValue),
+    BestMove = [FromPos, ToPos],
+    place_piece(FromPos, ToPos, Status).
+
 % Main minimax entry point
 minimax(Position, Color, Depth, BestMove, BestValue) :-
     worst_value(white, Alpha),
