@@ -54,7 +54,7 @@ namespace ChessLogic
 
 
             // Khởi tạo bàn cờ
-            if (!PlQuery.PlCall("start."))
+            if (!PlQuery.PlCall("init."))
             {
                 throw new Exception("Không thể khởi tạo bàn cờ.");
             }
