@@ -322,6 +322,8 @@ namespace ChessUI
             }
             else
             {
+                PrologEngine.Undo();
+
                 gameState.UndoMove();
                 DrawBoard(gameState.Board);
                 if (gameState.Moved.Count != 0)

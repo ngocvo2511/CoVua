@@ -116,6 +116,11 @@ namespace ChessLogic
             return false;
         }
 
+        public static bool Undo()
+        {
+            return PlQuery.PlCall("undo.");
+        }
+
         public static bool IsGameOver()
         {
             // Kiểm tra xem ván cờ đã kết thúc chưa
