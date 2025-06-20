@@ -331,5 +331,11 @@
   <ItemGroup>
     <Resource Include="Assets\Images\gameBackground.jpg" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\Images\quanCo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\Images\sapxepquanco.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
