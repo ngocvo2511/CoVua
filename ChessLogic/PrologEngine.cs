@@ -163,5 +163,122 @@ namespace ChessLogic
                 _isInitialized = false;
             }
         }
+
+        public static Dictionary<Player, Dictionary<PieceType, List<int>>> GetCurrentPosition()
+        {
+            var result = new Dictionary<Player, Dictionary<PieceType, List<int>>>
+            {
+                { Player.White, new Dictionary<PieceType, List<int>>() },
+                { Player.Black, new Dictionary<PieceType, List<int>>() }
+            };
+
+            using (var q = new PlQuery("get_current_board(Position, _, _)"))
+            {
+                if (q.NextSolution())
+                {
+                    var position = q.Variables["Position"].ToString();
+                    ParsePosition(position, result);
+                }
+            }
+
+            return result;
+        }
+
+        private static void ParsePosition(string position, Dictionary<Player, Dictionary<PieceType, List<int>>> result)
+        {
+            // Bỏ phần "Position = " nếu có
+            if (position.StartsWith("Position ="))
+                position = position.Substring("Position =".Length).Trim();
+
+            // Bỏ dấu [] ngoài cùng nếu có
+            position = position.Trim();
+            if (position.StartsWith("[["))
+                position = position.Substring(1); // còn 1 dấu [
+            if (position.EndsWith("]]"))
+                position = position.Substring(0, position.Length - 1); // bỏ 1 dấu ]
+
+            // Tách 2 phần của trắng và đen
+            var halves = new List<string>();
+            int bracket = 0;
+            int lastSplit = 0;
+            for (int i = 0; i < position.Length; i++)
+            {
+                char c = position[i];
+                if (c == '[') bracket++;
+                if (c == ']') bracket--;
+                if (c == ',' && bracket == 0)
+                {
+                    halves.Add(position.Substring(lastSplit, i - lastSplit).Trim());
+                    lastSplit = i + 1;
+                }
+            }
+            halves.Add(position.Substring(lastSplit).Trim());
+
+            // Parse từng phần
+            ParseSimpleHalfPosition(halves[0], result[Player.White]);
+            ParseSimpleHalfPosition(halves[1], result[Player.Black]);
+        }
+
+        private static void ParseSimpleHalfPosition(string half, Dictionary<PieceType, List<int>> pieces)
+        {
+            half = half.Trim();
+            if (half.StartsWith("["))
+                half = half.Substring(1);
+            if (half.EndsWith("]"))
+                half = half.Substring(0, half.Length - 1);
+
+            var parts = new List<string>();
+            int bracket = 0;
+            int lastSplit = 0;
+            for (int i = 0; i < half.Length; i++)
+            {
+                char c = half[i];
+                if (c == '[') bracket++;
+                if (c == ']') bracket--;
+                if (c == ',' && bracket == 0)
+                {
+                    parts.Add(half.Substring(lastSplit, i - lastSplit).Trim());
+                    lastSplit = i + 1;
+                }
+            }
+            parts.Add(half.Substring(lastSplit).Trim());
+
+            if (parts.Count > 0) pieces[PieceType.Pawn] = ParsePositions(parts[0]);
+            if (parts.Count > 1) pieces[PieceType.Rook] = ParsePositions(parts[1]);
+            if (parts.Count > 2) pieces[PieceType.Knight] = ParsePositions(parts[2]);
+            if (parts.Count > 3) pieces[PieceType.Bishop] = ParsePositions(parts[3]);
+            if (parts.Count > 4) pieces[PieceType.Queen] = ParsePositions(parts[4]);
+            if (parts.Count > 5) pieces[PieceType.King] = ParsePositions(parts[5]);
+        }
+
+        private static List<int> ParsePositions(string positions)
+        {
+            if (string.IsNullOrWhiteSpace(positions))
+                return new List<int>();
+
+            var result = new List<int>();
+            foreach (var p in positions.Split(','))
+            {
+                var s = p.Trim().Trim('[', ']');
+                if (int.TryParse(s, out int value))
+                {
+                    result.Add(value);
+                }
+            }
+            return result;
+        }
+
+        public static Player GetCurrentPlayer()
+        {
+            using (var q = new PlQuery("board(_, Color, _)"))
+            {
+                if (q.NextSolution())
+                {
+                    var color = q.Variables["Color"].ToString();
+                    return color == "white" ? Player.White : Player.Black;
+                }
+            }
+            throw new Exception("Không thể lấy được lượt đi hiện tại.");
+        }
     }
 }

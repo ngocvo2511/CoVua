@@ -42,7 +42,7 @@ namespace ChessUI
             if (isAI == true) gameState = new GameStateAI(color, Board.Initial(), difficult, timeLimit);
             else gameState = new GameState2P(Player.White, Board.Initial(), timeLimit);
             ShowGameInformation(difficult);
-            DrawBoard(gameState.Board);
+            //DrawBoard(gameState.Board);
             if (color == Player.Black && isAI == true) isRedTurn = false;
             if (timeLimit != 0)
             {
@@ -54,7 +54,8 @@ namespace ChessUI
             string rootPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\.."));
             string prologPath = System.IO.Path.Combine(rootPath, "ChessLogic", "Prolog", "chess.pl");
             PrologEngine.Initialize(prologPath, isAI, color);
-
+            Board board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
+            DrawBoard(board);
 
             if (gameState is GameStateAI && color == Player.Black)
             {
@@ -241,7 +242,8 @@ namespace ChessUI
             UnableClick();
             if (gameState.Moved.Any()) HidePrevMove(gameState.Moved.First().Item1);
             gameState.MakeMove(move);
-            DrawBoard(gameState.Board);
+            Board board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
+            DrawBoard(board);
             ShowPrevMove(move);
             DrawCapturedGrid(gameState.CapturedPiece);
             WarningTextBlock.Text = gameState.Board.IsInCheck(gameState.CurrentPlayer) ? "Chiếu tướng!" : null;

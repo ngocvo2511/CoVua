@@ -257,5 +257,55 @@ namespace ChessLogic
 
             return HasPawnInPosition(player, pawnPositions, skipPos);
         }
+
+        public static Board FromPrologPosition(Dictionary<Player, Dictionary<PieceType, List<int>>> prologPosition)
+        {
+            Board board = new Board();
+
+            foreach (var playerEntry in prologPosition)
+            {
+                Player player = playerEntry.Key;
+                var pieceDict = playerEntry.Value;
+                foreach (var pieceEntry in pieceDict)
+                {
+                    PieceType type = pieceEntry.Key;
+                    List<int> positions = pieceEntry.Value;
+                    foreach (int pos in positions)
+                    {
+                        int row = 7 - (pos / 8);
+                        int col = pos % 8;
+                        Piece piece = null;
+                        switch (type)
+                        {
+                            case PieceType.Pawn:
+                                piece = new Pawn(player);
+                                break;
+                            case PieceType.Rook:
+                                piece = new Rook(player);
+                                break;
+                            case PieceType.Knight:
+                                piece = new Knight(player);
+                                break;
+                            case PieceType.Bishop:
+                                piece = new Bishop(player);
+                                break;
+                            case PieceType.Queen:
+                                piece = new Queen(player);
+                                break;
+                            case PieceType.King:
+                                piece = new King(player);
+                                break;
+                        }
+                        if (piece != null)
+                        {
+                            board[row, col] = piece;
+                        }
+                    }
+                }
+            }
+
+            IEnumerable<Position> piecePositions = board.PiecePositions();
+            return board;
+        }
     }
 }
