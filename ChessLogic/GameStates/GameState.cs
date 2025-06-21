@@ -61,17 +61,6 @@ namespace ChessLogic.GameStates.GameState
             }
             return history;
         }
-        public IEnumerable<Move> LegalMovesForPiece(Position pos)
-        {
-            if (Board.IsEmpty(pos) || Board[pos].Color != CurrentPlayer)
-            {
-                return Enumerable.Empty<Move>();
-            }
-
-            Piece piece = Board[pos];
-            IEnumerable<Move> moveCandidates = piece.GetMoves(pos, Board);
-            return moveCandidates.Where(move => move.IsLegal(Board));
-        }
 
         public void MakeMove(Move move)
         {
@@ -101,41 +90,11 @@ namespace ChessLogic.GameStates.GameState
         }
         public abstract void UndoMove();
 
-        public IEnumerable<Move> AllLegalMovesFor(Player player)  // nước đi khả thi của người chơi
-        {
-            IEnumerable<Move> moveCandidates = Board.PiecePositionsFor(player).SelectMany(pos =>
-            {
-                Piece piece = Board[pos];
-                return piece.GetMoves(pos, Board);
-            });
-            return moveCandidates.Where(move => move.IsLegal(Board));
-        }
+
 
         private void CheckForGameOver()
         {
-            if (!AllLegalMovesFor(CurrentPlayer).Any())
-            {
-                if (Board.IsInCheck(CurrentPlayer))
-                {
-                    Result = Result.Win(CurrentPlayer.Opponent(), EndReason.Checkmate);
-                }
-                else
-                {
-                    Result = Result.Win(CurrentPlayer.Opponent(), EndReason.Stalemate);
-                }
-            }
-            else if (Board.InsufficientMaterial())
-            {
-                Result = Result.Draw(EndReason.InsufficientMaterial);
-            }
-            else if (FiftyMoveRule())
-            {
-                Result = Result.Draw(EndReason.FiftyMoveRule);
-            }
-            else if (ThreefoldRepetition())
-            {
-                Result = Result.Draw(EndReason.ThreefoldRepetition);
-            }
+
         }
 
         public bool IsGameOver()

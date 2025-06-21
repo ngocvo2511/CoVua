@@ -54,59 +54,60 @@ namespace ChessLogic.GameStates.GameState
         }
         public void AiMove(CancellationToken token)
         {
-            IEnumerable<Move> moves = AllLegalMovesFor(CurrentPlayer);
-            if (!moves.Any()) return;
-            Move bestMove = null;
-            int value;
-            int bestValue = -10000;
-            foreach (var move in moves)
-            {
-                MakeTestMove(move);
-                value = AlphaBeta(depth - 1);
-                UndoTestMove();
-                if (value > bestValue)
-                {
-                    bestValue = value;
-                    bestMove = move;
-                }
-                if (token.IsCancellationRequested) return;
-            }
-            if (bestMove != null) MakeMove(bestMove);
+            //IEnumerable<Move> moves = AllLegalMovesFor(CurrentPlayer);
+            //if (!moves.Any()) return;
+            //Move bestMove = null;
+            //int value;
+            //int bestValue = -10000;
+            //foreach (var move in moves)
+            //{
+            //    MakeTestMove(move);
+            //    value = AlphaBeta(depth - 1);
+            //    UndoTestMove();
+            //    if (value > bestValue)
+            //    {
+            //        bestValue = value;
+            //        bestMove = move;
+            //    }
+            //    if (token.IsCancellationRequested) return;
+            //}
+            //if (bestMove != null) MakeMove(bestMove);
         }
         private int AlphaBeta(int depth, int alpha = -9999, int beta = 9999) // giá trị nước đi
         {
-            IEnumerable<Move> moves = AllLegalMovesFor(CurrentPlayer);
-            if (!moves.Any()) return (CurrentPlayer == Player.Black) ? -9999 : 9999;
-            if (depth == 0) return value.GetValueBoard(Board);
-            if (CurrentPlayer == Player.Black)
-            {
-                int bestValue = -9999;
-                foreach (var move in moves)
-                {
-                    MakeTestMove(move);
-                    int value = AlphaBeta(depth - 1, alpha, beta);
-                    UndoTestMove();
-                    bestValue = Math.Max(bestValue, value);
-                    alpha = Math.Max(alpha, value);
-                    if (alpha >= beta) return bestValue;
-                }
-                return bestValue;
-            }
-            else if (CurrentPlayer == Player.White)
-            {
-                int bestValue = 9999;
-                foreach (var move in moves)
-                {
-                    MakeTestMove(move);
-                    int value = AlphaBeta(depth - 1, alpha, beta);
-                    UndoTestMove();
-                    bestValue = Math.Min(bestValue, value);
-                    beta = Math.Min(beta, value);
-                    if (alpha >= beta) return bestValue;
-                }
-                return bestValue;
-            }
-            else return value.GetValueBoard(Board);
+            return 0;
+            //IEnumerable<Move> moves = AllLegalMovesFor(CurrentPlayer);
+            //if (!moves.Any()) return (CurrentPlayer == Player.Black) ? -9999 : 9999;
+            //if (depth == 0) return value.GetValueBoard(Board);
+            //if (CurrentPlayer == Player.Black)
+            //{
+            //    int bestValue = -9999;
+            //    foreach (var move in moves)
+            //    {
+            //        MakeTestMove(move);
+            //        int value = AlphaBeta(depth - 1, alpha, beta);
+            //        UndoTestMove();
+            //        bestValue = Math.Max(bestValue, value);
+            //        alpha = Math.Max(alpha, value);
+            //        if (alpha >= beta) return bestValue;
+            //    }
+            //    return bestValue;
+            //}
+            //else if (CurrentPlayer == Player.White)
+            //{
+            //    int bestValue = 9999;
+            //    foreach (var move in moves)
+            //    {
+            //        MakeTestMove(move);
+            //        int value = AlphaBeta(depth - 1, alpha, beta);
+            //        UndoTestMove();
+            //        bestValue = Math.Min(bestValue, value);
+            //        beta = Math.Min(beta, value);
+            //        if (alpha >= beta) return bestValue;
+            //    }
+            //    return bestValue;
+            //}
+            //else return value.GetValueBoard(Board);
         }
         #endregion
     }

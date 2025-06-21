@@ -42,6 +42,20 @@ check_game_status(Position,Color,Counter) :-
 	;	write('SAFE'), nl
 	).
 
+check_game_status(Position,Color,Counter, Status) :-
+	(   is_checkmate(Color, Position) ->
+	    Status = checkmate
+	;   is_stalemate(Color, Position) ->
+	    Status = stalemate
+	;   in_check(Color, Position) ->
+	    Status = check
+	;	is_threefold_repetition(Position, Color) ->
+		Status = draw
+	;	is_fifty_move(Counter) ->
+		Status = draw
+	;	Status = safe
+	).
+
 % Get the current board postion
 get_current_board(Position, Color, Counter) :-
 	board(TempPosition, Color, Counter),
