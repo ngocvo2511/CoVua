@@ -12,6 +12,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using ChessUI.Menus;
+using SbsSW.SwiPlCs;
 
 namespace ChessUI
 {
@@ -495,11 +497,10 @@ namespace ChessUI
             {
                 // Chuyển đổi tọa độ bàn cờ sang số 0-63
                 int fromPos = (7 - move.FromPos.Row) * 8 + move.FromPos.Column;
-
                 int toPos = (7 - move.ToPos.Row) * 8 + move.ToPos.Column;
 
                 // Thực hiện nước đi trong Prolog
-                if (PrologEngine.MakeMove(fromPos, toPos, out var status))
+                if (PrologEngine.MakeMove(fromPos, toPos, out var status, out var needsPromotion))
                 {
                     HandleMove(move);
 
@@ -517,8 +518,75 @@ namespace ChessUI
                         RaiseGameOverEvent(gameState);
                     }
                 }
+                else if (needsPromotion)
+                {
+                    // Prolog đã xác định đây là nước đi phong cấp, gọi UI phong cấp
+                    HandlePromotion(move.FromPos, move.ToPos);
+                }
             }
         }
+
+        private void HandlePromotion(Position from, Position to)
+        {
+            pieceImages[to.Row, to.Column].Source = Images.GetImage(gameState.CurrentPlayer, PieceType.Pawn);
+            pieceImages[from.Row, from.Column].Source = null;
+
+            PromotionMenu promMenu = new PromotionMenu(gameState.CurrentPlayer);
+            MenuContainer.Content = promMenu;
+
+            promMenu.PieceSelected += type =>
+            {
+                MenuContainer.Content = null;
+
+                // Gửi lựa chọn phong cấp vào Prolog
+                // Replace the switch expression with a traditional switch statement to comply with C# 7.3
+                string prologType;
+                switch (type)
+                {
+                    case PieceType.Queen:
+                        prologType = "queen";
+                        break;
+                    case PieceType.Rook:
+                        prologType = "rook";
+                        break;
+                    case PieceType.Bishop:
+                        prologType = "bishop";
+                        break;
+                    case PieceType.Knight:
+                        prologType = "knight";
+                        break;
+                    default:
+                        prologType = "queen";
+                        break;
+                }
+
+                // Chuyển đổi tọa độ bàn cờ sang số 0-63
+                int fromPos = (7 - from.Row) * 8 + from.Column;
+                int toPos = (7 - to.Row) * 8 + to.Column;
+
+                // Thực hiện nước đi phong cấp trong Prolog
+                if (PrologEngine.MakeMoveWithPromotion(fromPos, toPos, prologType, out var status))
+                {
+                    // Cập nhật lại bàn cờ và giao diện
+                    Move promMove = new PawnPromotion(from, to, type);
+                    HandleMove(promMove);
+
+                    WarningTextBlock.Text = status == "CHECK" ? "Chiếu tướng!" : null;
+
+                    if (status == "CHECKMATE" || status == "STALEMATE")
+                    {
+                        UnableClick();
+                        moveList = new Stack<Tuple<Move, Piece>>(gameState.Moved.ToArray());
+                        HideHighlights();
+                        CellGrid.IsEnabled = false;
+                        if (redTimer != null) StopTimer();
+                        RaiseGameOverEvent(gameState);
+                    }
+                }
+            };
+        }
+
+
         private void DrawCapturedGrid(Piece piece)
         {
             if (piece == null) return;
@@ -819,6 +887,20 @@ namespace ChessUI
         {
             RoutedEventArgs args = new RoutedPropertyChangedEventArgs<GameState>(null, gameState, GameOverEvent);
             RaiseEvent(args);
+        }
+
+        public static readonly RoutedEvent PawnPromotionEvent = EventManager.RegisterRoutedEvent(
+"PawnPromotion", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(GameUserControl));
+
+        public event RoutedEventHandler PawnPromotion
+        {
+            add { AddHandler(PawnPromotionEvent, value); }
+            remove { RemoveHandler(PawnPromotionEvent, value); }
+        }
+
+        protected void RaisePawnPromotionEvent()
+        {
+            RaiseEvent(new RoutedEventArgs(PawnPromotionEvent));
         }
         #endregion
     }

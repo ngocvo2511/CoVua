@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SbsSW.SwiPlCs;
+using SbsSW.SwiPlCs.Exceptions;
 
 namespace ChessLogic
 {
     public class PrologEngine
     {
         private static bool _isInitialized = false;
-
         public static void Initialize(string prologFile, bool isAI, Player color)
         {
             if (!_isInitialized)
@@ -95,24 +95,65 @@ namespace ChessLogic
             return legalMoves;
         }
 
-        public static bool MakeMove(int fromPos, int toPos, out string status)
+        public static bool MakeMove(int fromPos, int toPos, out string status, out bool needsPromotion)
         {
             status = null;
+            needsPromotion = false;
             try
             {
                 using (var q = new PlQuery($"place_piece({fromPos}, {toPos}, Status)"))
                 {
                     if (q.NextSolution())
                     {
-                        status = q.Variables["Status"].ToString().ToUpper(); // SAFE, CHECK, ...
+                        status = q.Variables["Status"].ToString().ToUpper();
                         return true;
                     }
                 }
             }
-            catch
+            catch (PlException ex)
             {
-                // Xử lý nếu có lỗi Prolog
+                // Kiểm tra xem có phải là lỗi phong cấp không
+                if (ex.Message.Contains("promotion_required"))
+                {
+                    needsPromotion = true;
+                    return false;
+                }
             }
+
+            return false;
+        }
+
+        public static bool MakeMoveWithPromotion(int fromPos, int toPos, string promotionPiece, out string status)
+        {
+            status = null;
+            try
+            {
+                Console.WriteLine($"Attempting promotion: from={fromPos}, to={toPos}, piece={promotionPiece}");
+                using (var q = new PlQuery($"place_piece_with_promotion({fromPos}, {toPos}, '{promotionPiece}', Status)"))
+                {
+                    if (q.NextSolution())
+                    {
+                        status = q.Variables["Status"].ToString().ToUpper();
+                        Console.WriteLine($"Promotion successful: {status}");
+                        return true;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Promotion failed: No solution found");
+                    }
+                }
+            }
+            catch (PlException ex)
+            {
+                // Handle any Prolog errors
+                Console.WriteLine($"Prolog error in promotion: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                // Handle any other errors
+                Console.WriteLine($"General error in promotion: {ex.Message}");
+            }
+
             return false;
         }
 

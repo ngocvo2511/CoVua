@@ -22,7 +22,13 @@ bot_move(FromPos, ToPos, Status) :-
     depth(Depth),
     minimax(Position, Color, Depth, BestMove, _BestValue),
     BestMove = [FromPos, ToPos],
-    place_piece(FromPos, ToPos, Status).
+    % Check if this is a promotion move
+    (   (find_piece_type(FromPos, pawn, Position, Color), is_promotion_move(FromPos, ToPos, Color, Position)) ->
+        % Use place_piece_with_promotion for promotion moves (AI defaults to queen)
+        place_piece_with_promotion(FromPos, ToPos, queen, Status)
+    ;   % Use normal place_piece for other moves
+        place_piece(FromPos, ToPos, Status)
+    ).
 
 % Main minimax entry point
 minimax(Position, Color, Depth, BestMove, BestValue) :-
@@ -36,7 +42,7 @@ minimax_ab(Position, Color, 0, _Alpha, _Beta, [0,0], Value) :-
 
 minimax_ab(Position, Color, Depth, Alpha, Beta, BestMove, BestValue) :-
     Depth > 0,
-    get_all_legal_moves(Color, Position, Moves),
+    get_all_legal_moves_with_promotion(Color, Position, Moves),
     (   Moves = [] ->
         evaluate_position(Position, Color, BestValue),
         BestMove = [0,0]
@@ -52,7 +58,13 @@ evaluate_moves([], _Position, _Color, _Depth, _Alpha, _Beta,
 evaluate_moves([Move|RestMoves], Position, Color, Depth, Alpha, Beta,
                CurrentBest, CurrentValue, BestMove, BestValue) :-
     Move = [From, To],
-    simulate_move(From, To, Color, Position, NewPosition),
+    % Check if this is a promotion move
+    (   (find_piece_type(From, pawn, Position, Color), is_promotion_move(From, To, Color, Position)) ->
+        % Use simulate_move_with_promotion for promotion moves (default to queen)
+        simulate_move_with_promotion(From, To, Color, Position, queen, NewPosition)
+    ;   % Use normal simulate_move for other moves
+        simulate_move(From, To, Color, Position, NewPosition)
+    ),
     invert(Color, OpponentColor),
     NewDepth is Depth - 1,
     minimax_ab(NewPosition, OpponentColor, NewDepth, Alpha, Beta, _OpponentMove, Value),

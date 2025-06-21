@@ -18,8 +18,16 @@ is_legal_move(From, To, Color, Position) :-
 	find_piece_type(From, Type, Position, Color),
 	legal_move_for_piece(From, To, Type, Color, Position),
 	% Then simulate the move and check if king is still safe
-	simulate_move(From, To, Color, Position, NewPosition),
-	not(in_check(Color, NewPosition)).
+	(   (Type = pawn, is_promotion_move(From, To, Color, Position)) ->
+	    % For promotion moves, check if any promotion can save the king
+	    (is_legal_move_with_promotion(From, To, Color, Position, queen) ;
+	     is_legal_move_with_promotion(From, To, Color, Position, rook) ;
+	     is_legal_move_with_promotion(From, To, Color, Position, bishop) ;
+	     is_legal_move_with_promotion(From, To, Color, Position, knight))
+	;   % For normal moves
+	    simulate_move(From, To, Color, Position, NewPosition),
+	    not(in_check(Color, NewPosition))
+	).
 
 % legal_move_for_piece: generate individual legal moves based on piece type
 legal_move_for_piece(From, To, pawn, Color, Position) :-
@@ -62,9 +70,39 @@ simulate_move(From, To, Color, Position, NewPosition) :-
 	    capture_piece(Position, OpponentColor, CapturedPawnPos, TempPosition),
 	    move_piece(TempPosition, Color, From, To, NewPosition)
 	;   % Check if this is a pawn promotion
-	    (Type = pawn, is_promotion_move(From, To, Color, Position), 
-			get_promotion_choice(PromotionPiece)) ->
-	    % Handle pawn promotion
+	    (Type = pawn, is_promotion_move(From, To, Color, Position)) ->
+	    % Handle pawn promotion - this should be handled by place_piece_with_promotion
+	    fail  % This should not be reached in normal place_piece
+	;   % Check if there's an opponent piece to capture
+	    (   occupied(To, OpponentColor, Position) ->
+	        % Capture move: remove opponent piece first, then move our piece
+	        capture_piece(Position, OpponentColor, To, TempPosition),
+	        move_piece(TempPosition, Color, From, To, NewPosition)
+	    ;   % Normal move: just move our piece
+	        move_piece(Position, Color, From, To, NewPosition)
+	    )
+	).
+
+% New predicate to handle moves with promotion choice
+simulate_move_with_promotion(From, To, Color, Position, PromotionPiece, NewPosition) :-
+	find_piece_type(From, Type, Position, Color),
+	invert(Color, OpponentColor),
+	% Check if this is a castling move
+	(   (Type = king, is_castling_move(Color, From, To)) ->
+	    % Handle castling
+	    castle_move(Position, Color, From, To, NewPosition)
+	;   % Check if this is an en passant move
+	    (Type = pawn, is_enpassant_move(From, To, Color, Position)) ->
+	    % Handle en passant: capture the pawn and move our pawn
+	    (   Color = white ->
+	        CapturedPawnPos is To - 8  % Black pawn is one rank below
+	    ;   CapturedPawnPos is To + 8  % White pawn is one rank above
+	    ),
+	    capture_piece(Position, OpponentColor, CapturedPawnPos, TempPosition),
+	    move_piece(TempPosition, Color, From, To, NewPosition)
+	;   % Check if this is a pawn promotion
+	    (Type = pawn, is_promotion_move(From, To, Color, Position)) ->
+	    % Handle pawn promotion with given piece type
 	    (   occupied(To, OpponentColor, Position) ->
 	        % Promotion with capture
 	        capture_piece(Position, OpponentColor, To, TempPosition),
@@ -92,6 +130,24 @@ get_all_legal_moves(Color, Position, LegalMoves) :-
 	         find_piece_type(From, Type, Position, Color),
 	         legal_move_for_piece(From, To, Type, Color, Position),
 	         is_legal_move(From, To, Color, Position)),
+	        LegalMoves).
+
+% get_all_legal_moves_with_promotion: get all legal moves including promotion options
+get_all_legal_moves_with_promotion(Color, Position, LegalMoves) :-
+	findall([From,To], 
+	        (get_half(Position, Half, Color),
+	         get_piece_position(Half, From, _),
+	         find_piece_type(From, Type, Position, Color),
+	         legal_move_for_piece(From, To, Type, Color, Position),
+	         (   (Type = pawn, is_promotion_move(From, To, Color, Position)) ->
+	             % For promotion moves, check if any promotion is legal
+	             (is_legal_move_with_promotion(From, To, Color, Position, queen) ;
+	              is_legal_move_with_promotion(From, To, Color, Position, rook) ;
+	              is_legal_move_with_promotion(From, To, Color, Position, bishop) ;
+	              is_legal_move_with_promotion(From, To, Color, Position, knight))
+	         ;   % For normal moves
+	             is_legal_move(From, To, Color, Position)
+	         )),
 	        LegalMoves).
 
 % check if the given color is in checkmate
@@ -195,6 +251,34 @@ pawn_move(From,white,Position,To):-
 	Check is From + 1,
 	member(Check,EnpassantList).
 	
+pawn_move(From,white,Position,To):-
+	To is From + 16, % double move from starting position
+	not(invalid_field(To)),
+	unoccupied(To,Position),
+	unoccupied(From + 8,Position),
+	From >= 8, From =< 15. % starting row for white pawns
+
+% White pawn promotion moves
+pawn_move(From,white,Position,To):-
+	To is From + 8,  % move forward to promotion rank
+	not(invalid_field(To)),
+	unoccupied(To,Position),
+	is_promotion_rank(To, white).  % Moving to 8th rank
+
+pawn_move(From,white,Position,To):-
+	To is From + 7,  % capture diagonal left to promotion rank
+	not(invalid_field(To)),
+	not(crosses_edge(From,To,7)),
+	occupied(To,black,Position),
+	is_promotion_rank(To, white).  % Moving to 8th rank
+
+pawn_move(From,white,Position,To):-
+	To is From + 9,  % capture diagonal right to promotion rank
+	not(invalid_field(To)),
+	not(crosses_edge(From,To,9)),
+	occupied(To,black,Position),
+	is_promotion_rank(To, white).  % Moving to 8th rank
+
 pawn_move(From,white,Position,To):-
 	To is From + 16, % double move from starting position
 	not(invalid_field(To)),
@@ -333,9 +417,20 @@ promote_pawn(Position, Color, PawnPos, PromotionPiece, NewPosition) :-
 	remove(PawnPos, PawnList, NewPawnList),
 	combine(Half, pawn, NewPawnList, TempHalf),
 	
-	% Add the promoted piece
-	extract(TempHalf, PromotionPiece, PieceList),
-	combine(TempHalf, PromotionPiece, [PawnPos|PieceList], NewHalf),
+	% Add the promoted piece based on type
+	(   PromotionPiece = queen ->
+	    extract(TempHalf, queen, QueenList),
+	    combine(TempHalf, queen, [PawnPos|QueenList], NewHalf)
+	;   PromotionPiece = rook ->
+	    extract(TempHalf, rook, RookList),
+	    combine(TempHalf, rook, [PawnPos|RookList], NewHalf)
+	;   PromotionPiece = bishop ->
+	    extract(TempHalf, bishop, BishopList),
+	    combine(TempHalf, bishop, [PawnPos|BishopList], NewHalf)
+	;   PromotionPiece = knight ->
+	    extract(TempHalf, knight, KnightList),
+	    combine(TempHalf, knight, [PawnPos|KnightList], NewHalf)
+	),
 	
 	% Update the position
 	update_half(Position, NewHalf, Color, NewPosition).
@@ -351,6 +446,15 @@ get_promotion_choice(PromotionPiece) :-
     ;   Input = 'k' -> PromotionPiece = knight
     ;   (write('Invalid choice, promoting to queen.'), nl,
         PromotionPiece = queen)
+    ).
+
+% New predicate to handle promotion with given piece type
+get_promotion_choice(PromotionPiece, PieceType) :-
+    (   PieceType = 'q' -> PromotionPiece = queen
+    ;   PieceType = 'r' -> PromotionPiece = rook  
+    ;   PieceType = 'b' -> PromotionPiece = bishop
+    ;   PieceType = 'k' -> PromotionPiece = knight
+    ;   PromotionPiece = queen  % Default to queen
     ).
 
 % =================================
@@ -371,3 +475,12 @@ is_enpassant_move(From, To, black, Position) :-
     get_half(Position, half_position(_,_,_,_,_,_,_,EnpassantList), black),
     member(OpponentPawnPos, EnpassantList),  % Get opponent pawn position
     abs(To - OpponentPawnPos) =:= 8.     % Target square is 8 squares away from opponent pawn
+
+% Check if a promotion move is legal with specific piece
+is_legal_move_with_promotion(From, To, Color, Position, PromotionPiece) :-
+	% First check if the basic move is valid
+	find_piece_type(From, Type, Position, Color),
+	legal_move_for_piece(From, To, Type, Color, Position),
+	% Then simulate the move with promotion and check if king is still safe
+	simulate_move_with_promotion(From, To, Color, Position, PromotionPiece, NewPosition),
+	not(in_check(Color, NewPosition)).

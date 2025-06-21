@@ -150,6 +150,10 @@
     <Reference Include="MahApps.Metro.IconPacks.Zondicons, Version=5.0.0.0, Culture=neutral, PublicKeyToken=0c0d510f9915137a, processorArchitecture=MSIL">
       <HintPath>..\packages\MahApps.Metro.IconPacks.Zondicons.5.1.0\lib\net47\MahApps.Metro.IconPacks.Zondicons.dll</HintPath>
     </Reference>
+    <Reference Include="SwiPlCs, Version=1.1.60605.0, Culture=neutral, PublicKeyToken=03ea137181587c56, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\lib\SwiPlCs.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Web" />
@@ -174,6 +178,9 @@
     </ApplicationDefinition>
     <Compile Include="GameUserControl.xaml.cs">
       <DependentUpon>GameUserControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Menus\PromotionMenu.xaml.cs">
+      <DependentUpon>PromotionMenu.xaml</DependentUpon>
     </Compile>
     <Compile Include="Utils\Images.cs" />
     <Compile Include="Utils\Sound.cs" />
@@ -224,6 +231,10 @@
     <Page Include="Menus\PauseMenu.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Menus\PromotionMenu.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Menus\SearchingMatchMenu.xaml">
       <Generator>MSBuild:Compile</Generator>

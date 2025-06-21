@@ -242,6 +242,7 @@ namespace ChessUI
         {
             Sound.PlayButtonClickSound();
             CreateMainMenu();
+            PrologEngine.Cleanup();
         }
         #endregion
 

@@ -32,8 +32,19 @@ game_mode(cxc) :- !.
 pick_piece(Pos, LegalMoves) :-
 	board(Position, Color, _),
 	find_piece_color(Pos, Color, Position),
-	% find_piece_type(Pos, Type, Position, Color),
-	findall(To, is_legal_move(Pos, To, Color, Position), LegalMoves).
+	find_piece_type(Pos, Type, Position, Color),
+	findall(To, 
+		(legal_move_for_piece(Pos, To, Type, Color, Position),
+		 (   (Type = pawn, is_promotion_move(Pos, To, Color, Position)) ->
+		     % For promotion moves, check if any promotion is legal
+		     (is_legal_move_with_promotion(Pos, To, Color, Position, queen) ;
+		      is_legal_move_with_promotion(Pos, To, Color, Position, rook) ;
+		      is_legal_move_with_promotion(Pos, To, Color, Position, bishop) ;
+		      is_legal_move_with_promotion(Pos, To, Color, Position, knight))
+		 ;   % For normal moves
+		     is_legal_move(Pos, To, Color, Position)
+		 )), 
+		LegalMoves).
 
 % move piece from From to To with full validation
 place_piece(From, To) :-
@@ -65,9 +76,41 @@ place_piece(From, To, Status) :-
 	% Check if it's a legal move
 	is_legal_move(From, To, Color, Position),
 	
+	% Check if this is a pawn promotion move
+	(   (find_piece_type(From, pawn, Position, Color), is_promotion_move(From, To, Color, Position)) ->
+	    % This is a promotion move, but we need the promotion piece choice
+	    throw(error(promotion_required, context(place_piece, 'Pawn promotion requires piece choice')))
+	;   % Normal move processing - continue with existing logic
+	    true
+	),
+	
 	% Make the move, wrap this with state(place) to make sure only this allow to print to screen
 	asserta(state(place)),
 	simulate_move(From, To, Color, Position, NewPosition),
+	retract(state(place)),
+	
+	% Update fifty-move counter
+	update_fifty_move_counter(From, To, Position, Color, Counter, NewCounter),
+	
+	% Switch to opposite player's turn
+	invert(Color, NextColor),
+	add_to_history(NewPosition, NextColor, NewCounter),
+	% Check for game ending conditions
+	check_game_status(NewPosition, NextColor, NewCounter, Status),
+	
+	retract(board(Position, Color, Counter)),
+	asserta(board(NewPosition, NextColor, NewCounter)).
+
+% New predicate to handle pawn promotion with given piece type
+place_piece_with_promotion(From, To, PromotionPiece, Status) :-
+	board(Position, Color, Counter),
+
+	% Check if it's a legal move with promotion
+	is_legal_move_with_promotion(From, To, Color, Position, PromotionPiece),
+	
+	% Make the move with promotion
+	asserta(state(place)),
+	simulate_move_with_promotion(From, To, Color, Position, PromotionPiece, NewPosition),
 	retract(state(place)),
 	
 	% Update fifty-move counter
