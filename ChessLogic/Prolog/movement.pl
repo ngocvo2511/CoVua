@@ -198,8 +198,9 @@ pawn_move(From,white,Position,To):-
 pawn_move(From,white,Position,To):-
 	To is From + 16, % double move from starting position
 	not(invalid_field(To)),
+	OneSquareForward is From + 8,
 	unoccupied(To,Position),
-	unoccupied(From + 8,Position),
+	unoccupied(OneSquareForward,Position),
 	From >= 8, From =< 15. % starting row for white pawns
 
 pawn_move(From,black,Position,To):-
@@ -236,8 +237,9 @@ pawn_move(From,black,Position,To):-
 pawn_move(From,black,Position,To):-
 	To is From - 16, % double move from starting position
 	not(invalid_field(To)),
-	unoccupied(To,Position),
-	unoccupied(From - 8,Position),
+	OneSquareForward is From - 8, % square immediately in front
+	unoccupied(OneSquareForward,Position), % must be clear one square ahead
+	unoccupied(To,Position), % destination must also be clear
 	From >= 48, From =< 55. % starting row for black pawns
 
 % =================================

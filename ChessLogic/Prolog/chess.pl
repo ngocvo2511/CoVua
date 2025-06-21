@@ -30,10 +30,18 @@ game_mode(cxc) :- !.
 
 % returns list of all legal moves for piece at Pos
 pick_piece(Pos, LegalMoves) :-
-	board(Position, Color, _),
-	find_piece_color(Pos, Color, Position),
-	% find_piece_type(Pos, Type, Position, Color),
-	findall(To, is_legal_move(Pos, To, Color, Position), LegalMoves).
+	board(Position, CurrentColor, _),
+	(   find_piece_color(Pos, PieceColor, Position) ->
+	    % There is a piece at this position
+	    (   PieceColor = CurrentColor ->
+	        % It's the current player's piece, find legal moves
+	        findall(To, is_legal_move(Pos, To, PieceColor, Position), LegalMoves)
+	    ;   % It's the opponent's piece
+	        LegalMoves = []
+	    )
+	;   % No piece at this position
+	    LegalMoves = []
+	).
 
 % move piece from From to To with full validation
 place_piece(From, To) :-
@@ -98,9 +106,17 @@ start :-
 		bot_move
 	), fail.
 
+% Initialize the game for web interface
 init :-
+	retractall(human(_)),
+	retractall(board(_,_,_)),
+	retractall(state(_)),
+	retractall(history(_)),
+	retractall(depth(_)),
 	set_position(begin),
 	% Initialize default depth if not set
-	(depth(_) -> true ; asserta(depth(3))).
+	asserta(depth(3)),
+	% Set game mode (human vs computer by default)
+	asserta(human(white)).
 
 
