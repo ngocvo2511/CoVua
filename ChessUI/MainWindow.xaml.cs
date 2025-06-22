@@ -26,7 +26,7 @@ namespace ChessUI
     {
         GameUserControl gameUserControl;
         private SettingsModel settingsModel = new SettingsModel();
-
+        SaveSlotControl saveloadSlotControl;
         GameOverMenu gameOverMenu;
 
         bool onGame = false;
@@ -51,7 +51,7 @@ namespace ChessUI
             mainMenu.InstructionsButtonClicked += MainMenu_InstructionsButtonClicked;
             mainMenu.SettingsButtonClicked += SettingsButtonClicked;
             mainMenu.HistoryButtonClicked += MainMenu_HistoryButtonClicked;
-            //mainMenu.LoadButtonClicked += MainMenu_LoadButton_Clicked;
+            mainMenu.LoadButtonClicked += MainMenu_LoadButton_Clicked;
             mainMenu.CloseAppButtonClicked += CloseAppButtonClicked;
 
             mainWindowGrid.Children.Clear();
@@ -90,11 +90,11 @@ namespace ChessUI
         //    CreateHistoryMenu();
         //}
 
-        //private void MainMenu_LoadButton_Clicked(object sender, RoutedEventArgs e)
-        //{
-        //    Sound.PlayButtonClickSound();
-        //    CreateLoadMenu();
-        //}
+        private void MainMenu_LoadButton_Clicked(object sender, RoutedEventArgs e)
+        {
+            Sound.PlayButtonClickSound();
+            CreateLoadMenu();
+        }
         #endregion
 
         #region SelectGameModeMenu
@@ -254,7 +254,7 @@ namespace ChessUI
             color = settingsModel.HumanFirst ? Player.White : Player.Black;
             gameUserControl = new GameUserControl(color, settingsModel.IsTimeLimit ? settingsModel.TimeLimit * 60 : 0, true, difficulty);
             gameUserControl.PauseButtonClicked += PauseButtonClicked;
-            //gameUserControl.SaveButtonClicked += SaveButtonClicked;
+            gameUserControl.SaveButtonClicked += SaveButtonClicked;
             gameUserControl.GameOver += OnGameOver;
             gameUserControl.CloseAppButtonClicked += CloseAppButtonClicked;
 
@@ -271,7 +271,7 @@ namespace ChessUI
             color = settingsModel.HumanFirst ? Player.White : Player.Black;
             gameUserControl = new GameUserControl(color, settingsModel.IsTimeLimit ? settingsModel.TimeLimit * 60 : 0, false);
             gameUserControl.PauseButtonClicked += PauseButtonClicked;
-            //gameUserControl.SaveButtonClicked += SaveButtonClicked;
+            gameUserControl.SaveButtonClicked += SaveButtonClicked;
             gameUserControl.GameOver += OnGameOver;
             gameUserControl.CloseAppButtonClicked += CloseAppButtonClicked;
 
@@ -297,29 +297,29 @@ namespace ChessUI
         //#endregion
 
         #region SaveMenu
-        //private void CreateSaveMenu()
-        //{
-        //    saveloadSlotControl = new SaveSlotControl(gameUserControl.gameState);
-        //    saveloadSlotControl.CloseButtonClicked += ContinueButtonClicked;
+        private void CreateSaveMenu()
+        {
+            saveloadSlotControl = new SaveSlotControl(gameUserControl.gameState);
+            saveloadSlotControl.CloseButtonClicked += ContinueButtonClicked;
 
-        //    mainWindowGrid.Children.Add(saveloadSlotControl);
-        //}
+            mainWindowGrid.Children.Add(saveloadSlotControl);
+        }
         #endregion
 
         #region LoadMenu
-        //private void CreateLoadMenu()
-        //{
-        //    saveloadSlotControl = new SaveSlotControl();
-        //    saveloadSlotControl.CloseButtonClicked += CloseButtonClicked;
-        //    saveloadSlotControl.SelectedLoadSlot += SelectedLoadSlot_Clicked;
+        private void CreateLoadMenu()
+        {
+            saveloadSlotControl = new SaveSlotControl();
+            saveloadSlotControl.CloseButtonClicked += CloseButtonClicked;
+            //saveloadSlotControl.SelectedLoadSlot += SelectedLoadSlot_Clicked;
 
-        //    mainWindowGrid.Children.Add(saveloadSlotControl);
-        //}
+            mainWindowGrid.Children.Add(saveloadSlotControl);
+        }
 
         //private void SelectedLoadSlot_Clicked(object sender, SaveSlotEventArgs e)
         //{
         //    Sound.PlayButtonClickSound();
-        //    GameStateForLoad gameStateForLoad = SaveService.Load(e.FilePath);
+        //    //GameStateForLoad gameStateForLoad = SaveService.Load(e.FilePath);
         //    CreateViewGameLoad(gameStateForLoad);
         //}
         #endregion
@@ -344,12 +344,12 @@ namespace ChessUI
         }
 
 
-        //private void SaveButtonClicked(object sender, RoutedEventArgs e)
-        //{
-        //    if (time != 0) gameUserControl.StopTimer();
-        //    Sound.PlayButtonClickSound();
-        //    CreateSaveMenu();
-        //}
+        private void SaveButtonClicked(object sender, RoutedEventArgs e)
+        {
+            if (time != 0) gameUserControl.StopTimer();
+            Sound.PlayButtonClickSound();
+            CreateSaveMenu();
+        }
         private void PauseButtonClicked(object sender, RoutedEventArgs e)
         {
             Sound.PlayButtonClickSound();
