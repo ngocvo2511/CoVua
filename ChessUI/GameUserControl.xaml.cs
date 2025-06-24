@@ -61,7 +61,27 @@ namespace ChessUI
 
             if (gameState is GameStateAI && color == Player.Black)
             {
-                StartAIMoveWithDelay();
+                var result = PrologEngine.AiMove();
+                if (result.HasValue)
+                {
+                    var (status, from, to) = result.Value;
+                    //await Task.Run(() => AI.AiMove(cts.Token), cts.Token);
+                    gameState.MakeMove(new NormalMove(Position.IntToPosition(from), Position.IntToPosition(to)));
+                    gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
+                    isRedTurn = !isRedTurn;
+                    if (redTimer != null) SwitchTurn();
+
+                    WarningTextBlock.Text = status == "CHECK" ? "Chiếu tướng!" : null;
+                    TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
+                    DrawCapturedGrid(gameState.CapturedPiece);
+                    DrawBoard(gameState.Board);
+                    ShowPrevMove(gameState.Moved.First().Item1);
+                    Sound.PlayMoveSound();
+                }
+                else
+                {
+                    Console.WriteLine("Không thể thực hiện bot_move.");
+                }
             }
         }
         //public GameUserControl(GameStateForLoad gameStateForLoad)
@@ -510,6 +530,7 @@ namespace ChessUI
 
                     if (gameStatus == "CHECKMATE" || gameStatus == "STALEMATE")
                     {
+                        gameState.Result = Result.Win(gameState.CurrentPlayer.Opponent(), gameStatus == "CHECKMATE" ? EndReason.Checkmate : EndReason.Stalemate);
                         UnableClick();
                         moveList = new Stack<Tuple<Move, Piece>>(gameState.Moved.ToArray());
                         HideHighlights();

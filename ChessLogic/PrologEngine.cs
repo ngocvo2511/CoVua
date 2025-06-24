@@ -28,21 +28,10 @@ namespace ChessLogic
 
             if (isAI)
             {
-                if(color == Player.White)
+                if (!PlQuery.PlCall("game_mode(hxc)."))
                 {
-                    if (!PlQuery.PlCall("game_mode(hxc)."))
-                    {
-                        throw new Exception("Không thể khởi tạo bàn cờ.");
-                    }
+                    throw new Exception("Không thể khởi tạo bàn cờ.");
                 }
-                else
-                {
-                    if (!PlQuery.PlCall("game_mode(cxh)."))
-                    {
-                        throw new Exception("Không thể khởi tạo bàn cờ.");
-                    }
-                }
-
             }
             else
             {
