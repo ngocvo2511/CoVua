@@ -32,6 +32,14 @@ namespace ChessLogic
                 {
                     throw new Exception("Không thể khởi tạo bàn cờ.");
                 }
+
+                if (color == Player.Black)
+                {
+                    if (!PlQuery.PlCall("set_first_player(black)."))
+                    {
+                        throw new Exception("Không thể khởi tạo bàn cờ cho người chơi đen.");
+                    }
+                }
             }
             else
             {
@@ -40,6 +48,8 @@ namespace ChessLogic
                     throw new Exception("Không thể khởi tạo bàn cờ.");
                 }
             }
+
+
 
 
             // Khởi tạo bàn cờ

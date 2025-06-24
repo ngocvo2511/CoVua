@@ -354,13 +354,17 @@ namespace ChessUI
                 UndoCapturedGrid(gameState.CapturedPiece);
                 TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
                 WarningTextBlock.Text = gameState.Board.IsInCheck(gameState.CurrentPlayer) ? "Chiếu tướng!" : null;
-                gameState.noCapture.Pop();
+                //gameState.noCapture.Pop();
             }
             else
             {
                 PrologEngine.Undo();
-
+                if (gameState is GameStateAI gs)
+                {
+                    PrologEngine.Undo();
+                }
                 gameState.UndoMove();
+                gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
                 DrawBoard(gameState.Board);
                 if (gameState.Moved.Count != 0)
                 {
@@ -385,12 +389,12 @@ namespace ChessUI
 
             if (capture)
             {
-                gameState.noCapture.Push(0);
+                //gameState.noCapture.Push(0);
             }
             else
             {
-                if (gameState.noCapture.Count == 0) gameState.noCapture.Push(1);
-                else gameState.noCapture.Push(gameState.noCapture.Peek() + 1);
+                //if (gameState.noCapture.Count == 0) gameState.noCapture.Push(1);
+                //else gameState.noCapture.Push(gameState.noCapture.Peek() + 1);
             }
             gameState.Moved.Push(moveList.Pop());
             DrawBoard(gameState.Board);

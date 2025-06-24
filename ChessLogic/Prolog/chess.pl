@@ -3,9 +3,12 @@
 	board/3, % board state, color, fifty-move counter
 	state/1, % picking piece or placing piece
 	history/1, % moves history
-	depth/1.
+	depth/1,
+	first_player/1.
 
-	
+% Mặc định lượt đi đầu tiên là trắng
+first_player(white).
+
 :- [history].
 :- [board].
 :- [attack].
@@ -125,48 +128,17 @@ place_piece_with_promotion(From, To, PromotionPiece, Status) :-
 	retract(board(Position, Color, Counter)),
 	asserta(board(NewPosition, NextColor, NewCounter)).
 
-start :- 
-	(not(board(_, _, _)) -> init),
-	game_mode(hxc),
-	repeat,
-	board(_, Color, _),
-	(
-		human(Color) -> 
-			% Human player's turn
-			read(Query),
-			(   Query = pick_piece(Pos) ->
-					(pick_piece(Pos, LegalMoves) ->
-                        (LegalMoves = [] -> write('[]') ; write(LegalMoves))
-                    ;   write('[]')
-                    ), nl
-			;   Query = place_piece(Pos, To) ->
-					place_piece(Pos, To)
-			; 	Query = skip_turn ->
-					skip_turn
-			; 	Query = reset ->
-					reset
-			; 	Query = undo ->
-					(can_undo -> undo)
-			; 	Query = get_position -> 
-					get_current_board(Position, _Color, _Counter),
-					write(Position), nl
-			; 	Query = exit -> 
-					write('Exiting...'), nl, !, fail
-			; 	Query = game_mode(Mode) ->
-					(   member(Mode, [hxh, hxc, cxh, cxc]) ->
-						game_mode(Mode)
-					;   write('Invalid game mode!'), nl
-					)
-			; Query = _ ->
-					write('Invalid command!'), nl
-			)
-	;	% Computer player's turn
-		bot_move
-	), fail.
 
 init :-
-	set_position(begin),
+	% Lấy lượt đi đầu tiên từ first_player/1
+	first_player(Color),
+	set_position(begin, Color),
 	% Initialize default depth if not set
 	(depth(_) -> true ; asserta(depth(3))).
+
+% Đặt lượt đi đầu tiên
+set_first_player(Color) :-
+	retractall(first_player(_)),
+	assertz(first_player(Color)).
 
 

@@ -353,6 +353,7 @@ namespace ChessUI
 
         private void NewButtonClicked(object sender, RoutedEventArgs e)
         {
+            PrologEngine.Cleanup();
             Sound.PlayButtonClickSound();
             CreateSelectGameModeMenu();
         }
@@ -385,6 +386,7 @@ namespace ChessUI
 
         private void GameOverMenu_HomeButtonClicked(object sender, RoutedEventArgs e)
         {
+            PrologEngine.Cleanup();
             Sound.PlayButtonClickSound();
             CreateMainMenu();
         }
@@ -409,6 +411,7 @@ namespace ChessUI
 
         private void CloseApp(object sender, RoutedEventArgs e)
         {
+            PrologEngine.Cleanup();
             Application.Current.Shutdown();
         }
     }
