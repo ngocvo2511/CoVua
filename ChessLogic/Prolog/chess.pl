@@ -107,24 +107,20 @@ place_piece(From, To, Status) :-
 % New predicate to handle pawn promotion with given piece type
 place_piece_with_promotion(From, To, PromotionPiece, Status) :-
 	board(Position, Color, Counter),
-
+	% Lưu trạng thái hiện tại vào lịch sử trước khi thay đổi
 	% Check if it's a legal move with promotion
 	is_legal_move_with_promotion(From, To, Color, Position, PromotionPiece),
-	
 	% Make the move with promotion
 	asserta(state(place)),
 	simulate_move_with_promotion(From, To, Color, Position, PromotionPiece, NewPosition),
 	retract(state(place)),
-	
 	% Update fifty-move counter
 	update_fifty_move_counter(From, To, Position, Color, Counter, NewCounter),
-	
 	% Switch to opposite player's turn
 	invert(Color, NextColor),
 	add_to_history(NewPosition, NextColor, NewCounter),
 	% Check for game ending conditions
 	check_game_status(NewPosition, NextColor, NewCounter, Status),
-	
 	retract(board(Position, Color, Counter)),
 	asserta(board(NewPosition, NextColor, NewCounter)).
 

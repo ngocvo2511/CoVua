@@ -134,6 +134,12 @@ namespace ChessLogic
                     {
                         status = q.Variables["Status"].ToString().ToUpper();
                         Console.WriteLine($"Promotion successful: {status}");
+                        using (var qq = new PlQuery("current_predicate(undo/0)."))
+                        {
+                            Console.WriteLine(qq.NextSolution()
+                                ? "✅ undo/0 vẫn tồn tại."
+                                : "❌ undo/0 không tồn tại sau khi phong cấp.");
+                        }
                         return true;
                     }
                     else
@@ -141,6 +147,8 @@ namespace ChessLogic
                         Console.WriteLine("Promotion failed: No solution found");
                     }
                 }
+
+
             }
             catch (PlException ex)
             {
@@ -174,7 +182,7 @@ namespace ChessLogic
 
         public static bool Undo()
         {
-            return PlQuery.PlCall("undo.");
+            return PlQuery.PlCall("user:undo.");
         }
 
         public static bool IsGameOver()
