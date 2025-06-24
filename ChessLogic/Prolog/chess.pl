@@ -3,7 +3,8 @@
 	board/3, % board state, color, fifty-move counter
 	state/1, % picking piece or placing piece
 	history/1, % moves history
-	depth/1.
+	depth/1,
+	stack/3.
 
 	
 :- [history].

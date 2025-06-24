@@ -4,9 +4,9 @@ test_check :-
 	write('Testing check detection:'), nl,
 	board(Pos, _, _),
 	write('White king in check: '),
-	(in_check(white, Pos) -> write('Yes') ; write('No')), nl,
+	(in_check(Pos, white) -> write('Yes') ; write('No')), nl,
 	write('Black king in check: '),
-	(in_check(black, Pos) -> write('Yes') ; write('No')), nl.
+	(in_check(Pos, black) -> write('Yes') ; write('No')), nl.
 	
 test_pawn_promotion :-
 	only_king_and_pawns(Position),
@@ -21,8 +21,8 @@ test_threefold :-
 	set_position(Position,white).
 
 only_king_and_rooks(position(H1, H2)) :-
-    H1 = half_position([],[0, 7],[],[],[],[4],[queenside,kingside],[]),
-    H2 = half_position([],[56, 63],[],[],[],[60],[queenside,kingside],[]).
+    H1 = half_position([],[],[],[],[],[4],[queenside,kingside],[]),
+    H2 = half_position([],[8, 23],[],[],[],[60],[queenside,kingside],[]).
 	
 only_king_and_pawns(position(H1, H2)) :-
     H1 = half_position([51],[],[],[],[],[4],[queenside,kingside],[]),

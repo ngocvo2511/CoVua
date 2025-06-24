@@ -55,6 +55,6 @@ is_under_attack(Pos, Color, Position) :-
 	).
 
 % in_check: check if king of given color is in check
-in_check(Color, Position) :-
+in_check(Position, Color) :-
 	find_king(Position, Color, KingPos),
 	is_under_attack(KingPos, Color, Position).

@@ -277,9 +277,9 @@ class ChessGame {
             });
             
             const result = await response.json();
-            
-            if (result.success) {
+              if (result.success) {
                 const movesData = result.legalMoves;
+                this.log(`Raw legal moves data: "${movesData}"`);
                 this.legalMoves = this.parseLegalMoves(movesData);
                 
                 if (this.legalMoves.length > 0) {
@@ -287,34 +287,53 @@ class ChessGame {
                     this.highlightMoves();
                     this.log(`Selected piece at ${pos}, legal moves: [${this.legalMoves.join(', ')}]`);
                 } else {
-                    this.log(`No legal moves for piece at ${pos}`);
+                    this.log(`No legal moves for piece at ${pos} (parsed from: "${movesData}")`);
+                    this.clearSelection();
                 }
             } else {
                 this.log('Error selecting piece: ' + result.error);
+                this.clearSelection();
             }
         } catch (error) {
             this.log('Network error during piece selection: ' + error.message);
         } finally {
             this.showLoading(false);
         }
-    }
-    
-    parseLegalMoves(movesString) {
+    }    parseLegalMoves(movesString) {
         // Parse Prolog list format
-        // Handle formats like "[]", "[1,2,3]", or other variations
+        // Handle formats like "[]", "[1,2,3]", "[1, 2, 3]", or other variations
         
-        if (movesString === '[]' || movesString === '') {
+        this.log('Parsing legal moves: ' + movesString);
+        
+        if (!movesString || movesString === '[]' || movesString.trim() === '') {
+            this.log('Empty or null legal moves');
             return [];
         }
-          try {
-            // Try direct JSON parsing first
-            if (movesString.startsWith('[') && movesString.endsWith(']')) {
-                return JSON.parse(movesString);
+        
+        try {
+            // Clean up the string first
+            let cleanString = movesString.trim();
+            
+            // Handle Prolog canonical format: remove any extra whitespace and normalize
+            cleanString = cleanString.replace(/\s+/g, '');
+            
+            // Try direct JSON parsing first for simple cases like [1,2,3]
+            if (cleanString.startsWith('[') && cleanString.endsWith(']') && !cleanString.includes('(')) {
+                try {
+                    const result = JSON.parse(cleanString);
+                    this.log('JSON parse successful: [' + result.join(', ') + ']');
+                    return result;
+                } catch (e) {
+                    this.log('JSON parse failed: ' + e.message + ', trying regex approach');
+                }
             }
             
-            // Extract numbers from string
-            const matches = movesString.match(/\d+/g);
-            return matches ? matches.map(Number) : [];
+            // Extract all numbers from the string (handles any Prolog format)
+            const matches = cleanString.match(/\d+/g);
+            const result = matches ? matches.map(Number) : [];
+            
+            this.log('Regex parse result: [' + result.join(', ') + ']');
+            return result;
             
         } catch (error) {
             this.log('Error parsing legal moves: ' + error.message);
@@ -342,10 +361,11 @@ class ChessGame {
             }
         });
     }
-    
-    async makeMove(from, to) {
+      async makeMove(from, to) {
         this.showLoading(true);
         try {
+            this.log(`Attempting move: ${from} → ${to}`);
+            
             const response = await fetch('/place', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -353,7 +373,9 @@ class ChessGame {
             });
             
             const result = await response.json();
-              if (result.success) {
+            this.log(`Move response: ${JSON.stringify(result)}`);
+            
+            if (result.success) {
                 this.log(`Move executed: ${from} → ${to}`);
                 this.clearSelection();
                 this.moveCount++;
@@ -361,15 +383,23 @@ class ChessGame {
                 // Add visual feedback for the move
                 this.animateMove(from, to);
                 
+                // Refresh the board to show the new position
                 await this.refreshBoard();
+                
+                // Update game status
                 await this.updateGameStatus();
+                
+                // Update display
                 this.updateDisplay();
                 
             } else {
                 this.log('Error making move: ' + result.error);
+                // Clear selection if move failed
+                this.clearSelection();
             }
         } catch (error) {
             this.log('Network error during move: ' + error.message);
+            this.clearSelection();
         } finally {
             this.showLoading(false);
         }
