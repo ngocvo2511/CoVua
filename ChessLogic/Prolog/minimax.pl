@@ -69,6 +69,18 @@ prune(Color, Value, Alpha, Beta) :-
     ;   false
     ).
 
+minimax(position(half_position(_,_,_,_,_,[],_,_),_), Color, _Counter, _Move, _Depth, Value, _Alpha, _Beta) :-
+    (
+        Color = white -> losing_value(white, Value)
+    ;   Color = black -> winning_value(black, Value)
+    ),!.
+
+minimax(position(_,half_position(_,_,_,_,_,[],_,_)), Color, _Counter, _Move, _Depth, Value, _Alpha, _Beta) :-
+    (
+        Color = white -> winning_value(white, Value)
+    ;   Color = black -> losing_value(black, Value)
+    ),!.
+
 minimax(Position, _Color, _Counter, move(64, 64), 0, Value, _Alpha, _Beta) :-
     %score(Position, Color, Counter, Value), 
     Position = position(WhiteHalf, BlackHalf),
