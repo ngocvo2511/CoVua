@@ -35,3 +35,7 @@ enpassant_position(position(H1, H2)) :-
 threefold_position(position(H1, H2)) :-
 	H1 = half_position([],[1],[],[],[],[4],[],[]),
     H2 = half_position([],[],[],[],[],[56],[],[]).
+
+test_time :-
+	initial_pos(Position),
+	get_all_legal_moves(Position, white, _MoveList).

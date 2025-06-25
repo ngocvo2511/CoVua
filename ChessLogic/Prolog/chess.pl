@@ -116,7 +116,7 @@ init :-
 	retractall(depth(_)),
 	set_position(begin),
 	% Initialize default depth if not set
-	asserta(depth(3)),
+	asserta(depth(2)),
 	% Set game mode (human vs computer by default)
 	asserta(human(white)).
 

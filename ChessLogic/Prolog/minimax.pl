@@ -29,7 +29,7 @@ bot_move :-
     depth(Depth),
     losing_value(white,Alpha),
 	losing_value(black,Beta),
-    minimax(Position, Color, Counter, Move, Depth, Value, Alpha, Beta),
+    minimax(Position, Color, Counter, Move, Depth, _Value, Alpha, Beta),
     Move = move(From, To),
     place_piece(From, To),
     write('Bot played: '), write(From), write(' to '), write(To), nl.
@@ -69,7 +69,7 @@ prune(Color, Value, Alpha, Beta) :-
     ;   false
     ).
 
-minimax(Position, Color, Counter, move(64, 64), 0, Value, _Alpha, _Beta) :-
+minimax(Position, _Color, _Counter, move(64, 64), 0, Value, _Alpha, _Beta) :-
     %score(Position, Color, Counter, Value), 
     Position = position(WhiteHalf, BlackHalf),
     score_half(WhiteHalf, white, ValueWhite),

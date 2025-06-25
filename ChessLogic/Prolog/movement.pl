@@ -63,7 +63,7 @@ simulate_move(From, To, Color, Position, NewPosition) :-
 	    move_piece(TempPosition, Color, From, To, NewPosition)
 	;   % Check if this is a pawn promotion
 	    (Type = pawn, is_promotion_move(From, To, Color, Position), 
-			get_promotion_choice(PromotionPiece)) ->
+			get_promotion_choice(PromotionPiece, Color)) ->
 	    % Handle pawn promotion
 	    (   occupied(To, OpponentColor, Position) ->
 	        % Promotion with capture
@@ -148,7 +148,7 @@ crosses_edge(From,To,Direction) :-
 % one_step: from Field to Next through one step
 one_step(Field,Direction,Next,Color,Position):-	
 	Next is Field + Direction,
-	not(invalid_field(Next)),
+	valid_field(Next),
 	not(crosses_edge(Field,Next,Direction)),
 	not(occupied(Next,Color,Position)).
 
@@ -161,15 +161,15 @@ multiple_steps(Field,Direction,Next,Color,Position):-
 	not(occupied(FieldNew,Oppo,Position)),
 	multiple_steps(FieldNew,Direction,Next,Color,Position).
 
-% Pawn movement rules (adjusted for 0-63 board)
+% Pawn movement rules =
 pawn_move(From,white,Position,To):-
 	To is From + 7,  % capture diagonal left
-	not(invalid_field(To)),
+	valid_field(To),
 	not(crosses_edge(From,To,7)),
 	occupied(To,black,Position).
 pawn_move(From,white,Position,To):-
 	To is From + 7,  % enpassant left
-	not(invalid_field(To)),
+	valid_field(To),
 	not(crosses_edge(From,To,7)),
 	get_half(Position, half_position(_,_,_,_,_,_,_,EnpassantList), white),
 	Check is From - 1,
@@ -177,17 +177,17 @@ pawn_move(From,white,Position,To):-
 	
 pawn_move(From,white,Position,To):-
 	To is From + 8,  % move forward
-	not(invalid_field(To)),
+	valid_field(To),
 	unoccupied(To,Position).
 	
 pawn_move(From,white,Position,To):-
 	To is From + 9,  % capture diagonal right
-	not(invalid_field(To)),
+	valid_field(To),
 	not(crosses_edge(From,To,9)),
 	occupied(To,black,Position).
 pawn_move(From,white,Position,To):-
 	To is From + 9,  % enpassant right
-	not(invalid_field(To)),
+	valid_field(To),
 	not(crosses_edge(From,To,9)),
 	get_half(Position, half_position(_,_,_,_,_,_,_,EnpassantList), white),
 	Check is From + 1,
@@ -195,19 +195,20 @@ pawn_move(From,white,Position,To):-
 	
 pawn_move(From,white,Position,To):-
 	To is From + 16, % double move from starting position
-	not(invalid_field(To)),
+	valid_field(To),
 	unoccupied(To,Position),
-	unoccupied(From + 8,Position),
+	OneSquareForward is From + 8,
+	unoccupied(OneSquareForward, Position),
 	between(8, 15, From). % starting row for white pawns
 
 pawn_move(From,black,Position,To):-
 	To is From - 7,  % capture diagonal right
-	not(invalid_field(To)),
+	valid_field(To),
 	not(crosses_edge(From,To,-7)),
 	occupied(To,white,Position).
 pawn_move(From,black,Position,To):-
 	To is From - 7,  % enpassant right
-	not(invalid_field(To)),
+	valid_field(To),
 	not(crosses_edge(From,To,-7)),
 	get_half(Position, half_position(_,_,_,_,_,_,_,EnpassantList), white),
 	Check is From + 1,
@@ -215,17 +216,17 @@ pawn_move(From,black,Position,To):-
 	
 pawn_move(From,black,Position,To):-
 	To is From - 8,  % move forward
-	not(invalid_field(To)),
+	valid_field(To),
 	unoccupied(To,Position).
 	
 pawn_move(From,black,Position,To):-
 	To is From - 9,  % capture diagonal left
-	not(invalid_field(To)),
+	valid_field(To),
 	not(crosses_edge(From,To,-9)),
 	occupied(To,white,Position).
 pawn_move(From,black,Position,To):-
 	To is From - 9,  % enpassant left
-	not(invalid_field(To)),
+	valid_field(To),
 	not(crosses_edge(From,To,-9)),
 	get_half(Position, half_position(_,_,_,_,_,_,_,EnpassantList), white),
 	Check is From - 1,
@@ -233,9 +234,10 @@ pawn_move(From,black,Position,To):-
 	
 pawn_move(From,black,Position,To):-
 	To is From - 16, % double move from starting position
-	not(invalid_field(To)),
+	valid_field(To),
 	unoccupied(To,Position),
-	unoccupied(From - 8,Position),
+	OneSquareForward is From - 8,
+	unoccupied(OneSquareForward,Position),
 	between(48, 55, From). % starting row for black pawns
 
 % =================================
@@ -341,7 +343,8 @@ promote_pawn(Position, Color, PawnPos, PromotionPiece, NewPosition) :-
 bot_promotion(queen).
 bot_promotion(knight).
 % promotion choice
-get_promotion_choice(PromotionPiece) :-
+get_promotion_choice(PromotionPiece, Color) :-
+	human(Color),
     state(place),
     write('Choose promotion piece (q/r/b/k): '),
     get_char(Input),
@@ -351,7 +354,10 @@ get_promotion_choice(PromotionPiece) :-
     ;   Input = 'k' -> PromotionPiece = knight
     ;   (write('Invalid choice, promoting to queen.'), nl,
         PromotionPiece = queen)
-    ).
+    ),!.
+
+get_promotion_choice(PromotionPiece, _Color) :-
+	bot_promotion(PromotionPiece).
 
 % =================================
 % Pawn enpassant

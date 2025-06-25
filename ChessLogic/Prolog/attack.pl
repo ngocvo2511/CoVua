@@ -15,14 +15,14 @@ pawn_attacks(PawnPos, white, AttackPos) :-
 	(   AttackPos is PawnPos + 7  % diagonal left attack
 	;   AttackPos is PawnPos + 9  % diagonal right attack
 	),
-	not(invalid_field(AttackPos)),
+	valid_field(AttackPos),
 	not(crosses_edge(PawnPos, AttackPos, AttackPos - PawnPos)).
 
 pawn_attacks(PawnPos, black, AttackPos) :-
 	(   AttackPos is PawnPos - 7  % diagonal right attack
 	;   AttackPos is PawnPos - 9  % diagonal left attack
 	),
-	not(invalid_field(AttackPos)),
+	valid_field(AttackPos),
 	not(crosses_edge(PawnPos, AttackPos, AttackPos - PawnPos)).
 
 % is_attacked_by_piece: check if position is attacked by specific piece type
@@ -44,7 +44,7 @@ can_attack(From, PieceType, Color, Position, To) :-
 	member(PieceType, [rook, bishop, queen]),
 	long_move(From, Color, PieceType, Position, To).
 
-% is_under_attack: main predicate to check if a position is under attack
+% main predicate to check if a position is under attack
 is_under_attack(Pos, Color, Position) :-
 	(   is_attacked_by_pawn(Pos, Color, Position)
 	;   is_attacked_by_piece(Pos, Color, Position, knight)
@@ -54,7 +54,7 @@ is_under_attack(Pos, Color, Position) :-
 	;   is_attacked_by_piece(Pos, Color, Position, king)
 	).
 
-% in_check: check if king of given color is in check
+% check if king of given color is in check
 in_check(Position, Color) :-
 	find_king(Position, Color, KingPos),
 	is_under_attack(KingPos, Color, Position).

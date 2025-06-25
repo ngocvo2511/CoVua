@@ -2,11 +2,9 @@
 % Board utilities
 % =================================
 
-% invalid_field(X): X is invalid position for 0-63 board
-invalid_field(X):-
-	X < 0,!.
-invalid_field(X):-
-	X > 63,!.
+% X is valid position for 0-63 board
+valid_field(X) :-
+	between(0, 63, X).
 
 % get_half: get half position for one side
 get_half(position(Half,_),Half,white).
@@ -36,7 +34,7 @@ occupied(Field,black,Position):-
 unoccupied(Field,Position):-
 	not(occupied(Field,white,Position)),
 	not(occupied(Field,black,Position)),
-	not(invalid_field(Field)).
+	valid_field(Field).
 
 % Invert color
 invert(white, black).
