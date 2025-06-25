@@ -43,11 +43,6 @@
                           Width="720"
                           Height="720"
                           MouseDown="BoardGrid_MouseDown">
-                        <UniformGrid x:Name="PieceGrid"
-                                     Rows="8"
-                                     Columns="8"
-                                     RenderOptions.BitmapScalingMode="HighQuality">
-                        </UniformGrid>
                         <UniformGrid x:Name="PosMovedGrid"
                                      Rows="8"
                                      Columns="8">
@@ -55,6 +50,11 @@
                         <UniformGrid x:Name="HighlightGrid"
                                      Rows="8"
                                      Columns="8">
+                        </UniformGrid>
+                        <UniformGrid x:Name="PieceGrid"
+                             Rows="8"
+                             Columns="8"
+                             RenderOptions.BitmapScalingMode="HighQuality">
                         </UniformGrid>
                         <ContentControl x:Name="MenuContainer"/>
 

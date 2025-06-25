@@ -24,7 +24,7 @@ namespace ChessUI
     {
         private readonly Image[,] pieceImages = new Image[8, 8];
         private readonly Rectangle[,] highlights = new Rectangle[8, 8];
-        private readonly Canvas[,] posMoved = new Canvas[8, 8];
+        private readonly Rectangle[,] posMoved = new Rectangle[8, 8];
         private Dictionary<Position, Move> moveCache = new Dictionary<Position, Move>();
         public GameState gameState { get; set; }
         private Position selectedPos = null;
@@ -421,9 +421,9 @@ namespace ChessUI
                     highlights[r, c] = highlight;
                     HighlightGrid.Children.Add(highlight);
 
-                    Canvas canvas = new Canvas() { };
-                    posMoved[r, c] = canvas;
-                    PosMovedGrid.Children.Add(canvas);
+                    Rectangle pos = new Rectangle() { };
+                    posMoved[r, c] = pos;
+                    PosMovedGrid.Children.Add(pos);
                 }
             }
         }
@@ -456,7 +456,7 @@ namespace ChessUI
             {
                 if (gameState.Board[to] != null)
                 {
-                    highlights[to.Row, to.Column].Fill = new SolidColorBrush(Color.FromArgb(150, 255, 0, 0));
+                    highlights[to.Row, to.Column].Fill = new SolidColorBrush(Color.FromArgb(255, 255, 0, 0));
                 }
                 else highlights[to.Row, to.Column].Fill = new SolidColorBrush(color);
             }
@@ -649,183 +649,16 @@ namespace ChessUI
             if (count > 0)
                 BlackCapturedGrid.Children.RemoveAt(count - 1);
         }
-        private void DrawNewPos(Canvas canvas, int row, int col)
-        {
-            SolidColorBrush solidColorBrush = (gameState.Board[row, col].Color == Player.Black) ? Brushes.DarkBlue : Brushes.Red;
-            Line topLeftArrow = new Line
-            {
-                X1 = 5,
-                Y1 = 0,
-                X2 = 25,
-                Y2 = 0,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(topLeftArrow);
-            Line sideTopLeftArrow = new Line
-            {
-                X1 = 5,
-                Y1 = 0,
-                X2 = 5,
-                Y2 = 20,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(sideTopLeftArrow);
-            Line topRightArrow = new Line
-            {
-                X1 = 55,
-                Y1 = 0,
-                X2 = 75,
-                Y2 = 0,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(topRightArrow);
-            Line sideTopRightArrow = new Line
-            {
-                X1 = 75,
-                Y1 = 0,
-                X2 = 75,
-                Y2 = 20,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(sideTopRightArrow);
-            Line bottomLeftArrow = new Line
-            {
-                X1 = 5,
-                Y1 = 70,
-                X2 = 25,
-                Y2 = 70,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(bottomLeftArrow);
-            Line sideBotLeftArrow = new Line
-            {
-                X1 = 5,
-                Y1 = 70,
-                X2 = 5,
-                Y2 = 50,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(sideBotLeftArrow);
-            Line bottomRightArrow = new Line
-            {
-                X1 = 55,
-                Y1 = 70,
-                X2 = 75,
-                Y2 = 70,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(bottomRightArrow);
-            Line sideBotRightArrow = new Line
-            {
-                X1 = 75,
-                Y1 = 70,
-                X2 = 75,
-                Y2 = 50,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(sideBotRightArrow);
-        }
-        private void DrawOldPos(Canvas canvas, int row, int col)
-        {
-            SolidColorBrush solidColorBrush = (gameState.Board[row, col].Color == Player.Black) ? Brushes.DarkBlue : Brushes.Red;
-            Line topLeftArrow = new Line
-            {
-                X1 = 20,
-                Y1 = 15,
-                X2 = 30,
-                Y2 = 15,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(topLeftArrow);
-            Line sideTopLeftArrow = new Line
-            {
-                X1 = 20,
-                Y1 = 15,
-                X2 = 20,
-                Y2 = 25,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(sideTopLeftArrow);
-            Line topRightArrow = new Line
-            {
-                X1 = 48,
-                Y1 = 15,
-                X2 = 58,
-                Y2 = 15,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(topRightArrow);
-            Line sideTopRightArrow = new Line
-            {
-                X1 = 58,
-                Y1 = 15,
-                X2 = 58,
-                Y2 = 25,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(sideTopRightArrow);
-            Line bottomLeftArrow = new Line
-            {
-                X1 = 20,
-                Y1 = 53,
-                X2 = 30,
-                Y2 = 53,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(bottomLeftArrow);
-            Line sideBotLeftArrow = new Line
-            {
-                X1 = 20,
-                Y1 = 53,
-                X2 = 20,
-                Y2 = 43,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(sideBotLeftArrow);
-            Line bottomRightArrow = new Line
-            {
-                X1 = 58,
-                Y1 = 53,
-                X2 = 48,
-                Y2 = 53,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(bottomRightArrow);
-            Line sideBotRightArrow = new Line
-            {
-                X1 = 58,
-                Y1 = 53,
-                X2 = 58,
-                Y2 = 43,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(sideBotRightArrow);
-        }
         public void ShowPrevMove(Move move)
         {
-            //DrawOldPos(posMoved[move.FromPos.Row, move.FromPos.Column], move.ToPos.Row, move.ToPos.Column);
-            //DrawNewPos(posMoved[move.ToPos.Row, move.ToPos.Column], move.ToPos.Row, move.ToPos.Column);
+            Color color = Color.FromArgb(155, 207, 255, 112);
+            posMoved[move.FromPos.Row, move.FromPos.Column].Fill = new SolidColorBrush(color);
+            posMoved[move.ToPos.Row, move.ToPos.Column].Fill = new SolidColorBrush(color);
         }
         public void HidePrevMove(Move move)
         {
-            posMoved[move.FromPos.Row, move.FromPos.Column].Children.Clear();
-            posMoved[move.ToPos.Row, move.ToPos.Column].Children.Clear();
+            posMoved[move.FromPos.Row, move.FromPos.Column].Fill = Brushes.Transparent;
+            posMoved[move.ToPos.Row, move.ToPos.Column].Fill =  Brushes.Transparent;
         }
         #region event
         public event RoutedEventHandler PauseButtonClicked
