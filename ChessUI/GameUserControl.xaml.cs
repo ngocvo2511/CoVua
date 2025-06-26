@@ -12,6 +12,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using ChessUI.Menus;
+using SbsSW.SwiPlCs;
 
 namespace ChessUI
 {
@@ -22,7 +24,7 @@ namespace ChessUI
     {
         private readonly Image[,] pieceImages = new Image[8, 8];
         private readonly Rectangle[,] highlights = new Rectangle[8, 8];
-        private readonly Canvas[,] posMoved = new Canvas[8, 8];
+        private readonly Rectangle[,] posMoved = new Rectangle[8, 8];
         private Dictionary<Position, Move> moveCache = new Dictionary<Position, Move>();
         public GameState gameState { get; set; }
         private Position selectedPos = null;
@@ -54,12 +56,32 @@ namespace ChessUI
             string rootPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\.."));
             string prologPath = System.IO.Path.Combine(rootPath, "ChessLogic", "Prolog", "chess.pl");
             PrologEngine.Initialize(prologPath, isAI, color);
-            Board board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
-            DrawBoard(board);
+            gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
+            DrawBoard(gameState.Board);
 
             if (gameState is GameStateAI && color == Player.Black)
             {
-                StartAIMoveWithDelay();
+                var result = PrologEngine.AiMove();
+                if (result.HasValue)
+                {
+                    var (status, from, to) = result.Value;
+                    //await Task.Run(() => AI.AiMove(cts.Token), cts.Token);
+                    gameState.MakeMove(new NormalMove(Position.IntToPosition(from), Position.IntToPosition(to)));
+                    gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
+                    isRedTurn = !isRedTurn;
+                    if (redTimer != null) SwitchTurn();
+
+                    WarningTextBlock.Text = status == "CHECK" ? "Chiếu tướng!" : null;
+                    TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
+                    DrawCapturedGrid(gameState.CapturedPiece);
+                    DrawBoard(gameState.Board);
+                    ShowPrevMove(gameState.Moved.First().Item1);
+                    Sound.PlayMoveSound();
+                }
+                else
+                {
+                    Console.WriteLine("Không thể thực hiện bot_move.");
+                }
             }
         }
         //public GameUserControl(GameStateForLoad gameStateForLoad)
@@ -242,26 +264,38 @@ namespace ChessUI
             UnableClick();
             if (gameState.Moved.Any()) HidePrevMove(gameState.Moved.First().Item1);
             gameState.MakeMove(move);
-            Board board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
-            DrawBoard(board);
+            gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
+            DrawBoard(gameState.Board);
             ShowPrevMove(move);
             DrawCapturedGrid(gameState.CapturedPiece);
-            WarningTextBlock.Text = gameState.Board.IsInCheck(gameState.CurrentPlayer) ? "Chiếu tướng!" : null;
+            //WarningTextBlock.Text = gameState.Board.IsInCheck(gameState.CurrentPlayer) ? "Chiếu tướng!" : null;
             TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
             await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Render);
             if (gameState is GameStateAI AI)
             {
                 Move prevMove = gameState.Moved.First().Item1;
-                await Task.Run(() => AI.AiMove(cts.Token), cts.Token);
-                isRedTurn = !isRedTurn;
-                if (redTimer != null) SwitchTurn();
-                WarningTextBlock.Text = gameState.Board.IsInCheck(gameState.CurrentPlayer) ? "Chiếu tướng!" : null;
-                TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
-                DrawCapturedGrid(gameState.CapturedPiece);
-                DrawBoard(gameState.Board);
-                HidePrevMove(prevMove);
-                ShowPrevMove(gameState.Moved.First().Item1);
-                Sound.PlayMoveSound();
+                var result = PrologEngine.AiMove();
+                if (result.HasValue)
+                {
+                    var (status, from, to) = result.Value;
+                    //await Task.Run(() => AI.AiMove(cts.Token), cts.Token);
+                    gameState.MakeMove(new NormalMove(Position.IntToPosition(from), Position.IntToPosition(to)));
+                    gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
+                    isRedTurn = !isRedTurn;
+                    if (redTimer != null) SwitchTurn();
+
+                    WarningTextBlock.Text = status == "CHECK" ? "Chiếu tướng!" : null;
+                    TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
+                    DrawCapturedGrid(gameState.CapturedPiece);
+                    DrawBoard(gameState.Board);
+                    HidePrevMove(prevMove);
+                    ShowPrevMove(gameState.Moved.First().Item1);
+                    Sound.PlayMoveSound();
+                }
+                else
+                {
+                    Console.WriteLine("Không thể thực hiện bot_move.");
+                }
             }
 
             AbleClick();
@@ -320,13 +354,17 @@ namespace ChessUI
                 UndoCapturedGrid(gameState.CapturedPiece);
                 TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
                 WarningTextBlock.Text = gameState.Board.IsInCheck(gameState.CurrentPlayer) ? "Chiếu tướng!" : null;
-                gameState.noCapture.Pop();
+                //gameState.noCapture.Pop();
             }
             else
             {
                 PrologEngine.Undo();
-
+                if (gameState is GameStateAI gs)
+                {
+                    PrologEngine.Undo();
+                }
                 gameState.UndoMove();
+                gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
                 DrawBoard(gameState.Board);
                 if (gameState.Moved.Count != 0)
                 {
@@ -351,12 +389,12 @@ namespace ChessUI
 
             if (capture)
             {
-                gameState.noCapture.Push(0);
+                //gameState.noCapture.Push(0);
             }
             else
             {
-                if (gameState.noCapture.Count == 0) gameState.noCapture.Push(1);
-                else gameState.noCapture.Push(gameState.noCapture.Peek() + 1);
+                //if (gameState.noCapture.Count == 0) gameState.noCapture.Push(1);
+                //else gameState.noCapture.Push(gameState.noCapture.Peek() + 1);
             }
             gameState.Moved.Push(moveList.Pop());
             DrawBoard(gameState.Board);
@@ -383,9 +421,9 @@ namespace ChessUI
                     highlights[r, c] = highlight;
                     HighlightGrid.Children.Add(highlight);
 
-                    Canvas canvas = new Canvas() { };
-                    posMoved[r, c] = canvas;
-                    PosMovedGrid.Children.Add(canvas);
+                    Rectangle pos = new Rectangle() { };
+                    posMoved[r, c] = pos;
+                    PosMovedGrid.Children.Add(pos);
                 }
             }
         }
@@ -418,7 +456,7 @@ namespace ChessUI
             {
                 if (gameState.Board[to] != null)
                 {
-                    highlights[to.Row, to.Column].Fill = new SolidColorBrush(Color.FromArgb(150, 255, 0, 0));
+                    highlights[to.Row, to.Column].Fill = new SolidColorBrush(Color.FromArgb(255, 255, 0, 0));
                 }
                 else highlights[to.Row, to.Column].Fill = new SolidColorBrush(color);
             }
@@ -483,11 +521,10 @@ namespace ChessUI
             {
                 // Chuyển đổi tọa độ bàn cờ sang số 0-63
                 int fromPos = (7 - move.FromPos.Row) * 8 + move.FromPos.Column;
-
                 int toPos = (7 - move.ToPos.Row) * 8 + move.ToPos.Column;
 
                 // Thực hiện nước đi trong Prolog
-                if (PrologEngine.MakeMove(fromPos, toPos, out var status))
+                if (PrologEngine.MakeMove(fromPos, toPos, out var status, out var needsPromotion))
                 {
                     HandleMove(move);
 
@@ -497,6 +534,7 @@ namespace ChessUI
 
                     if (gameStatus == "CHECKMATE" || gameStatus == "STALEMATE")
                     {
+                        gameState.Result = Result.Win(gameState.CurrentPlayer.Opponent(), gameStatus == "CHECKMATE" ? EndReason.Checkmate : EndReason.Stalemate);
                         UnableClick();
                         moveList = new Stack<Tuple<Move, Piece>>(gameState.Moved.ToArray());
                         HideHighlights();
@@ -505,8 +543,75 @@ namespace ChessUI
                         RaiseGameOverEvent(gameState);
                     }
                 }
+                else if (needsPromotion)
+                {
+                    // Prolog đã xác định đây là nước đi phong cấp, gọi UI phong cấp
+                    HandlePromotion(move.FromPos, move.ToPos);
+                }
             }
         }
+
+        private void HandlePromotion(Position from, Position to)
+        {
+            pieceImages[to.Row, to.Column].Source = Images.GetImage(gameState.CurrentPlayer, PieceType.Pawn);
+            pieceImages[from.Row, from.Column].Source = null;
+
+            PromotionMenu promMenu = new PromotionMenu(gameState.CurrentPlayer);
+            MenuContainer.Content = promMenu;
+
+            promMenu.PieceSelected += type =>
+            {
+                MenuContainer.Content = null;
+
+                // Gửi lựa chọn phong cấp vào Prolog
+                // Replace the switch expression with a traditional switch statement to comply with C# 7.3
+                string prologType;
+                switch (type)
+                {
+                    case PieceType.Queen:
+                        prologType = "queen";
+                        break;
+                    case PieceType.Rook:
+                        prologType = "rook";
+                        break;
+                    case PieceType.Bishop:
+                        prologType = "bishop";
+                        break;
+                    case PieceType.Knight:
+                        prologType = "knight";
+                        break;
+                    default:
+                        prologType = "queen";
+                        break;
+                }
+
+                // Chuyển đổi tọa độ bàn cờ sang số 0-63
+                int fromPos = (7 - from.Row) * 8 + from.Column;
+                int toPos = (7 - to.Row) * 8 + to.Column;
+
+                // Thực hiện nước đi phong cấp trong Prolog
+                if (PrologEngine.MakeMoveWithPromotion(fromPos, toPos, prologType, out var status))
+                {
+                    // Cập nhật lại bàn cờ và giao diện
+                    Move promMove = new PawnPromotion(from, to, type);
+                    HandleMove(promMove);
+
+                    WarningTextBlock.Text = status == "CHECK" ? "Chiếu tướng!" : null;
+
+                    if (status == "CHECKMATE" || status == "STALEMATE")
+                    {
+                        UnableClick();
+                        moveList = new Stack<Tuple<Move, Piece>>(gameState.Moved.ToArray());
+                        HideHighlights();
+                        CellGrid.IsEnabled = false;
+                        if (redTimer != null) StopTimer();
+                        RaiseGameOverEvent(gameState);
+                    }
+                }
+            };
+        }
+
+
         private void DrawCapturedGrid(Piece piece)
         {
             if (piece == null) return;
@@ -544,183 +649,16 @@ namespace ChessUI
             if (count > 0)
                 BlackCapturedGrid.Children.RemoveAt(count - 1);
         }
-        private void DrawNewPos(Canvas canvas, int row, int col)
-        {
-            SolidColorBrush solidColorBrush = (gameState.Board[row, col].Color == Player.Black) ? Brushes.DarkBlue : Brushes.Red;
-            Line topLeftArrow = new Line
-            {
-                X1 = 5,
-                Y1 = 0,
-                X2 = 25,
-                Y2 = 0,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(topLeftArrow);
-            Line sideTopLeftArrow = new Line
-            {
-                X1 = 5,
-                Y1 = 0,
-                X2 = 5,
-                Y2 = 20,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(sideTopLeftArrow);
-            Line topRightArrow = new Line
-            {
-                X1 = 55,
-                Y1 = 0,
-                X2 = 75,
-                Y2 = 0,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(topRightArrow);
-            Line sideTopRightArrow = new Line
-            {
-                X1 = 75,
-                Y1 = 0,
-                X2 = 75,
-                Y2 = 20,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(sideTopRightArrow);
-            Line bottomLeftArrow = new Line
-            {
-                X1 = 5,
-                Y1 = 70,
-                X2 = 25,
-                Y2 = 70,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(bottomLeftArrow);
-            Line sideBotLeftArrow = new Line
-            {
-                X1 = 5,
-                Y1 = 70,
-                X2 = 5,
-                Y2 = 50,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(sideBotLeftArrow);
-            Line bottomRightArrow = new Line
-            {
-                X1 = 55,
-                Y1 = 70,
-                X2 = 75,
-                Y2 = 70,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(bottomRightArrow);
-            Line sideBotRightArrow = new Line
-            {
-                X1 = 75,
-                Y1 = 70,
-                X2 = 75,
-                Y2 = 50,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(sideBotRightArrow);
-        }
-        private void DrawOldPos(Canvas canvas, int row, int col)
-        {
-            SolidColorBrush solidColorBrush = (gameState.Board[row, col].Color == Player.Black) ? Brushes.DarkBlue : Brushes.Red;
-            Line topLeftArrow = new Line
-            {
-                X1 = 20,
-                Y1 = 15,
-                X2 = 30,
-                Y2 = 15,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(topLeftArrow);
-            Line sideTopLeftArrow = new Line
-            {
-                X1 = 20,
-                Y1 = 15,
-                X2 = 20,
-                Y2 = 25,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(sideTopLeftArrow);
-            Line topRightArrow = new Line
-            {
-                X1 = 48,
-                Y1 = 15,
-                X2 = 58,
-                Y2 = 15,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(topRightArrow);
-            Line sideTopRightArrow = new Line
-            {
-                X1 = 58,
-                Y1 = 15,
-                X2 = 58,
-                Y2 = 25,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(sideTopRightArrow);
-            Line bottomLeftArrow = new Line
-            {
-                X1 = 20,
-                Y1 = 53,
-                X2 = 30,
-                Y2 = 53,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(bottomLeftArrow);
-            Line sideBotLeftArrow = new Line
-            {
-                X1 = 20,
-                Y1 = 53,
-                X2 = 20,
-                Y2 = 43,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(sideBotLeftArrow);
-            Line bottomRightArrow = new Line
-            {
-                X1 = 58,
-                Y1 = 53,
-                X2 = 48,
-                Y2 = 53,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(bottomRightArrow);
-            Line sideBotRightArrow = new Line
-            {
-                X1 = 58,
-                Y1 = 53,
-                X2 = 58,
-                Y2 = 43,
-                Stroke = solidColorBrush,
-                StrokeThickness = 2
-            };
-            canvas.Children.Add(sideBotRightArrow);
-        }
         public void ShowPrevMove(Move move)
         {
-            //DrawOldPos(posMoved[move.FromPos.Row, move.FromPos.Column], move.ToPos.Row, move.ToPos.Column);
-            //DrawNewPos(posMoved[move.ToPos.Row, move.ToPos.Column], move.ToPos.Row, move.ToPos.Column);
+            Color color = Color.FromArgb(155, 207, 255, 112);
+            posMoved[move.FromPos.Row, move.FromPos.Column].Fill = new SolidColorBrush(color);
+            posMoved[move.ToPos.Row, move.ToPos.Column].Fill = new SolidColorBrush(color);
         }
         public void HidePrevMove(Move move)
         {
-            posMoved[move.FromPos.Row, move.FromPos.Column].Children.Clear();
-            posMoved[move.ToPos.Row, move.ToPos.Column].Children.Clear();
+            posMoved[move.FromPos.Row, move.FromPos.Column].Fill = Brushes.Transparent;
+            posMoved[move.ToPos.Row, move.ToPos.Column].Fill =  Brushes.Transparent;
         }
         #region event
         public event RoutedEventHandler PauseButtonClicked
@@ -807,6 +745,20 @@ namespace ChessUI
         {
             RoutedEventArgs args = new RoutedPropertyChangedEventArgs<GameState>(null, gameState, GameOverEvent);
             RaiseEvent(args);
+        }
+
+        public static readonly RoutedEvent PawnPromotionEvent = EventManager.RegisterRoutedEvent(
+"PawnPromotion", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(GameUserControl));
+
+        public event RoutedEventHandler PawnPromotion
+        {
+            add { AddHandler(PawnPromotionEvent, value); }
+            remove { RemoveHandler(PawnPromotionEvent, value); }
+        }
+
+        protected void RaisePawnPromotionEvent()
+        {
+            RaiseEvent(new RoutedEventArgs(PawnPromotionEvent));
         }
         #endregion
     }

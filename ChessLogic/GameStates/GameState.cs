@@ -6,7 +6,7 @@ namespace ChessLogic.GameStates.GameState
 {
     public abstract class GameState
     {
-        public Board Board { get; }
+        public Board Board { get; set; }
         public Stack<Tuple<Move, Piece>> Moved { get; set; }
         public Player CurrentPlayer { get; set; }
 
@@ -17,9 +17,9 @@ namespace ChessLogic.GameStates.GameState
         public int timeRemainingBlack { get; set; }
         public List<Piece> CapturedRedPiece { get; set; }
         public List<Piece> CapturedBlackPiece { get; set; }
-        public Stack<int> noCapture { get; set; }
+        //public Stack<int> noCapture { get; set; }
 
-        public Stack<string> stateString { get; set; }
+        //public Stack<string> stateString { get; set; }
 
         private readonly Dictionary<string, int> stateHistory;
         public GameState(Player player, Board board, int timeLimit)
@@ -29,11 +29,11 @@ namespace ChessLogic.GameStates.GameState
             this.Moved = new Stack<Tuple<Move, Piece>>();
             this.CapturedBlackPiece = new List<Piece>();
             this.CapturedRedPiece = new List<Piece>();
-            this.noCapture = new Stack<int>();
+            //this.noCapture = new Stack<int>();
             this.stateHistory = new Dictionary<string, int>();
-            stateString = new Stack<string>();
-            stateString.Push(new StateString(player, board).ToString());
-            this.stateHistory[stateString.Peek()] = 1;
+            //stateString = new Stack<string>();
+            //stateString.Push(new StateString(player, board).ToString());
+            //this.stateHistory[stateString.Peek()] = 1;
             timeRemainingBlack = timeLimit;
             timeRemainingRed = timeLimit;
         }
@@ -44,12 +44,12 @@ namespace ChessLogic.GameStates.GameState
             Board = board;
             this.Moved = Moved;
             this.stateHistory = stateHistory;
-            this.stateString = stateString;
+            //this.stateString = stateString;
             this.CapturedBlackPiece = CapturedBlackPiece;
             this.CapturedRedPiece = CapturedRedPiece;
             timeRemainingBlack = blackTime;
             timeRemainingRed = redTime;
-            this.noCapture = noCapture;
+            //this.noCapture = noCapture;
         }
         public List<string> getStateHistory()
         {
@@ -71,22 +71,22 @@ namespace ChessLogic.GameStates.GameState
                 if (CapturedPiece.Color == Player.Black) CapturedBlackPiece.Add(CapturedPiece);
                 else CapturedRedPiece.Add(CapturedPiece);
             }
-            bool capture = move.Execute(Board);
+            //bool capture = move.Execute(Board);
 
-            if (capture)
-            {
-                noCapture.Push(0);
-                stateString.Push("Clear");
-                stateHistory.Clear();
-            }
-            else
-            {
-                if (noCapture.Count == 0) noCapture.Push(1);
-                else noCapture.Push(noCapture.Peek() + 1);
-            }
+            //if (capture)
+            //{
+            //    noCapture.Push(0);
+            //    stateString.Push("Clear");
+            //    stateHistory.Clear();
+            //}
+            //else
+            //{
+            //    if (noCapture.Count == 0) noCapture.Push(1);
+            //    else noCapture.Push(noCapture.Peek() + 1);
+            //}
             CurrentPlayer = CurrentPlayer.Opponent();
-            UpdateStateString();
-            CheckForGameOver();
+            //UpdateStateString();
+            //CheckForGameOver();
         }
         public abstract void UndoMove();
 
@@ -104,53 +104,55 @@ namespace ChessLogic.GameStates.GameState
 
         private bool FiftyMoveRule()
         {
-            return noCapture.Peek() >= 100;
+            return false;
+            //return noCapture.Peek() >= 100;
         }
 
         private void UpdateStateString()
         {
-            string currentStateString = new StateString(CurrentPlayer, Board).ToString();
-            stateString.Push(currentStateString);
+            //string currentStateString = new StateString(CurrentPlayer, Board).ToString();
+            //stateString.Push(currentStateString);
 
-            if (!stateHistory.ContainsKey(currentStateString))
-            {
-                stateHistory[currentStateString] = 1;
-            }
-            else
-            {
-                stateHistory[currentStateString]++;
-            }
+            //if (!stateHistory.ContainsKey(currentStateString))
+            //{
+            //    stateHistory[currentStateString] = 1;
+            //}
+            //else
+            //{
+            //    stateHistory[currentStateString]++;
+            //}
         }
 
         protected void UndoStateString()
         {
-            string currentStateString = stateString.Pop();
-            stateHistory[currentStateString]--;
+            //string currentStateString = stateString.Pop();
+            //stateHistory[currentStateString]--;
 
-            if (stateString.Count > 0 && stateString.Peek() == "Clear")
-            {
-                stateString.Pop();
-                foreach (string state in stateString)
-                {
-                    if (state == "Clear")
-                    {
-                        break;
-                    }
-                    if (!stateHistory.ContainsKey(state))
-                    {
-                        stateHistory[state] = 1;
-                    }
-                    else
-                    {
-                        stateHistory[state]++;
-                    }
-                }
-            }
+            //if (stateString.Count > 0 && stateString.Peek() == "Clear")
+            //{
+            //    stateString.Pop();
+            //    foreach (string state in stateString)
+            //    {
+            //        if (state == "Clear")
+            //        {
+            //            break;
+            //        }
+            //        if (!stateHistory.ContainsKey(state))
+            //        {
+            //            stateHistory[state] = 1;
+            //        }
+            //        else
+            //        {
+            //            stateHistory[state]++;
+            //        }
+            //    }
+            //}
         }
 
         private bool ThreefoldRepetition()
         {
-            return stateHistory[stateString.Peek()] == 3;
+            return false;
+            //return stateHistory[stateString.Peek()] == 3;
         }
         public void TimeForfeit()
         {

@@ -1,0 +1,55 @@
+﻿<UserControl x:Class="ChessUI.SaveSlotControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:local="clr-namespace:ChessUI"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Border Background="#80000000" BorderThickness="0" CornerRadius="10">
+        <Grid>
+            <Border Style="{StaticResource BorderStyle1}" Padding="10" Height="450" Width="450">
+                <Grid>
+                    <Button x:Name="CloseButton"
+                        HorizontalAlignment="Right" VerticalAlignment="Top"
+                        Background="Transparent"
+                        Foreground="Black"
+                        BorderThickness="0"
+                        Width="30" Height="30" 
+                        Margin="0,10,10,0"
+                        Click="CloseButton_Click">
+                        <iconPacks:PackIconMaterial Kind="Close" Height="20" Width="20"/>
+                    </Button>
+                    <StackPanel>
+                        <TextBlock x:Name="title" 
+                               Style="{StaticResource TextStyle1}" 
+                               FontSize="50"
+                               Margin="0,0,0,10" 
+                               HorizontalAlignment="Center" />
+                        <ListBox Name="SaveSlotList"
+                             BorderThickness="0" 
+                             Background="Transparent" MouseUp="SaveSlotList_MouseUp">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="5" Height="50">
+                                        <TextBlock Text="{Binding}" FontSize="16"
+                                               Style="{StaticResource TextStyle2}"
+                                               Margin="10,0,0,0" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </Grid>
+            </Border>
+            <Border x:Name="ConfirmationDialogContainer" Background="#80000000" Visibility="Collapsed" 
+                HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                BorderThickness="0" CornerRadius="10">
+                <local:SaveLoadConfirm x:Name="ConfirmationControl" 
+                                   HorizontalAlignment="Center" 
+                                   VerticalAlignment="Center" />
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>

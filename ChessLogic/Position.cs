@@ -49,5 +49,12 @@ namespace ChessLogic
                 return hash;
             }
         }
+
+        public static Position IntToPosition(int pos)
+        {
+            int row = 7 - pos / 8;
+            int column = pos % 8;
+            return new Position(row, column);
+        }
     }
 }

@@ -21,7 +21,7 @@ namespace ChessLogic.GameStates.GameState
             }
             CurrentPlayer = CurrentPlayer.Opponent();
             CapturedPiece = undo.Item2;
-            noCapture.Pop();
+            //noCapture.Pop();
         }
     }
 }

@@ -4,11 +4,22 @@
              xmlns:local="clr-namespace:ChessUI"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
+        <SolidColorBrush x:Key="StrokeColor">#260000</SolidColorBrush>
         <SolidColorBrush x:Key="FillColor">#ffffff</SolidColorBrush>
+        <SolidColorBrush x:Key="FillColor1">#cc380404</SolidColorBrush>
         <SolidColorBrush x:Key="TextColor">#a93737</SolidColorBrush>
+        <SolidColorBrush x:Key="TextColor1">#ffa274</SolidColorBrush>
+
 
         <FontFamily x:Key="TitleFont">Assets/Fonts/#Bungee</FontFamily>
         <FontFamily x:Key="TextFont">Assets/Fonts/#Noto Serif</FontFamily>
+
+        <Style TargetType="Border" x:Key="BorderStyle">
+            <Setter Property="BorderThickness" Value="4"/>
+            <Setter Property="BorderBrush" Value="{StaticResource StrokeColor}"/>
+            <Setter Property="Background" Value="{StaticResource FillColor1}"/>
+            <Setter Property="CornerRadius" Value="10"/>
+        </Style>
 
         <Style TargetType="Border" x:Key="BorderStyle1">
             <Setter Property="Opacity" Value="1"/>
@@ -24,6 +35,13 @@
             <Setter Property="CornerRadius" Value="25"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="Background" Value="{StaticResource FillColor}"/>
+        </Style>
+
+        <Style TargetType="TextBlock" x:Key="TextStyle">
+            <Setter Property="FontFamily" Value="Segoe UI Light"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="{StaticResource TextColor1}"/>
         </Style>
 
         <Style TargetType="TextBlock" x:Key="TextStyle1">

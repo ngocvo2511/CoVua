@@ -3,6 +3,18 @@
 % =================================
 
 :- dynamic history/1.
+:- dynamic undo/0.
+:- dynamic undo_move/0.
+
+undo :- undo_move.
+
+% Undo last move
+undo_move :-
+    history([_, board(PreviousPosition, PreviousColor, PreviousCounter)|RestHistory]),
+    retract(history([_, board(PreviousPosition, PreviousColor, PreviousCounter)|RestHistory])),
+    asserta(history([board(PreviousPosition, PreviousColor, PreviousCounter)|RestHistory])),
+    retractall(board(_,_,_)),
+    asserta(board(PreviousPosition, PreviousColor, PreviousCounter)).
 
 % Initialize history with starting board state
 init_history(Position, Color) :-
@@ -33,16 +45,9 @@ count_occurrences(board(Position, Color, _), HistoryList, Count) :-
     findall(1, member(board(Position, Color, _), HistoryList), Occurrences),
     length(Occurrences, Count).
 
-% Undo last move
-undo_move :-
-    history([_, board(PreviousPosition, PreviousColor, PreviousCounter)|RestHistory]),
-    retract(history([_, board(PreviousPosition, PreviousColor, PreviousCounter)|RestHistory])),
-    asserta(history([board(PreviousPosition, PreviousColor, PreviousCounter)|RestHistory])),
-    retractall(board(_,_,_)),
-    asserta(board(PreviousPosition, PreviousColor, PreviousCounter)).
+
 
 % Check if undo is possible
 can_undo :-
     history([_Current, _Previous|_]).
 	
-undo :- undo_move.

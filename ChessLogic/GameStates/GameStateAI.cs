@@ -32,7 +32,7 @@ namespace ChessLogic.GameStates.GameState
                 }
                 if (i == 0) AiCapturedPiece = undo.Item2;
                 else CapturedPiece = undo.Item2;
-                noCapture.Pop();
+                //noCapture.Pop();
             }
             CurrentPlayer = Player.White;
         }
