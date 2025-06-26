@@ -34,7 +34,7 @@ namespace ChessUI.Menus
             switch (winner)
             {
                 case Player.White:
-                    return "ĐỎ THẮNG!";
+                    return "TRẮNG THẮNG!";
                 case Player.Black:
                     return "ĐEN THẮNG!";
                 default:
@@ -47,7 +47,7 @@ namespace ChessUI.Menus
             switch (player)
             {
                 case Player.White:
-                    return "Đỏ";
+                    return "Trắng";
                 case Player.Black:
                     return "Đen";
                 default:

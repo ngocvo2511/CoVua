@@ -22,7 +22,5 @@ namespace ChessLogic.Pieces
             copy.HasMoved = HasMoved;
             return copy;
         }
-
-       
     }
 }

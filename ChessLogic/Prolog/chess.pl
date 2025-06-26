@@ -3,9 +3,12 @@
 	board/3, % board state, color, fifty-move counter
 	state/1, % picking piece or placing piece
 	history/1, % moves history
-	depth/1.
+	depth/1,
+	first_player/1.
 
-	
+% Mặc định lượt đi đầu tiên là trắng
+first_player(white).
+
 :- [history].
 :- [board].
 :- [attack].
@@ -65,7 +68,6 @@ place_piece(From, To, Status, PromotionPiece) :-
 	retract(board(Position, Color, Counter)),
 	asserta(board(NewPosition, NextColor, NewCounter)).
 
-% Initialize the game for web interface
 init :-
 	retractall(human(_)),
 	retractall(board(_,_,_)),
@@ -77,4 +79,5 @@ init :-
 	asserta(depth(3)),
 	% Set game mode (human vs computer by default)
 	asserta(human(white)).
+
 

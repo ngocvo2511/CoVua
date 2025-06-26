@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SbsSW.SwiPlCs;
+using SbsSW.SwiPlCs.Exceptions;
 
 namespace ChessLogic
 {
     public class PrologEngine
     {
         private static bool _isInitialized = false;
-
         public static void Initialize(string prologFile, bool isAI, Player color)
         {
             if (!_isInitialized)
@@ -28,21 +28,18 @@ namespace ChessLogic
 
             if (isAI)
             {
-                if(color == Player.White)
+                if (!PlQuery.PlCall("game_mode(hxc)."))
                 {
-                    if (!PlQuery.PlCall("game_mode(hxc)."))
-                    {
-                        throw new Exception("Không thể khởi tạo bàn cờ.");
-                    }
-                }
-                else
-                {
-                    if (!PlQuery.PlCall("game_mode(cxh)."))
-                    {
-                        throw new Exception("Không thể khởi tạo bàn cờ.");
-                    }
+                    throw new Exception("Không thể khởi tạo bàn cờ.");
                 }
 
+                if (color == Player.Black)
+                {
+                    if (!PlQuery.PlCall("set_first_player(black)."))
+                    {
+                        throw new Exception("Không thể khởi tạo bàn cờ cho người chơi đen.");
+                    }
+                }
             }
             else
             {
@@ -53,8 +50,10 @@ namespace ChessLogic
             }
 
 
+
+
             // Khởi tạo bàn cờ
-            if (!PlQuery.PlCall("start."))
+            if (!PlQuery.PlCall("init."))
             {
                 throw new Exception("Không thể khởi tạo bàn cờ.");
             }
@@ -95,30 +94,95 @@ namespace ChessLogic
             return legalMoves;
         }
 
-        public static bool MakeMove(int fromPos, int toPos, out string status)
+        public static bool MakeMove(int fromPos, int toPos, out string status, out bool needsPromotion)
         {
             status = null;
+            needsPromotion = false;
             try
             {
                 using (var q = new PlQuery($"place_piece({fromPos}, {toPos}, Status)"))
                 {
                     if (q.NextSolution())
                     {
-                        status = q.Variables["Status"].ToString().ToUpper(); // SAFE, CHECK, ...
+                        status = q.Variables["Status"].ToString().ToUpper();
                         return true;
                     }
                 }
             }
-            catch
+            catch (PlException ex)
             {
-                // Xử lý nếu có lỗi Prolog
+                // Kiểm tra xem có phải là lỗi phong cấp không
+                if (ex.Message.Contains("promotion_required"))
+                {
+                    needsPromotion = true;
+                    return false;
+                }
             }
+
             return false;
+        }
+
+        public static bool MakeMoveWithPromotion(int fromPos, int toPos, string promotionPiece, out string status)
+        {
+            status = null;
+            try
+            {
+                Console.WriteLine($"Attempting promotion: from={fromPos}, to={toPos}, piece={promotionPiece}");
+                using (var q = new PlQuery($"place_piece_with_promotion({fromPos}, {toPos}, '{promotionPiece}', Status)"))
+                {
+                    if (q.NextSolution())
+                    {
+                        status = q.Variables["Status"].ToString().ToUpper();
+                        Console.WriteLine($"Promotion successful: {status}");
+                        using (var qq = new PlQuery("current_predicate(undo/0)."))
+                        {
+                            Console.WriteLine(qq.NextSolution()
+                                ? "✅ undo/0 vẫn tồn tại."
+                                : "❌ undo/0 không tồn tại sau khi phong cấp.");
+                        }
+                        return true;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Promotion failed: No solution found");
+                    }
+                }
+
+
+            }
+            catch (PlException ex)
+            {
+                // Handle any Prolog errors
+                Console.WriteLine($"Prolog error in promotion: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                // Handle any other errors
+                Console.WriteLine($"General error in promotion: {ex.Message}");
+            }
+
+            return false;
+        }
+
+        public static (string status, int fromPos, int toPos)? AiMove()
+        {
+            using (var q = new PlQuery("bot_move(FromPos, ToPos, Status)."))
+            {
+                if (q.NextSolution())
+                {
+                    string status = q.Variables["Status"].ToString().ToUpper(); // e.g. SAFE, CHECK
+                    int fromPos = int.Parse(q.Variables["FromPos"].ToString());
+                    int toPos = int.Parse(q.Variables["ToPos"].ToString());
+                    return (status, fromPos, toPos);
+                }
+            }
+
+            return null; // Nếu không có kết quả
         }
 
         public static bool Undo()
         {
-            return PlQuery.PlCall("undo.");
+            return PlQuery.PlCall("user:undo.");
         }
 
         public static bool IsGameOver()
