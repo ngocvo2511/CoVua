@@ -13,12 +13,12 @@ get_piece_position(half_position(_,_,_,_,_,_,Castles,_), Pos, king) :- member(Po
 get_piece_position(half_position(_,_,_,_,_,_,_,Enpassants), Pos, king) :- member(Pos, Enpassants).
 
 % check if a move is legal (no getting checked, follow chess rule)
-is_legal_move(From, To, Color, Position) :-
+is_legal_move(From, To, Color, Position, PromotionPiece) :-
 	% First check if the basic move is valid
 	find_piece_type(From, Type, Position, Color),
 	legal_move_for_piece(From, To, Type, Color, Position),
 	% Then simulate the move and check if king is still safe
-	simulate_move(From, To, Color, Position, NewPosition),
+	simulate_move(From, To, Color, Position, NewPosition, PromotionPiece),
 	not(in_check(NewPosition, Color)).
 
 % legal_move_for_piece: generate individual legal moves based on piece type
@@ -45,7 +45,7 @@ legal_move_for_piece(From, To, king, Color, Position) :-
 	castling_move(From, Color, Position, To).
 
 % create a new position after making a move
-simulate_move(From, To, Color, Position, NewPosition) :-
+simulate_move(From, To, Color, Position, NewPosition, PromotionPiece) :-
 	find_piece_type(From, Type, Position, Color),
 	invert(Color, OpponentColor),
 	% Check if this is a castling move
@@ -63,7 +63,11 @@ simulate_move(From, To, Color, Position, NewPosition) :-
 	    move_piece(TempPosition, Color, From, To, NewPosition)
 	;   % Check if this is a pawn promotion
 	    (Type = pawn, is_promotion_move(From, To, Color, Position), 
-			get_promotion_choice(PromotionPiece, Color)) ->
+			(
+				var(PromotionPiece) -> bot_promotion(PromotionPiece)
+			;	PromotionPiece = null -> throw(error(promotion_required, context(place_piece, 'Pawn promotion requires piece choice')))
+			;	true
+			)) ->
 	    % Handle pawn promotion
 	    (   occupied(To, OpponentColor, Position) ->
 	        % Promotion with capture
@@ -82,14 +86,15 @@ simulate_move(From, To, Color, Position, NewPosition) :-
 	    ;   % Normal move: just move our piece
 	        move_piece(Position, Color, From, To, NewPosition)
 	    )
-	).
+	), 				write(To), nl
+.
 
 % get_all_legal_moves: get all legal moves for a color
 get_all_legal_moves(Position, Color, LegalMoves) :-
-	findall(move(From, To), 
+	findall(move(From, To, PromotionPiece), 
 	        (get_half(Position, Half, Color),
 	         get_piece_position(Half, From, _Type),
-	         is_legal_move(From, To, Color, Position)),
+	         is_legal_move(From, To, Color, Position, PromotionPiece)),
 	        LegalMoves).
 
 % check if the given color is in checkmate
@@ -245,8 +250,7 @@ pawn_move(From,black,Position,To):-
 % =================================
 
 % Kingside castling (short castling)
-castling_move(From, Color, Position, To) :-
-	Color = white,
+castling_move(From, white, Position, To) :-
 	From = 4,  % White king starting position
 	To = 6,    % King moves to g1 (position 6)
 	get_half(Position, half_position(_,_,_,_,_,_,Castle,_), white),
@@ -258,8 +262,7 @@ castling_move(From, Color, Position, To) :-
 	not(is_under_attack(5, white, Position)),  % f1 not under attack
 	not(is_under_attack(6, white, Position)).  % g1 not under attack
 
-castling_move(From, Color, Position, To) :-
-	Color = black,
+castling_move(From, black, Position, To) :-
 	From = 60,  % Black king starting position
 	To = 62,    % King moves to g8 (position 62)
 	get_half(Position, half_position(_,_,_,_,_,_,Castle,_), black),
@@ -272,8 +275,7 @@ castling_move(From, Color, Position, To) :-
 	not(is_under_attack(62, black, Position)).  % g8 not under attack
 
 % Queenside castling (long castling)
-castling_move(From, Color, Position, To) :-
-	Color = white,
+castling_move(From, white, Position, To) :-
 	From = 4,  % White king starting position
 	To = 2,    % King moves to c1 (position 2)
 	get_half(Position, half_position(_,_,_,_,_,_,Castle,_), black),
@@ -286,8 +288,7 @@ castling_move(From, Color, Position, To) :-
 	not(is_under_attack(3, white, Position)),  % d1 not under attack
 	not(is_under_attack(2, white, Position)).  % c1 not under attack
 
-castling_move(From, Color, Position, To) :-
-	Color = black,
+castling_move(From, black, Position, To) :-
 	From = 60,  % Black king starting position
 	To = 58,    % King moves to c8 (position 58)
 	get_half(Position, half_position(_,_,_,_,_,_,Castle,_), black),

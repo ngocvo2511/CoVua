@@ -15,6 +15,13 @@ add_to_history(Position, Color, Counter) :-
     retract(history(HistoryList)),
     asserta(history([board(Position, Color, Counter)|HistoryList])).
 
+set_new_history(History) :-
+    History = [Board|_],
+    retract(history(_)),
+    retractall(board(_,_,_)),
+    asserta(History),
+    asserta(Board).
+
 % Check for threefold repetition
 is_threefold_repetition(Position, Color) :-
     history(HistoryList),

@@ -27,22 +27,7 @@ reset:-
 	retractall(state(_)),
 	retractall(history(_)).
 		
-% check current game status
-check_game_status(Position,Color,Counter) :-
-	(   is_checkmate(Position, Color) ->
-	    write('CHECKMATE'), nl
-	;   is_stalemate(Position, Color) ->
-	    write('STALEMATE'), nl
-	;   in_check(Position, Color) ->
-	    write('CHECK'), nl
-	;	is_threefold_repetition(Position, Color) ->
-		write('DRAW'), nl
-	;	is_fifty_move(Counter) ->
-		write('DRAW'), nl
-	;	write('SAFE'), nl
-	).
-
-get_game_status(Position,Color,Counter, Status) :-
+check_game_status(Position, Color, Counter, Status) :-
     (   is_checkmate(Position, Color) ->
         Status = checkmate
     ;   is_stalemate(Position, Color) ->

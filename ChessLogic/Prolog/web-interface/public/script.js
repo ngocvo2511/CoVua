@@ -509,17 +509,49 @@ async function makeBotMove() {
         const result = await response.json();
         
         if (result.success) {
-            window.game.log('🤖 Bot move completed');
+            // Log the move details
+            if (result.move) {
+                const moveText = `🤖 Bot moved from ${result.move.from} to ${result.move.to}`;
+                window.game.log(moveText);
+                
+                // Log the game status
+                if (result.status) {
+                    const statusText = result.status.toUpperCase();
+                    let statusEmoji = '';
+                    switch(result.status.toLowerCase()) {
+                        case 'check': statusEmoji = '⚠️'; break;
+                        case 'checkmate': statusEmoji = '🏁'; break;
+                        case 'stalemate': statusEmoji = '�'; break;
+                        case 'draw': statusEmoji = '🤝'; break;
+                        case 'safe': statusEmoji = '✅'; break;
+                        default: statusEmoji = 'ℹ️';
+                    }
+                    window.game.log(`${statusEmoji} Game status: ${statusText}`);
+                }
+            } else {
+                window.game.log('�🤖 Bot move completed');
+            }
+            
+            // Refresh the board and update game state
             await window.game.refreshBoard();
             await window.game.updateGameStatus();
             window.game.moveCount++;
             window.game.currentTurn = 'white'; // Assuming bot is black
             window.game.updateDisplay();
+            
+            // Debug output
+            if (result.raw_output) {
+                console.log('Bot move raw output:', result.raw_output);
+            }
         } else {
-            window.game.log('❌ Bot move failed: ' + result.error);
+            window.game.log('❌ Bot move failed: ' + (result.error || 'Unknown error'));
+            if (result.raw_output) {
+                console.log('Bot move failure output:', result.raw_output);
+            }
         }
     } catch (error) {
         window.game.log('❌ Network error during bot move: ' + error.message);
+        console.error('Bot move network error:', error);
     } finally {
         window.game.showLoading(false);
     }

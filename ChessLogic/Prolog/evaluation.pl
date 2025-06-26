@@ -116,11 +116,11 @@ position_row_value(Color, Type, [PiecePos|RestPos], Value) :-
 
 score_special(Position, Color, Counter, Value) :-
     % Use get_game_status to check for special conditions
-    get_game_status(Position, Color, Counter, Status),
+    check_game_status(Position, Color, Counter, Status),
     (   Status = checkmate ->
         losing_value(Color, Value)
     ;   invert(Color, OpponentColor),
-        get_game_status(Position, OpponentColor, Counter, OpponentStatus),
+        check_game_status(Position, OpponentColor, Counter, OpponentStatus),
         OpponentStatus = checkmate ->
         winning_value(Color, Value)
     ;   Status = draw ->

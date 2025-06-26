@@ -23,29 +23,31 @@ update_alpha_beta(Color,Alpha,NewAlpha,Beta,NewBeta) :-
     ).
 
 
-bot_move :-
+bot_move(From, To, Status) :-
     init_minimax,
     board(Position, Color, Counter),
     depth(Depth),
     losing_value(white,Alpha),
 	losing_value(black,Beta),
     minimax(Position, Color, Counter, Move, Depth, _Value, Alpha, Beta),
-    Move = move(From, To),
-    place_piece(From, To),
-    write('Bot played: '), write(From), write(' to '), write(To), nl.
+    Move = move(From, To, PromotionPiece),
+    place_piece(From, To, Status, PromotionPiece),
+    % Get the new game state after the move
+    board(NewPosition, NewColor, NewCounter),
+    check_game_status(NewPosition, NewColor, NewCounter, Status).
 
 simulate_new_position_from_move_list([Move|_], Move, Color, Position, NewPosition) :-
-    move(From, To) = Move,
-    simulate_move(From, To, Color, Position, NewPosition).
+    Move = move(From, To, PromotionPiece),
+    simulate_move(From, To, Color, Position, NewPosition, PromotionPiece).
 simulate_new_position_from_move_list([_|Rest], Move, Color, Position, NewPosition) :-
     simulate_new_position_from_move_list(Rest, Move, Color, Position, NewPosition).
-simulate_new_position_from_move_list([], _, _, Position, Position).
+simulate_new_position_from_move_list([], _, _, Position, Position, _).
 
 get_best(Position, Color, Counter, Depth, Alpha, Beta) :-
     invert(Color, Op),
     get_all_legal_moves(Position, Color, MoveList),
     simulate_new_position_from_move_list(MoveList, Move, Color, Position, NewPosition),
-    update_depth(Depth, NewDepth),    
+    update_depth(Depth, NewDepth),
     update_alpha_beta(Color, Alpha, NewAlpha, Beta, NewBeta),
     minimax(NewPosition, Op, Counter, _Move, NewDepth, Value, NewAlpha, NewBeta),
     compare_move(Move, Value, Color),    
@@ -63,25 +65,25 @@ compare_move(Move, Value, Color) :-
     ;   replace(Move, Value)
     ).
 
-prune(Color, Value, Alpha, Beta) :-
+prune(Value, Color, Alpha, Beta) :-
     (   (Color = white, Value > Beta) -> true
     ;   (Color = black, Value < Alpha) -> true
     ;   false
     ).
 
-minimax(position(half_position(_,_,_,_,_,[],_,_),_), Color, _Counter, _Move, _Depth, Value, _Alpha, _Beta) :-
+minimax(position(half_position(_,_,_,_,_,[],_,_),_), Color, _Counter, move(64, 64, none), _Depth, Value, _Alpha, _Beta) :-
     (
         Color = white -> losing_value(white, Value)
     ;   Color = black -> winning_value(black, Value)
     ),!.
 
-minimax(position(_,half_position(_,_,_,_,_,[],_,_)), Color, _Counter, _Move, _Depth, Value, _Alpha, _Beta) :-
+minimax(position(_,half_position(_,_,_,_,_,[],_,_)), Color, _Counter, move(64, 64, none), _Depth, Value, _Alpha, _Beta) :-
     (
         Color = white -> winning_value(white, Value)
     ;   Color = black -> losing_value(black, Value)
     ),!.
 
-minimax(Position, _Color, _Counter, move(64, 64), 0, Value, _Alpha, _Beta) :-
+minimax(Position, _Color, _Counter, move(64, 64, none), 0, Value, _Alpha, _Beta) :-
     %score(Position, Color, Counter, Value), 
     Position = position(WhiteHalf, BlackHalf),
     score_half(WhiteHalf, white, ValueWhite),
@@ -90,7 +92,7 @@ minimax(Position, _Color, _Counter, move(64, 64), 0, Value, _Alpha, _Beta) :-
 
 minimax(Position, Color, Counter, Move, Depth, Value, Alpha, Beta) :-
     losing_value(Color, Worst),
-    push(move(64, 64), Worst),
+    push(move(64, 64, none), Worst),
     not(get_best(Position, Color, Counter, Depth, Alpha, Beta)),
     pop(Move, Value), !.
 

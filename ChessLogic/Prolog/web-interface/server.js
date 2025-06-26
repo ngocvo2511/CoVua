@@ -198,18 +198,42 @@ app.post('/place', async (req, res) => {
         }
     } catch (error) {
         console.error('Place error:', error);
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, error: error.message }a);
     }
 });
 
 // Bot move
 app.post('/bot', async (req, res) => {
     try {
-        const result = await queryProlog('(bot_move -> write("bot_move_success") ; write("bot_move_failed"))');
-        if (result.includes('bot_move_success')) {
-            res.json({ success: true, message: 'Bot move made' });
+        const result = await queryProlog('(bot_move -> write("SUCCESS") ; write("FAILED"))');
+        
+        if (result.includes('SUCCESS')) {
+            // Parse the move and status from the output
+            const moveMatch = result.match(/Move: (\d+) to (\d+)/);
+            const statusMatch = result.match(/Status: (\w+)/);
+            
+            if (moveMatch && statusMatch) {
+                const from = parseInt(moveMatch[1]);
+                const to = parseInt(moveMatch[2]);
+                const status = statusMatch[1];
+                
+                res.json({ 
+                    success: true, 
+                    move: { from, to },
+                    status: status,
+                    message: `Bot moved from ${from} to ${to}`,
+                    raw_output: result
+                });
+            } else {
+                // Fallback if parsing fails
+                res.json({ 
+                    success: true, 
+                    message: 'Bot move completed but could not parse details',
+                    raw_output: result
+                });
+            }
         } else {
-            res.json({ success: false, error: 'Bot move failed' });
+            res.json({ success: false, error: 'Bot move failed', raw_output: result });
         }
     } catch (error) {
         console.error('Bot move error:', error);
