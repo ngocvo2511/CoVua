@@ -27,34 +27,19 @@ reset:-
 	retractall(state(_)),
 	retractall(history(_)).
 		
-% check current game status
-check_game_status(Position,Color,Counter) :-
-	(   is_checkmate(Color, Position) ->
-	    write('CHECKMATE'), nl
-	;   is_stalemate(Color, Position) ->
-	    write('STALEMATE'), nl
-	;   in_check(Color, Position) ->
-	    write('CHECK'), nl
-	;	is_threefold_repetition(Position, Color) ->
-		write('DRAW'), nl
-	;	is_fifty_move(Counter) ->
-		write('DRAW'), nl
-	;	write('SAFE'), nl
-	).
-
-check_game_status(Position,Color,Counter, Status) :-
-	(   is_checkmate(Color, Position) ->
-	    Status = checkmate
-	;   is_stalemate(Color, Position) ->
-	    Status = stalemate
-	;   in_check(Color, Position) ->
-	    Status = check
-	;	is_threefold_repetition(Position, Color) ->
-		Status = draw
-	;	is_fifty_move(Counter) ->
-		Status = draw
-	;	Status = safe
-	).
+check_game_status(Position, Color, Counter, Status) :-
+    (   is_checkmate(Position, Color) ->
+        Status = checkmate
+    ;   is_stalemate(Position, Color) ->
+        Status = stalemate
+    ;   in_check(Position, Color) ->
+        Status = check
+    ;	is_threefold_repetition(Position, Color) ->
+        Status = draw
+    ;	is_fifty_move(Counter) ->
+        Status = draw
+    ;	Status = safe
+    ).
 
 % Get the current board postion
 get_current_board(Position, Color, Counter) :-
@@ -67,3 +52,24 @@ get_current_board(Position, Color, Counter) :-
 	% Create the final position list
 	Position = [[PawnWhite, RookWhite, KnightWhite, BishopWhite, QueenWhite, KingWhite],
 	                    [PawnBlack, RookBlack, KnightBlack, BishopBlack, QueenBlack, KingBlack]].
+
+% Helper to get piece at a position
+get_piece_at(position(WhiteHalf, BlackHalf), Pos, Piece) :-
+    WhiteHalf = half_position(WhitePawns, WhiteRooks, WhiteKnights, WhiteBishops, WhiteQueens, WhiteKings, _, _),
+    BlackHalf = half_position(BlackPawns, BlackRooks, BlackKnights, BlackBishops, BlackQueens, BlackKings, _, _),
+    
+    (   member(Pos, WhitePawns) -> Piece = pawn
+    ;   member(Pos, WhiteRooks) -> Piece = rook
+    ;   member(Pos, WhiteKnights) -> Piece = knight
+    ;   member(Pos, WhiteBishops) -> Piece = bishop
+    ;   member(Pos, WhiteQueens) -> Piece = queen
+    ;   member(Pos, WhiteKings) -> Piece = king
+    ;   member(Pos, BlackPawns) -> Piece = pawn
+    ;   member(Pos, BlackRooks) -> Piece = rook
+    ;   member(Pos, BlackKnights) -> Piece = knight
+    ;   member(Pos, BlackBishops) -> Piece = bishop
+    ;   member(Pos, BlackQueens) -> Piece = queen
+    ;   member(Pos, BlackKings) -> Piece = king
+    ;   Piece = empty
+    ).
+
