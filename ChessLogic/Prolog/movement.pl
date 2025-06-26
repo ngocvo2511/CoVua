@@ -96,24 +96,6 @@ get_all_legal_moves(Position, Color, LegalMoves) :-
 	         is_legal_move(From, To, Color, Position, PromotionPiece)),
 	        LegalMoves).
 
-% get_all_legal_moves_with_promotion: get all legal moves including promotion options
-get_all_legal_moves_with_promotion(Color, Position, LegalMoves) :-
-	findall([From,To], 
-	        (get_half(Position, Half, Color),
-	         get_piece_position(Half, From, _),
-	         find_piece_type(From, Type, Position, Color),
-	         legal_move_for_piece(From, To, Type, Color, Position),
-	         (   (Type = pawn, is_promotion_move(From, To, Color, Position)) ->
-	             % For promotion moves, check if any promotion is legal
-	             (is_legal_move_with_promotion(From, To, Color, Position, queen) ;
-	              is_legal_move_with_promotion(From, To, Color, Position, rook) ;
-	              is_legal_move_with_promotion(From, To, Color, Position, bishop) ;
-	              is_legal_move_with_promotion(From, To, Color, Position, knight))
-	         ;   % For normal moves
-	             is_legal_move(From, To, Color, Position)
-	         )),
-	        LegalMoves).
-
 % check if the given color is in checkmate
 is_checkmate(Position, Color) :-
 	in_check(Position, Color),
@@ -222,34 +204,6 @@ pawn_move(From,white,Position,To):-
 	OneSquareForward is From + 8,
 	unoccupied(OneSquareForward, Position),
 	between(8, 15, From). % starting row for white pawns
-
-% White pawn promotion moves
-pawn_move(From,white,Position,To):-
-	To is From + 8,  % move forward to promotion rank
-	not(invalid_field(To)),
-	unoccupied(To,Position),
-	is_promotion_rank(To, white).  % Moving to 8th rank
-
-pawn_move(From,white,Position,To):-
-	To is From + 7,  % capture diagonal left to promotion rank
-	not(invalid_field(To)),
-	not(crosses_edge(From,To,7)),
-	occupied(To,black,Position),
-	is_promotion_rank(To, white).  % Moving to 8th rank
-
-pawn_move(From,white,Position,To):-
-	To is From + 9,  % capture diagonal right to promotion rank
-	not(invalid_field(To)),
-	not(crosses_edge(From,To,9)),
-	occupied(To,black,Position),
-	is_promotion_rank(To, white).  % Moving to 8th rank
-
-pawn_move(From,white,Position,To):-
-	To is From + 16, % double move from starting position
-	not(invalid_field(To)),
-	unoccupied(To,Position),
-	unoccupied(From + 8,Position),
-	From >= 8, From =< 15. % starting row for white pawns
 
 pawn_move(From,black,Position,To):-
 	To is From - 7,  % capture diagonal right
@@ -379,20 +333,9 @@ promote_pawn(Position, Color, PawnPos, PromotionPiece, NewPosition) :-
 	remove(PawnPos, PawnList, NewPawnList),
 	combine(Half, pawn, NewPawnList, TempHalf),
 	
-	% Add the promoted piece based on type
-	(   PromotionPiece = queen ->
-	    extract(TempHalf, queen, QueenList),
-	    combine(TempHalf, queen, [PawnPos|QueenList], NewHalf)
-	;   PromotionPiece = rook ->
-	    extract(TempHalf, rook, RookList),
-	    combine(TempHalf, rook, [PawnPos|RookList], NewHalf)
-	;   PromotionPiece = bishop ->
-	    extract(TempHalf, bishop, BishopList),
-	    combine(TempHalf, bishop, [PawnPos|BishopList], NewHalf)
-	;   PromotionPiece = knight ->
-	    extract(TempHalf, knight, KnightList),
-	    combine(TempHalf, knight, [PawnPos|KnightList], NewHalf)
-	),
+	% Add the promoted piece
+	extract(TempHalf, PromotionPiece, PieceList),
+	combine(TempHalf, PromotionPiece, [PawnPos|PieceList], NewHalf),
 	
 	% Update the position
 	update_half(Position, NewHalf, Color, NewPosition).
@@ -416,15 +359,6 @@ get_promotion_choice(PromotionPiece, Color) :-
 get_promotion_choice(PromotionPiece, _Color) :-
 	bot_promotion(PromotionPiece).
 
-% New predicate to handle promotion with given piece type
-get_promotion_choice(PromotionPiece, PieceType) :-
-    (   PieceType = 'q' -> PromotionPiece = queen
-    ;   PieceType = 'r' -> PromotionPiece = rook  
-    ;   PieceType = 'b' -> PromotionPiece = bishop
-    ;   PieceType = 'k' -> PromotionPiece = knight
-    ;   PromotionPiece = queen  % Default to queen
-    ).
-
 % =================================
 % Pawn enpassant
 % =================================
@@ -443,4 +377,3 @@ is_enpassant_move(From, To, black, Position) :-
 	get_half(Position, half_position(_,_,_,_,_,_,_,EnpassantList), black),
 	member(OpponentPawnPos, EnpassantList),  % Get opponent pawn position
 	abs(To - OpponentPawnPos) =:= 8.         % Target square is 8 squares away from opponent pawn
-

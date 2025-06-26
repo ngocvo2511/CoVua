@@ -4,13 +4,13 @@ initial_pos(position(H1,H2)):-
 	PawnBlack = [48,49,50,51,52,53,54,55],
 	H2 = half_position(PawnBlack,[56,63],[57,62],[58,61],[59],[60],[queenside,kingside],[]).
 
-set_position(begin, Color) :-
+set_position(begin) :-
 	retractall(board(_,_,_)),
 	initial_pos(Position),
 	asserta(board(Position, Color, 0)),
 	init_history(Position, Color),!.
 	
-set_position(Position,Color) :- 
+set_position(Position, Color) :- 
 	retractall(board(_,_,_)),
 	asserta(board(Position,Color,0)),
 	init_history(Position,Color),!.
