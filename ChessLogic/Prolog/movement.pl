@@ -86,8 +86,7 @@ simulate_move(From, To, Color, Position, NewPosition, PromotionPiece) :-
 	    ;   % Normal move: just move our piece
 	        move_piece(Position, Color, From, To, NewPosition)
 	    )
-	), 				write(To), nl
-.
+	).
 
 % get_all_legal_moves: get all legal moves for a color
 get_all_legal_moves(Position, Color, LegalMoves) :-
@@ -112,29 +111,29 @@ is_stalemate(Position, Color) :-
 % =================================
 
 % Direction vectors for different pieces (adjusted for 0-63 board)
-% poss_move: (piece, move value) - adjusted for 0-63 board
-poss_move(rook,8).    % up
-poss_move(rook,-8).   % down
-poss_move(rook,1).    % right
-poss_move(rook,-1).   % left
-poss_move(bishop,7).  % up-left diagonal
-poss_move(bishop,9).  % up-right diagonal
-poss_move(bishop,-7). % down-right diagonal
-poss_move(bishop,-9). % down-left diagonal
-poss_move(knight,15). % 2 up, 1 left
-poss_move(knight,17). % 2 up, 1 right
-poss_move(knight,6).  % 1 up, 2 left
-poss_move(knight,10). % 1 up, 2 right
-poss_move(knight,-6). % 1 down, 2 right
-poss_move(knight,-10).% 1 down, 2 left
-poss_move(knight,-15).% 2 down, 1 right
-poss_move(knight,-17).% 2 down, 1 left
-poss_move(queen,X):-
-	poss_move(rook,X).
-poss_move(queen,X):-
-	poss_move(bishop,X).
-poss_move(king,X):-
-	poss_move(queen,X).
+% piece_direction: (piece, move value) - adjusted for 0-63 board
+piece_direction(rook,8).    % up
+piece_direction(rook,-8).   % down
+piece_direction(rook,1).    % right
+piece_direction(rook,-1).   % left
+piece_direction(bishop,7).  % up-left diagonal
+piece_direction(bishop,9).  % up-right diagonal
+piece_direction(bishop,-7). % down-right diagonal
+piece_direction(bishop,-9). % down-left diagonal
+piece_direction(knight,15). % 2 up, 1 left
+piece_direction(knight,17). % 2 up, 1 right
+piece_direction(knight,6).  % 1 up, 2 left
+piece_direction(knight,10). % 1 up, 2 right
+piece_direction(knight,-6). % 1 down, 2 right
+piece_direction(knight,-10).% 1 down, 2 left
+piece_direction(knight,-15).% 2 down, 1 right
+piece_direction(knight,-17).% 2 down, 1 left
+piece_direction(queen,X):-
+	piece_direction(rook,X).
+piece_direction(queen,X):-
+	piece_direction(bishop,X).
+piece_direction(king,X):-
+	piece_direction(queen,X).
 
 % Check if move crosses board edge (for 0-63 board)
 crosses_edge(From,To,Direction) :-
@@ -151,7 +150,7 @@ crosses_edge(From,To,Direction) :-
 	).
 
 % one_step: from Field to Next through one step
-one_step(Field,Direction,Next,Color,Position):-	
+one_step(Field,Direction,Next,Color,Position):-
 	Next is Field + Direction,
 	valid_field(Next),
 	not(crosses_edge(Field,Next,Direction)),
@@ -303,12 +302,12 @@ castling_move(From, black, Position, To) :-
 
 % long_move: move for long distance (rook, bishop, queen)
 long_move(From,Color,Type,Position,To):-
-	poss_move(Type,Direction),
+	piece_direction(Type,Direction),
 	multiple_steps(From,Direction,To,Color,Position).
 
 % short_move: move for one step (king, knight)
 short_move(From,Color,Type,Position,To):-
-	poss_move(Type,Direction),
+	piece_direction(Type,Direction),
 	one_step(From,Direction,To,Color,Position).
 
 % =================================
