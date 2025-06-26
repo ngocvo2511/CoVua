@@ -65,7 +65,6 @@ place_piece(From, To, Status, PromotionPiece) :-
 	retract(board(Position, Color, Counter)),
 	asserta(board(NewPosition, NextColor, NewCounter)).
 
-% Initialize the game for web interface
 init :-
 	retractall(human(_)),
 	retractall(board(_,_,_)),
@@ -77,4 +76,3 @@ init :-
 	asserta(depth(3)),
 	% Set game mode (human vs computer by default)
 	asserta(human(white)).
-
