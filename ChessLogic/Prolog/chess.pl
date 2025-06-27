@@ -3,6 +3,7 @@
 	board/3, % board state, color, fifty-move counter
 	state/1, % picking piece or placing piece
 	history/1, % moves history
+	stack/3, 
 	depth/1.
 
 	
@@ -10,6 +11,7 @@
 :- [board].
 :- [attack].
 :- [movement].
+:- [evaluation].
 :- [helper].
 :- [minimax].
 :- [test].
