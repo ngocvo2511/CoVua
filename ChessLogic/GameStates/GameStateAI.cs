@@ -15,6 +15,11 @@ namespace ChessLogic.GameStates.GameState
             this.depth = depth;
             value = new ValuePiece();
         }
+        public GameStateAI(GameStateForLoad gameState, Board board) : base(gameState.CurrentPlayer, board, gameState.timeRemainingWhite, gameState.timeRemainingBlack,gameState.Moved,gameState.CapturedWhitePiece,gameState.CapturedWhitePiece)
+        {
+            this.depth = gameState.depth;
+            value = new ValuePiece();
+        }
         public override void UndoMove()
         {
             if (Moved.Count <= 1 || CurrentPlayer == Player.Black) return;

@@ -84,23 +84,26 @@ namespace ChessUI
                 }
             }
         }
-        //public GameUserControl(GameStateForLoad gameStateForLoad)
-        //{
-        //    InitializeComponent();
-        //    InitializeBoard();
-        //    if (gameStateForLoad.GameType == "GameStateAI") gameState = new GameStateAI(gameStateForLoad);
-        //    else gameState = new GameState2P(gameStateForLoad);
-        //    ShowGameInformation(gameStateForLoad.depth);
-        //    DrawBoard(gameState.Board);
-        //    foreach (var piece in gameState.CapturedRedPiece) DrawCapturedGrid(piece);
-        //    foreach (var piece in gameState.CapturedBlackPiece) DrawCapturedGrid(piece);
-        //    if (gameState.Moved.Any()) ShowPrevMove(gameState.Moved.First().Item1);
-        //    if (gameState.timeRemainingBlack != 0)
-        //    {
-        //        InitializeTimer();
-        //        SwitchTurn();
-        //    }
-        //}
+        public GameUserControl(GameStateForLoad gameStateForLoad)
+        {
+            InitializeComponent();
+            InitializeBoard();
+            PrologEngine.setHistoryBoard(gameStateForLoad.historyBoard);
+            if(gameStateForLoad.depth!=0) PrologEngine.SetDepth(gameStateForLoad.depth);
+            Board board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
+            if (gameStateForLoad.GameType == "GameStateAI") gameState = new GameStateAI(gameStateForLoad,board);
+            else gameState = new GameState2P(gameStateForLoad, board);
+            ShowGameInformation(gameStateForLoad.depth);
+            DrawBoard(gameState.Board);
+            foreach (var piece in gameState.CapturedRedPiece) DrawCapturedGrid(piece);
+            foreach (var piece in gameState.CapturedBlackPiece) DrawCapturedGrid(piece);
+            if (gameState.Moved.Any()) ShowPrevMove(gameState.Moved.First().Item1);
+            if (gameState.timeRemainingBlack != 0)
+            {
+                InitializeTimer();
+                SwitchTurn();
+            }
+        }
         private void InitializeTimer()
         {
             int minutes = gameState.timeRemainingRed / 60;
@@ -456,7 +459,7 @@ namespace ChessUI
             {
                 if (gameState.Board[to] != null)
                 {
-                    highlights[to.Row, to.Column].Fill = new SolidColorBrush(Color.FromArgb(255, 255, 0, 0));
+                    highlights[to.Row, to.Column].Fill = new SolidColorBrush(Color.FromArgb(225, 255, 0, 0));
                 }
                 else highlights[to.Row, to.Column].Fill = new SolidColorBrush(color);
             }

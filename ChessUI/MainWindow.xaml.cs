@@ -4,6 +4,7 @@ using ChessUI.Menus;
 using System;
 using System.ComponentModel;
 using System.Windows;
+using ChessLogic.GameStates;
 
 namespace ChessUI
 {
@@ -50,6 +51,7 @@ namespace ChessUI
         {
             try
             {
+                CreateHistoryMenu();
                 string rootPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\.."));
                 string prologPath = System.IO.Path.Combine(rootPath, "ChessLogic", "Prolog", "test.pl");
                 //PrologEngine.Initialize(prologPath);
@@ -180,15 +182,15 @@ namespace ChessUI
         #endregion
 
         #region HistoryMenu
-        //private void CreateHistoryMenu()
-        //{
-        //    HistoryMenu historyMenu = new HistoryMenu();
+        private void CreateHistoryMenu()
+        {
+            HistoryMenu historyMenu = new HistoryMenu();
 
-        //    historyMenu.CloseButtonClicked += CloseButtonClicked;
+            historyMenu.CloseButtonClicked += CloseButtonClicked;
 
-        //    historyMenu.LoadHistory();
-        //    mainWindowGrid.Children.Add(historyMenu);
-        //}
+            //historyMenu.LoadHistory();
+            mainWindowGrid.Children.Add(historyMenu);
+        }
         #endregion
 
         #region PauseMenu
@@ -268,21 +270,21 @@ namespace ChessUI
         }
         #endregion
 
-        //#region ViewGameLoad
-        //private void CreateViewGameLoad(GameStateForLoad gameStateForLoad)
-        //{
-        //    onGame = true;
-        //    if (gameUserControl != null) gameUserControl.ResetTimer();
-        //    gameUserControl = new GameUserControl(gameStateForLoad);
-        //    gameUserControl.PauseButtonClicked += PauseButtonClicked;
-        //    gameUserControl.SaveButtonClicked += SaveButtonClicked;
-        //    gameUserControl.GameOver += OnGameOver;
-        //    gameUserControl.CloseAppButtonClicked += CloseAppButtonClicked;
+        #region ViewGameLoad
+        private void CreateViewGameLoad(GameStateForLoad gameStateForLoad)
+        {
+            onGame = true;
+            if (gameUserControl != null) gameUserControl.ResetTimer();
+            gameUserControl = new GameUserControl(gameStateForLoad);
+            gameUserControl.PauseButtonClicked += PauseButtonClicked;
+            gameUserControl.SaveButtonClicked += SaveButtonClicked;
+            gameUserControl.GameOver += OnGameOver;
+            gameUserControl.CloseAppButtonClicked += CloseAppButtonClicked;
 
-        //    mainWindowGrid.Children.Clear();
-        //    mainWindowGrid.Children.Add(gameUserControl);
-        //}
-        //#endregion
+            mainWindowGrid.Children.Clear();
+            mainWindowGrid.Children.Add(gameUserControl);
+        }
+        #endregion
 
         #region SaveMenu
         private void CreateSaveMenu()
@@ -299,17 +301,16 @@ namespace ChessUI
         {
             saveloadSlotControl = new SaveSlotControl();
             saveloadSlotControl.CloseButtonClicked += CloseButtonClicked;
-            //saveloadSlotControl.SelectedLoadSlot += SelectedLoadSlot_Clicked;
-
+            saveloadSlotControl.SelectedLoadSlot += SelectedLoadSlot_Clicked;
             mainWindowGrid.Children.Add(saveloadSlotControl);
         }
 
-        //private void SelectedLoadSlot_Clicked(object sender, SaveSlotEventArgs e)
-        //{
-        //    Sound.PlayButtonClickSound();
-        //    //GameStateForLoad gameStateForLoad = SaveService.Load(e.FilePath);
-        //    CreateViewGameLoad(gameStateForLoad);
-        //}
+        private void SelectedLoadSlot_Clicked(object sender, SaveSlotEventArgs e)
+        {
+            Sound.PlayButtonClickSound();
+            GameStateForLoad gameStateForLoad = SaveService.Load(e.FilePath);
+            CreateViewGameLoad(gameStateForLoad);
+        }
         #endregion
 
 

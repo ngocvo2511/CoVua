@@ -82,6 +82,7 @@
     <Compile Include="Counting.cs" />
     <Compile Include="Direction.cs" />
     <Compile Include="EndReason.cs" />
+    <Compile Include="GameRecord.cs" />
     <Compile Include="GameStates\GameState.cs" />
     <Compile Include="GameStates\GameState2P.cs" />
     <Compile Include="GameStates\GameStateAI.cs" />

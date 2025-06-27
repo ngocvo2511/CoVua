@@ -6,6 +6,8 @@ namespace ChessLogic.GameStates.GameState
     {
         public GameState2P(Player player, Board board, int timeLimit = 0) : base(player, board, timeLimit) { }
 
+        public GameState2P(GameStateForLoad gameState, Board board) : base(gameState.CurrentPlayer,board,gameState.timeRemainingWhite,gameState.timeRemainingBlack,gameState.Moved,gameState.CapturedWhitePiece,gameState.CapturedBlackPiece)
+        {}
         public override void UndoMove()
         {
             if (!Moved.Any()) return;

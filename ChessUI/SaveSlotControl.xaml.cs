@@ -1,4 +1,5 @@
-﻿using ChessLogic.GameStates.GameState;
+﻿using ChessLogic;
+using ChessLogic.GameStates.GameState;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -119,22 +120,22 @@ namespace ChessUI
             string filePath = System.IO.Path.Combine(SaveDirectory, SaveFiles[index]);
             if (isSave == true)
             {
-                //if (File.Exists(filePath))
-                //{
-                //    ShowConfirmationDialog("Bạn có muốn ghi đè trận đấu trước đó?", result =>
-                //    {
-                //        if (result)
-                //        {
-                //            SaveService.Save(currentGameState, filePath);
-                //            LoadFileToList();
-                //        }
-                //    });
-                //}
-                //else
-                //{
-                //    SaveService.Save(currentGameState, filePath);
-                //    LoadFileToList();
-                //}
+                if (File.Exists(filePath))
+                {
+                    ShowConfirmationDialog("Bạn có muốn ghi đè trận đấu trước đó?", result =>
+                    {
+                        if (result)
+                        {
+                            SaveService.Save(currentGameState, filePath);
+                            LoadFileToList();
+                        }
+                    });
+                }
+                else
+                {
+                    SaveService.Save(currentGameState, filePath);
+                    LoadFileToList();
+                }
             }
             else
             {

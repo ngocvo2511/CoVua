@@ -2,6 +2,11 @@
 % Minimax AI
 % =================================
 
+% Set new depth
+set_depth(New) :-
+    retractall(depth(_)),
+    asserta(depth(New)).
+
 % Initialize default depth if not set
 init_minimax :-
     (depth(_) -> true ; asserta(depth(3))),

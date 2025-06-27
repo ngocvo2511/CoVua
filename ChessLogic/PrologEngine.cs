@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -338,11 +339,63 @@ namespace ChessLogic
             {
                 if (q.NextSolution())
                 {
+                    Debug.Print(q.Variables.ToString());
                     var color = q.Variables["Color"].ToString();
                     return color == "white" ? Player.White : Player.Black;
                 }
             }
             throw new Exception("Không thể lấy được lượt đi hiện tại.");
+        }
+
+        public static string GetRawHistory()
+        {
+            using (var q = new PlQuery("history(H)"))
+            {
+                if (q.NextSolution())
+                    return q.Variables["H"].ToString();
+            }
+            return null;
+        }
+        public static void setHistoryBoard(string rawHistory)
+        {
+            using( var q = new PlQuery($"set_new_history({rawHistory})"))
+            {
+                if (!q.NextSolution())
+                {
+                    throw new Exception("Không thể đặt lịch sử bàn cờ.");
+                }
+            }
+        }
+        public static int? GetDepth()
+        {
+            try
+            {
+                using (var q = new PlQuery("depth(D)"))
+                {
+                    if (q.NextSolution())
+                    {
+                        var dStr = q.Variables["D"].ToString();
+                        if (int.TryParse(dStr, out int depth))
+                            return depth;
+                    }
+                }
+            }
+            catch
+            {
+
+            }
+            return null;
+        }
+        public static void SetDepth(int depth)
+        {
+            try
+            {
+                PlQuery.PlCall($"set_depth({depth})");
+            }
+            catch (PlException ex)
+            {
+                Console.WriteLine($"Lỗi khi đặt độ sâu: {ex.Message}");
+            }
         }
     }
 }

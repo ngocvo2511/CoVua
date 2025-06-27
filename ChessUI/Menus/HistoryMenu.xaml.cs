@@ -36,6 +36,22 @@ namespace ChessUI.Menus
 
         //    HistoryList.ItemsSource = history;
         //}
+        private void HistoryList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (HistoryList.SelectedItem is ChessLogic.GameRecord selectedRecord)
+            {
+                // Gọi replay hoặc load lại ván đấu
+                LoadGameFromFile(selectedRecord.FilePath);
 
+                // Bỏ chọn sau khi click để chọn lại được sau này
+                HistoryList.SelectedItem = null;
+            }
+        }
+        private void LoadGameFromFile(string filePath)
+        {
+            // Giả sử bạn có một phương thức để tải lại ván đấu từ file
+            // Ví dụ: GameLoader.LoadGame(filePath);
+            MessageBox.Show($"Loading game from {filePath}", "Load Game", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
     }
 }

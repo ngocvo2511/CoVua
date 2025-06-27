@@ -1,0 +1,11 @@
+{
+  "GameType": "GameState2P",
+  "depth": 0,
+  "CurrentPlayer": "White",
+  "Moved": [],
+  "timeRemainingWhite": 595,
+  "timeRemainingBlack": 600,
+  "historyBoard": "[board(position(half_position([8,9,10,11,12,13,14,15],[0,7],[1,6],[2,5],[3],[4],[queenside,kingside],[]),half_position([48,49,50,51,52,53,54,55],[56,63],[57,62],[58,61],[59],[60],[queenside,kingside],[])),white,0)]",
+  "CapturedWhitePiece": [],
+  "CapturedBlackPiece": []
+}

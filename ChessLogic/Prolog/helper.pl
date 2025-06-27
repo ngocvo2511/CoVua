@@ -7,8 +7,8 @@ initial_pos(position(H1,H2)):-
 set_position(begin) :-
 	retractall(board(_,_,_)),
 	initial_pos(Position),
-	asserta(board(Position, Color, 0)),
-	init_history(Position, Color),!.
+	asserta(board(Position, white, 0)),
+	init_history(Position, white),!.
 	
 set_position(Position, Color) :- 
 	retractall(board(_,_,_)),
