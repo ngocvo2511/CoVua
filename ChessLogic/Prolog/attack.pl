@@ -1,3 +1,8 @@
+% ============================================
+% check if a position is under attack
+% ============================================
+
+
 % find_king: find the position of king for given color
 find_king(Position, Color, KingPos) :-
 	get_half(Position, half_position(_,_,_,_,_,[KingPos],_,_), Color).

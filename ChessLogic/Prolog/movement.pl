@@ -342,22 +342,6 @@ promote_pawn(Position, Color, PawnPos, PromotionPiece, NewPosition) :-
 
 bot_promotion(queen).
 bot_promotion(knight).
-% promotion choice
-get_promotion_choice(PromotionPiece, Color) :-
-	human(Color),
-    state(place),
-    write('Choose promotion piece (q/r/b/k): '),
-    get_char(Input),
-    (   Input = 'q' -> PromotionPiece = queen
-    ;   Input = 'r' -> PromotionPiece = rook  
-    ;   Input = 'b' -> PromotionPiece = bishop
-    ;   Input = 'k' -> PromotionPiece = knight
-    ;   (write('Invalid choice, promoting to queen.'), nl,
-        PromotionPiece = queen)
-    ),!.
-
-get_promotion_choice(PromotionPiece, _Color) :-
-	bot_promotion(PromotionPiece).
 
 % =================================
 % Pawn enpassant

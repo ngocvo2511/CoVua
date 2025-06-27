@@ -2,52 +2,44 @@
 % History management and threefold repetition
 % =================================
 
-:- dynamic history/1.
-:- dynamic undo/0.
-:- dynamic undo_move/0.
-
 undo :- undo_move.
 
 % Undo last move
 undo_move :-
-    history([_, board(PreviousPosition, PreviousColor, PreviousCounter)|RestHistory]),
-    retract(history([_, board(PreviousPosition, PreviousColor, PreviousCounter)|RestHistory])),
-    asserta(history([board(PreviousPosition, PreviousColor, PreviousCounter)|RestHistory])),
-    retractall(board(_,_,_)),
-    asserta(board(PreviousPosition, PreviousColor, PreviousCounter)).
+    history(Board),
+    retract(history(Board)),
+    (not(history(NewBoard)) -> asserta(Board); NewBoard = Board),
+    retract(board(_,_,_)),
+    asserta(NewBoard).
 
 % Initialize history with starting board state
 init_history(Position, Color) :-
     retractall(history(_)),
-    asserta(history([board(Position, Color, 0)])).
+    asserta(history(board(Position, Color, 0))).
 
 % Add board state to history
 add_to_history(Position, Color, Counter) :-
-    history(HistoryList),
-    retract(history(HistoryList)),
-    asserta(history([board(Position, Color, Counter)|HistoryList])).
+    asserta(history(board(Position, Color, Counter))).
 
-set_new_history(History) :-
-    History = [Board|_],
-    retract(history(_)),
+set_new_history(HistoryList) :-
+    retractall(history(_)),
     retractall(board(_,_,_)),
-    asserta(History),
-    asserta(Board).
+    set_full_history(HistoryList).
+
+set_full_history([Board|Rest]) :-
+    set_full_history(Rest),
+    asserta(Board),
+    asserta(history(Board)).
+
+set_full_history([]).
+
+get_full_history(HistoryList) :-
+    findall(Board, history(Board), HistoryList).
 
 % Check for threefold repetition
 is_threefold_repetition(Position, Color) :-
-    history(HistoryList),
-    count_occurrences(board(Position, Color, _), HistoryList, Count),
-    Count >= 3.
+    findall(1, history(board(Position, Color, _)), Occurrences),
+    length(Occurrences, Count),
+    Count >= 3.    
 
-% Count occurrences of a board state in history
-count_occurrences(board(Position, Color, _), HistoryList, Count) :-
-    findall(1, member(board(Position, Color, _), HistoryList), Occurrences),
-    length(Occurrences, Count).
-
-
-
-% Check if undo is possible
-can_undo :-
-    history([_Current, _Previous|_]).
 	

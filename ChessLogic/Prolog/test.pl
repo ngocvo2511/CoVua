@@ -20,6 +20,10 @@ test_threefold :-
 	threefold_position(Position),
 	set_position(Position,white).
 
+test_checkmate :-
+	checkmate_position(Position),
+	set_position(Position,white).
+
 only_king_and_rooks(position(H1, H2)) :-
     H1 = half_position([],[],[],[],[],[4],[queenside,kingside],[]),
     H2 = half_position([],[8, 23],[],[],[],[60],[queenside,kingside],[]).
@@ -36,11 +40,15 @@ threefold_position(position(H1, H2)) :-
 	H1 = half_position([],[1],[],[],[],[4],[],[]),
     H2 = half_position([],[],[],[],[],[56],[],[]).
 
+checkmate_position(position(H1, H2)) :-
+	H1 = half_position([],[],[],[],[],[47],[],[]),
+	H2 = half_position([],[62,5],[],[],[],[35],[],[]).
+
 test_time :-
 	initial_pos(Position),
 	get_all_legal_moves(Position, white, _MoveList).
 
 test_incheck :-
-	board(Pos, Color, _Counter),
+	board(Pos, _Color, _Counter),
 	(in_check(Pos, white) -> write('Yes') ; write('No')), nl,
 	(in_check(Pos, black) -> write('Yes') ; write('No')), nl.

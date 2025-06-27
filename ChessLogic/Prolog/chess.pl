@@ -1,9 +1,10 @@
 :- dynamic 
 	human/1, % human player color, if predicate not exist then bot will play that turn
 	board/3, % board state, color, fifty-move counter
-	state/1, % picking piece or placing piece
 	history/1, % moves history
-	depth/1.
+	depth/1,
+	stack/3,
+	count/1.
 
 	
 :- [history].
@@ -12,20 +13,12 @@
 :- [movement].
 :- [helper].
 :- [minimax].
+:- [evaluation].
 :- [test].
 
 % =================================
 % player queries
 % =================================
-% human vs human
-% human vs computer
-% computer vs human
-% computer vs computer
-game_mode(hxh) :- asserta(human(white)), asserta(human(black)) ,!.
-game_mode(hxc) :- asserta(human(white)), !.
-game_mode(cxh) :- asserta(human(black)), !.
-game_mode(cxc) :- !.
-
 
 % returns list of all legal moves for piece at Pos
 pick_piece(Pos, LegalMoves) :-
@@ -49,9 +42,7 @@ place_piece(From, To, Status, PromotionPiece) :-
 	is_legal_move(From, To, Color, Position, PromotionPiece),
 	
 	% Make the move, wrap this with state(place) to make sure only this allow to print to screen
-	asserta(state(place)),
 	simulate_move(From, To, Color, Position, NewPosition, PromotionPiece),
-	retract(state(place)),
 	
 	% Update fifty-move counter
 	update_fifty_move_counter(From, To, Position, Color, Counter, NewCounter),
@@ -66,13 +57,10 @@ place_piece(From, To, Status, PromotionPiece) :-
 	asserta(board(NewPosition, NextColor, NewCounter)).
 
 init :-
-	retractall(human(_)),
 	retractall(board(_,_,_)),
 	retractall(state(_)),
 	retractall(history(_)),
 	retractall(depth(_)),
 	set_position(begin),
 	% Initialize default depth if not set
-	asserta(depth(3)),
-	% Set game mode (human vs computer by default)
-	asserta(human(white)).
+	asserta(depth(3)).

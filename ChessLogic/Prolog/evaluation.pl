@@ -182,9 +182,9 @@ get_row_col(Position, Row, Col) :-
     Row is Position // 8,
     Col is Position mod 8.
 
-winning_value(white, 9000).
-winning_value(black, -9000).
+winning_value(white, 900000).
+winning_value(black, -900000).
 
-losing_value(white, -9000).
-losing_value(black, 9000).
+losing_value(white, -900000).
+losing_value(black, 900000).
 
