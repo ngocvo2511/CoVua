@@ -4,8 +4,6 @@
 
 % Initialize default depth if not set
 init_minimax :-
-    retractall(count(_)),
-    asserta(count(0)),
     (depth(_) -> true ; asserta(depth(3))),
     (stack(_, _, _) -> true ; asserta(stack(_, _, 0))).
 
@@ -31,9 +29,10 @@ bot_move(From, To, Status) :-
     depth(Depth),
     losing_value(white,Alpha),
 	losing_value(black,Beta),
+    asserta(count(0)),
     minimax(Position, Color, Counter, Move, Depth, _Value, Alpha, Beta),
-    count(Count),
-    write('Count: '), write(Count), nl,
+    retract(count(Count)),
+    write('Depth: '), write(Depth), write(' Count: '), write(Count), nl,
     Move = move(From, To, PromotionPiece),
     place_piece(From, To, Status, PromotionPiece),
     % Get the new game state after the move
@@ -47,31 +46,16 @@ simulate_new_position_from_move_list([_|Rest], Move, Color, Position, NewPositio
     simulate_new_position_from_move_list(Rest, Move, Color, Position, NewPosition).
 % simulate_new_position_from_move_list([], _, _, Position, Position, _).
 
-get_best(Position, Color, Counter, Depth, Alpha, Beta) :-
+get_best(Position, Color, Counter, Depth, Alpha, Beta, MoveList) :-
     invert(Color, Op),
     update_depth(Depth, NewDepth),
     update_alpha_beta(Color, Alpha, NewAlpha, Beta, NewBeta),
-
-    get_all_legal_moves(Position, Color, MoveList),
-    %write('Depth: '), write(Depth), nl, write('MoveList: '), write(MoveList), nl,
-    (   MoveList = [] -> 
-        count(Count),
-        retract(count(Count)),
-        NewCount is Count + 1,
-        asserta(count(NewCount)),
-        Move = move(64, 64, none),
-        (   in_check(Position, Color) -> 
-            minimax(_Position, Color, _Counter, Move, checkmate, Value, NewAlpha, NewBeta)
-        ;   
-            minimax(_Position, _Color, _Counter, Move, stalemate, Value, NewAlpha, NewBeta)
-        )
-    ;
-        simulate_new_position_from_move_list(MoveList, Move, Color, Position, NewPosition),
-        minimax(NewPosition, Op, Counter, _Move, NewDepth, Value, NewAlpha, NewBeta)
-    ),    
-    compare_move(Move, Value, Color),    
-    prune(Value, Color, Alpha, Beta),
-    !, fail.
+    %write('Depth: '), write(Depth), write(' Moves: '), write(MoveList), nl,
+    simulate_new_position_from_move_list(MoveList, Move, Color, Position, NewPosition),
+    minimax(NewPosition, Op, Counter, _Move, NewDepth, Value, NewAlpha, NewBeta),
+    compare_move(Move, Value, Color),
+    %prune(Value, Color, Alpha, Beta),!,
+    fail.
 
 compare_move(Move, Value, Color) :-
     get(OldMove, OldValue),
@@ -92,17 +76,11 @@ prune(Value, Color, Alpha, Beta) :-
     ;   false
     ).
 
-minimax(_Position, _Color, _Counter, move(64, 64, none), stalemate, Value, _Alpha, _Beta) :-
-    Value is 0, !.
-
-minimax(_Position, Color, _Counter, move(64, 64, none), checkmate, Value, _Alpha, _Beta) :-
-    losing_value(Color, Value),!.
-
 minimax(Position, _Color, _Counter, move(64, 64, none), 0, Value, _Alpha, _Beta) :-
-count(Counter),
-    retract(count(Counter)),
-    NewCounter is Counter + 1,
-    asserta(count(NewCounter)),
+    count(Count),
+    retract(count(Count)),
+    NewCount is Count + 1,
+    asserta(count(NewCount)),
     %score(Position, Color, Counter, Value), 
     Position = position(WhiteHalf, BlackHalf),
     score_half(WhiteHalf, white, ValueWhite),
@@ -110,15 +88,30 @@ count(Counter),
     Value is ValueWhite - ValueBlack, !.
 
 minimax(Position, Color, Counter, Move, Depth, Value, Alpha, Beta) :-
-    count(Count),
-    retract(count(Count)),
-    NewCount is Count + 1,
-    asserta(count(NewCount)),
-    (  losing_value(Color, Worst),
+    get_all_legal_moves(Position, Color, MoveList),
+    %write(MoveList),nl,
+    (   (is_threefold_repetition(Position, Color) ; is_fifty_move(Counter)) ->
+        Value is 0
+    ;
+        MoveList = [] ->
+
+            count(Count),
+            retract(count(Count)),
+            NewCount is Count + 1,
+            asserta(count(NewCount)),
+            % No legal moves, check for checkmate or stalemate
+            (   in_check(Position, Color) ->
+                losing_value(Color, Value)
+            ;   Value is 0
+            )
+    ;
+
+        losing_value(Color, Worst),
         push(move(64, 64, none), Worst),
-        not(get_best(Position, Color, Counter, Depth, Alpha, Beta)),
+        not(get_best(Position, Color, Counter, Depth, Alpha, Beta, MoveList)),
         pop(Move, Value)
-    ), !.
+    ), 
+!.
 
 
 % =================================

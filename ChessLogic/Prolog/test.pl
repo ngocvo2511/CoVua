@@ -35,7 +35,8 @@ only_king_and_pawns(position(H1, H2)) :-
 enpassant_position(position(H1, H2)) :-
     H1 = half_position([35],[],[],[],[],[4],[],[]),
     H2 = half_position([52],[],[],[],[],[60],[],[]).
-	
+
+
 threefold_position(position(H1, H2)) :-
 	H1 = half_position([],[1],[],[],[],[4],[],[]),
     H2 = half_position([],[],[],[],[],[56],[],[]).

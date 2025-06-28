@@ -9,100 +9,116 @@ find_king(Position, Color, KingPos) :-
 
 % check if position is attacked by enemy pawn
 is_attacked_by_pawn(Pos, Color, Pawns) :-
-	(
-		Color = white ->
-		(
-			PawnPos is Pos - 7,  % diagonal left attack
-			valid_field(PawnPos),
-			not(crosses_edge(PawnPos, Pos, PawnPos - Pos)),
-			member(PawnPos, Pawns)
-		;   
-			PawnPos is Pos - 9,  % diagonal right attack
-			valid_field(PawnPos),
-			not(crosses_edge(PawnPos, Pos, PawnPos - Pos)),
-			member(PawnPos, Pawns)
-		)
-		;
-		Color = black ->
-		(
-			PawnPos is Pos + 7,  % diagonal right attack
-			valid_field(PawnPos),
-			not(crosses_edge(PawnPos, Pos, PawnPos - Pos)),
-			member(PawnPos, Pawns)
-		;
-			PawnPos is Pos + 9,  % diagonal left attack
-			valid_field(PawnPos),
-			not(crosses_edge(PawnPos, Pos, PawnPos - Pos)),
-			member(PawnPos, Pawns)
-		)
-	).
+    (
+        Color = white ->
+        (
+            (
+                PawnPos is Pos - 7,  % diagonal left attack
+                Direction is PawnPos - Pos,
+                valid_field(PawnPos),
+                not(crosses_edge(Pos, PawnPos, Direction)),
+                member(PawnPos, Pawns)
+            ;
+                PawnPos is Pos - 9,  % diagonal right attack
+                Direction is PawnPos - Pos,
+                valid_field(PawnPos),
+                not(crosses_edge(Pos, PawnPos, Direction)),
+                member(PawnPos, Pawns)
+            )
+        )
+    ;
+        Color = black ->
+        (
+            (
+                PawnPos is Pos + 7,  % diagonal right attack
+                Direction is PawnPos - Pos,
+                valid_field(PawnPos),
+                not(crosses_edge(Pos, PawnPos, Direction)),
+                member(PawnPos, Pawns)
+            ;
+                PawnPos is Pos + 9,  % diagonal left attack
+                Direction is PawnPos - Pos,
+                valid_field(PawnPos),
+                not(crosses_edge(Pos, PawnPos, Direction)),
+                member(PawnPos, Pawns)
+            )
+        )
+    ).
+
 
 is_attacked_by_knight(Pos, _Color, Knights) :-
-	(
-		KnightPos is Pos + 15, % L-shape move
-		valid_field(KnightPos),
-		not(crosses_edge(KnightPos, Pos, KnightPos - Pos)),
-		member(KnightPos, Knights)
-	;
-		KnightPos is Pos + 17,
-		valid_field(KnightPos),
-		not(crosses_edge(KnightPos, Pos, KnightPos - Pos)),
-		member(KnightPos, Knights)
-	;
-		KnightPos is Pos - 15,
-		valid_field(KnightPos),
-		not(crosses_edge(KnightPos, Pos, KnightPos - Pos)),
-		member(KnightPos, Knights)
-	;
-		KnightPos is Pos - 17,
-		valid_field(KnightPos),
-		not(crosses_edge(KnightPos, Pos, KnightPos - Pos)),
-		member(KnightPos, Knights)
-	;
-		KnightPos is Pos + 6,
-		valid_field(KnightPos),
-		not(crosses_edge(KnightPos, Pos, KnightPos - Pos)),
-		member(KnightPos, Knights)
-	;
-		KnightPos is Pos + 10,
-		valid_field(KnightPos),
-		not(crosses_edge(KnightPos, Pos, KnightPos - Pos)),
-		member(KnightPos, Knights)
-	;
-		KnightPos is Pos - 6,
-		valid_field(KnightPos),
-		not(crosses_edge(KnightPos, Pos, KnightPos - Pos)),
-		member(KnightPos, Knights)
-	;
-		KnightPos is Pos - 10,
-		valid_field(KnightPos),
-		not(crosses_edge(KnightPos, Pos, KnightPos - Pos)),
-		member(KnightPos, Knights)
-	
-	).
+    (
+        KnightPos is Pos + 15,
+        Direction is KnightPos - Pos,
+        valid_field(KnightPos),
+        not(crosses_edge(Pos, KnightPos, Direction)),
+        member(KnightPos, Knights)
+    ;
+        KnightPos is Pos + 17,
+        Direction is KnightPos - Pos,
+        valid_field(KnightPos),
+        not(crosses_edge(Pos, KnightPos, Direction)),
+        member(KnightPos, Knights)
+    ;
+        KnightPos is Pos - 15,
+        Direction is KnightPos - Pos,
+        valid_field(KnightPos),
+        not(crosses_edge(Pos, KnightPos, Direction)),
+        member(KnightPos, Knights)
+    ;
+        KnightPos is Pos - 17,
+        Direction is KnightPos - Pos,
+        valid_field(KnightPos),
+        not(crosses_edge(Pos, KnightPos, Direction)),
+        member(KnightPos, Knights)
+    ;
+        KnightPos is Pos + 6,
+        Direction is KnightPos - Pos,
+        valid_field(KnightPos),
+        not(crosses_edge(Pos, KnightPos, Direction)),
+        member(KnightPos, Knights)
+    ;
+        KnightPos is Pos + 10,
+        Direction is KnightPos - Pos,
+        valid_field(KnightPos),
+        not(crosses_edge(Pos, KnightPos, Direction)),
+        member(KnightPos, Knights)
+    ;
+        KnightPos is Pos - 6,
+        Direction is KnightPos - Pos,
+        valid_field(KnightPos),
+        not(crosses_edge(Pos, KnightPos, Direction)),
+        member(KnightPos, Knights)
+    ;
+        KnightPos is Pos - 10,
+        Direction is KnightPos - Pos,
+        valid_field(KnightPos),
+        not(crosses_edge(Pos, KnightPos, Direction)),
+        member(KnightPos, Knights)
+    ).
 
 is_attacked_by_king(Pos, _Color, Kings) :-
 	Kings = [KingPos],
 	(
-		KingPos is Pos + 1 ; % right
-		KingPos is Pos - 1 ; % left
-		KingPos is Pos + 8 ; % up
-		KingPos is Pos - 8 ; % down
-		KingPos is Pos + 9 ; % up-right
-		KingPos is Pos + 7 ; % up-left
-		KingPos is Pos - 7 ; % down-left
-		KingPos is Pos - 9    % down-right
+		KingPos is Pos + 1, valid_field(KingPos), Direction is KingPos - Pos, not(crosses_edge(Pos, KingPos, Direction)) ; % right
+		KingPos is Pos - 1, valid_field(KingPos), Direction is KingPos - Pos, not(crosses_edge(Pos, KingPos, Direction)) ; % left
+		KingPos is Pos + 8, valid_field(KingPos), Direction is KingPos - Pos, not(crosses_edge(Pos, KingPos, Direction)) ; % up
+		KingPos is Pos - 8, valid_field(KingPos), Direction is KingPos - Pos, not(crosses_edge(Pos, KingPos, Direction)) ; % down
+		KingPos is Pos + 9, valid_field(KingPos), Direction is KingPos - Pos, not(crosses_edge(Pos, KingPos, Direction)) ; % up-right
+		KingPos is Pos + 7, valid_field(KingPos), Direction is KingPos - Pos, not(crosses_edge(Pos, KingPos, Direction)) ; % up-left
+		KingPos is Pos - 7, valid_field(KingPos), Direction is KingPos - Pos, not(crosses_edge(Pos, KingPos, Direction)) ; % down-left
+		KingPos is Pos - 9, valid_field(KingPos), Direction is KingPos - Pos, not(crosses_edge(Pos, KingPos, Direction))    % down-right
 	).
 
 
 multiple_steps_to_enemy(Field,Direction,Next,Color,Position):-
 	invert(Color,FriendColor),
 	one_step(Field,Direction,Next,FriendColor,Position),
-	occupied(Next,Color,Position).
+	occupied(Next,Color,Position),!.
 multiple_steps_to_enemy(Field,Direction,Next,Color,Position):-
 	invert(Color,FriendColor),
 	one_step(Field,Direction,FieldNew,FriendColor,Position),
-	multiple_steps_to_enemy(FieldNew,Direction,Next,Color,Position).
+	multiple_steps_to_enemy(FieldNew,Direction,Next,Color,Position),!.
 
 inverse_long_move(From,Color,Type,Position, Direction, To) :-
 	piece_direction(Type, Direction),

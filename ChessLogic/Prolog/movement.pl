@@ -48,6 +48,7 @@ legal_move_for_piece(From, To, king, Color, Position) :-
 simulate_move(From, To, Color, Position, NewPosition, PromotionPiece) :-
 	find_piece_type(From, Type, Position, Color),
 	invert(Color, OpponentColor),
+	(is_promotion_move(From, To, Color, Position), Type = pawn -> Promoting = true ; Promoting = false),
 	% Check if this is a castling move
 	(   (Type = king, is_castling_move(Color, From, To)) ->
 	    % Handle castling
@@ -62,12 +63,8 @@ simulate_move(From, To, Color, Position, NewPosition, PromotionPiece) :-
 	    capture_piece(Position, OpponentColor, CapturedPawnPos, TempPosition),
 	    move_piece(TempPosition, Color, From, To, NewPosition)
 	;   % Check if this is a pawn promotion
-	    (Type = pawn, is_promotion_move(From, To, Color, Position), 
-			(
-				var(PromotionPiece) -> bot_promotion(PromotionPiece)
-			;	PromotionPiece = null -> throw(error(promotion_required, context(place_piece, 'Pawn promotion requires piece choice')))
-			;	true
-			)) ->
+		Promoting = true,
+		bot_promotion(PromotionPiece),
 	    % Handle pawn promotion
 	    (   occupied(To, OpponentColor, Position) ->
 	        % Promotion with capture
@@ -79,6 +76,7 @@ simulate_move(From, To, Color, Position, NewPosition, PromotionPiece) :-
 	        promote_pawn(TempPosition, Color, To, PromotionPiece, NewPosition)
 	    )
 	;   % Check if there's an opponent piece to capture
+		Promoting = false,
 	    (   occupied(To, OpponentColor, Position) ->
 	        % Capture move: remove opponent piece first, then move our piece
 	        capture_piece(Position, OpponentColor, To, TempPosition),
@@ -277,7 +275,7 @@ castling_move(From, black, Position, To) :-
 castling_move(From, white, Position, To) :-
 	From = 4,  % White king starting position
 	To = 2,    % King moves to c1 (position 2)
-	get_half(Position, half_position(_,_,_,_,_,_,Castle,_), black),
+	get_half(Position, half_position(_,_,_,_,_,_,Castle,_), white),
 	member(queenside,Castle),
 	unoccupied(1, Position),  % b1 is empty
 	unoccupied(2, Position),  % c1 is empty
@@ -342,6 +340,8 @@ promote_pawn(Position, Color, PawnPos, PromotionPiece, NewPosition) :-
 
 bot_promotion(queen).
 bot_promotion(knight).
+bot_promotion(rook).
+bot_promotion(bishop).
 
 % =================================
 % Pawn enpassant
