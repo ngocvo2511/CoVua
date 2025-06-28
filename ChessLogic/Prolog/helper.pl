@@ -4,6 +4,13 @@ initial_pos(position(H1,H2)):-
 	PawnBlack = [48,49,50,51,52,53,54,55],
 	H2 = half_position(PawnBlack,[56,63],[57,62],[58,61],[59],[60],[queenside,kingside],[]).
 
+kiwipete_pos(position(H1, H2)) :-
+    PawnWhite = [8, 9, 10, 13, 14, 15, 28, 35],
+    H1 = half_position(PawnWhite, [0, 7], [18, 36], [11, 12], [21], [4], [queenside, kingside], []),
+
+    PawnBlack = [48, 50, 51, 53, 25, 44, 46, 23],
+    H2 = half_position(PawnBlack, [56, 63], [41, 45], [40, 54], [52], [60], [queenside, kingside], []).
+
 set_position(begin) :-
 	retractall(board(_,_,_)),
 	initial_pos(Position),

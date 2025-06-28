@@ -214,7 +214,7 @@ pawn_move(From,black,Position,To):-
 	To is From - 7,  % enpassant right
 	valid_field(To),
 	not(crosses_edge(From,To,-7)),
-	get_half(Position, half_position(_,_,_,_,_,_,_,EnpassantList), white),
+	get_half(Position, half_position(_,_,_,_,_,_,_,EnpassantList), black),
 	Check is From + 1,
 	member(Check,EnpassantList).
 	
@@ -232,7 +232,7 @@ pawn_move(From,black,Position,To):-
 	To is From - 9,  % enpassant left
 	valid_field(To),
 	not(crosses_edge(From,To,-9)),
-	get_half(Position, half_position(_,_,_,_,_,_,_,EnpassantList), white),
+	get_half(Position, half_position(_,_,_,_,_,_,_,EnpassantList), black),
 	Check is From - 1,
 	member(Check,EnpassantList).
 	
