@@ -44,6 +44,13 @@ legal_move_for_piece(From, To, king, Color, Position) :-
 legal_move_for_piece(From, To, king, Color, Position) :-
 	castling_move(From, Color, Position, To).
 
+generate_move(Move, Color, Position, NewPosition) :-
+	Move = move(From, To, PromotionPiece),
+	find_piece_type(From, Type, Position, Color),
+	legal_move_for_piece(From, To, Type, Color, Position),
+	simulate_move(From, To, Color, Position, NewPosition, PromotionPiece),
+	not(in_check(NewPosition, Color)).
+
 % create a new position after making a move
 simulate_move(From, To, Color, Position, NewPosition, PromotionPiece) :-
 	find_piece_type(From, Type, Position, Color),

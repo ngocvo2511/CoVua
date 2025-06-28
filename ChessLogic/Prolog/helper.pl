@@ -19,7 +19,7 @@ buggy_pos(position(H1, H2)) :-
 
 set_position(begin) :-
 	retractall(board(_,_,_)),
-	buggy_pos(Position),
+	initial_pos(Position),
 	asserta(board(Position, white, 0)),
 	init_history(Position, white),!.
 
