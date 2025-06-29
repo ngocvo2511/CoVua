@@ -50,7 +50,9 @@ get_best(Position, Color, Counter, Depth, Alpha, Beta) :-
     invert(Color, Op),
     update_depth(Depth, NewDepth),
     %write('Depth: '), write(Depth), write(' Moves: '), write(MoveList), nl,
-    generate_move(Move, Color, Position, NewPosition),
+    %generate_move(Move, Color, Position, NewPosition),
+    get_all_psuedo_legal_moves(Position, Color, MoveList),
+    simulate_new_position_from_move_list(MoveList, Move, Color, Position, NewPosition),
     update_alpha_beta(Color, Alpha, NewAlpha, Beta, NewBeta),
     (   Move = move(64, 64, none) ->
         (   in_check(Position, Color) ->
@@ -88,7 +90,6 @@ minimax(Position, _Color, _Counter, move(64, 64, none), 0, Value, _Alpha, _Beta)
     Value is ValueWhite - ValueBlack, !.
 
 minimax(Position, Color, Counter, Move, Depth, Value, Alpha, Beta) :-
-    %get_all_legal_moves(Position, Color, MoveList),
     %write(MoveList),nl,
     (   (is_threefold_repetition(Position, Color) ; is_fifty_move(Counter)) ->
         Value is 0

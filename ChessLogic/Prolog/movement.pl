@@ -100,6 +100,12 @@ get_all_legal_moves(Position, Color, LegalMoves) :-
 	         get_piece_position(Half, From, _Type),
 	         is_legal_move(From, To, Color, Position, PromotionPiece)),
 	        LegalMoves).
+% faster version that does not check for king safety
+get_all_psuedo_legal_moves(Position, Color, LegalMoves) :-
+	findall(move(From, To, _PromotionPiece), 
+	        (find_piece_type(From, Type, Position, Color),
+	        legal_move_for_piece(From, To, Type, Color, Position)),
+	        LegalMoves).
 
 % check if the given color is in checkmate
 is_checkmate(Position, Color) :-
