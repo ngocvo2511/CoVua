@@ -85,3 +85,4 @@ get_piece_at(position(WhiteHalf, BlackHalf), Pos, Piece) :-
     ;   Piece = empty
     ).
 
+debugging.

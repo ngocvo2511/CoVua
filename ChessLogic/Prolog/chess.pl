@@ -61,6 +61,7 @@ init :-
 	retractall(state(_)),
 	retractall(history(_)),
 	retractall(depth(_)),
+	retractall(stack(_,_,_)),
 	set_position(begin),
 	% Initialize default depth if not set
 	asserta(depth(3)).

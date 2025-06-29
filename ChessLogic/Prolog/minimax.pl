@@ -8,7 +8,7 @@ init_minimax :-
     (stack(_, _, _) -> true ; asserta(stack(_, _, 0))).
 
 update_depth(Depth, NewDepth) :-
-    NewDepth is Depth-1,!.	
+    NewDepth is Depth-1, !.	
 
 update_alpha_beta(Color,Alpha,NewAlpha,Beta,NewBeta) :-
     get(_,Value),
@@ -19,6 +19,8 @@ update_alpha_beta(Color,Alpha,NewAlpha,Beta,NewBeta) :-
         NewBeta is min(Beta, Value),
         NewAlpha = Alpha
     ).
+       % write('New alpha: '), write(NewAlpha), nl,
+       % write('New beta: '), write(NewBeta), nl.
 
 
 bot_move(From, To, Status) :-
@@ -47,10 +49,9 @@ simulate_new_position_from_move_list([_|Rest], Move, Color, Position, NewPositio
 get_best(Position, Color, Counter, Depth, Alpha, Beta) :-
     invert(Color, Op),
     update_depth(Depth, NewDepth),
-    update_alpha_beta(Color, Alpha, NewAlpha, Beta, NewBeta),
     %write('Depth: '), write(Depth), write(' Moves: '), write(MoveList), nl,
-    %simulate_new_position_from_move_list(MoveList, Move, Color, Position, NewPosition),
     generate_move(Move, Color, Position, NewPosition),
+    update_alpha_beta(Color, Alpha, NewAlpha, Beta, NewBeta),
     (   Move = move(64, 64, none) ->
         (   in_check(Position, Color) ->
             losing_value(Color, Value)
@@ -58,6 +59,7 @@ get_best(Position, Color, Counter, Depth, Alpha, Beta) :-
         )
     ;   minimax(NewPosition, Op, Counter, _Move, NewDepth, Value, NewAlpha, NewBeta)
     ),
+    %(Depth = 3 -> write('New alpha: '), write(NewAlpha), nl, write('New beta: '), write(NewBeta), nl ; true),
     compare_move(Move, Value, Color),
     prune(Value, Color, Alpha, Beta),
     !,fail.
@@ -67,13 +69,11 @@ compare_move(Move, Value, Color) :-
     (   ((Color = white, OldValue < Value) ; (Color = black, OldValue > Value) ; OldMove = move(64, 64, none)) ->
         replace(Move, Value)
     ;   true
-    ),!.
+    ), !.
 
 prune(Value, Color, Alpha, Beta) :-
-    (   (Color = white, Value >= Beta) -> write('Prune white'),nl, true
-    ;   (Color = black, Value =< Alpha) -> write('Prune black'),nl, true
-    ;   false
-    ).
+    (Color = white, Value >= Beta);
+    (Color = black, Value =< Alpha).
 
 minimax(Position, _Color, _Counter, move(64, 64, none), 0, Value, _Alpha, _Beta) :-
     % for counting nodes at final depth for testing 
@@ -108,7 +108,6 @@ push(Move, Value) :-
     top_depth(Depth),
     NewDepth is Depth + 1,
     asserta(stack(Move, Value, NewDepth)), !.
-
 pop(Move,Value) :-
    top_depth(Depth),
    retract(stack(Move, Value, Depth)), !.
@@ -120,7 +119,7 @@ get(Move, Value) :-
 top_depth(Depth) :-
     (   stack(_, _, Depth) -> true
     ;   Depth = 0
-    ).
+    ), !.
 
 replace(Move, Value) :-
     top_depth(Depth),
