@@ -9,6 +9,7 @@
 	
 :- [history].
 :- [board].
+:- [move_ordering].
 :- [attack].
 :- [movement].
 :- [helper].
@@ -42,7 +43,7 @@ place_piece(From, To, Status, PromotionPiece) :-
 	is_legal_move(From, To, Color, Position, PromotionPiece),
 	
 	% Make the move, wrap this with state(place) to make sure only this allow to print to screen
-	simulate_move(From, To, Color, Position, NewPosition, PromotionPiece),
+	simulate_move(From, To, Color, Position, NewPosition, _CapturedPiece, PromotionPiece),
 	
 	% Update fifty-move counter
 	update_fifty_move_counter(From, To, Position, Color, Counter, NewCounter),

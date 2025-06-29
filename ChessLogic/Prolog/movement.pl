@@ -18,7 +18,7 @@ is_legal_move(From, To, Color, Position, PromotionPiece) :-
 	find_piece_type(From, Type, Position, Color),
 	legal_move_for_piece(From, To, Type, Color, Position),
 	% Then simulate the move and check if king is still safe
-	simulate_move(From, To, Color, Position, NewPosition, PromotionPiece),
+	simulate_move(From, To, Color, Position, NewPosition, _CapturedPiece, PromotionPiece),
 	not(in_check(NewPosition, Color)).
 
 % legal_move_for_piece: generate individual legal moves based on piece type
@@ -45,20 +45,27 @@ legal_move_for_piece(From, To, king, Color, Position) :-
 	castling_move(From, Color, Position, To).
 
 generate_move(Move, Color, Position, NewPosition) :-
-	Move = move(From, To, PromotionPiece),
+	Move = move(From, To, CapturedPiece, PromotionPiece),
 	find_piece_type(From, Type, Position, Color),
 	legal_move_for_piece(From, To, Type, Color, Position),
-	simulate_move(From, To, Color, Position, NewPosition, PromotionPiece),
+	simulate_move(From, To, Color, Position, NewPosition, CapturedPiece, PromotionPiece),
 	not(in_check(NewPosition, Color)).
 
 % create a new position after making a move
-simulate_move(From, To, Color, Position, NewPosition, PromotionPiece) :-
+simulate_move(From, To, Color, Position, NewPosition, CapturedPiece, PromotionPiece) :-
 	find_piece_type(From, Type, Position, Color),
 	invert(Color, OpponentColor),
 	(is_promotion_move(From, To, Color, Position), Type = pawn -> Promoting = true ; Promoting = false),
+	
+	(	occupied(To, OpponentColor, Position) ->
+	    % If there's an opponent piece at To, we need to capture it
+	    find_piece_type(To, Type, Position, OpponentColor),
+		CapturedPiece = Type,
+	    capture_piece(TempPosition, OpponentColor, To, TempPosition)
+	;   CapturedPiece = none, TempPosition = Position
+	),
 	% Check if this is a castling move
 	(   (Type = king, is_castling_move(Color, From, To)) ->
-	    % Handle castling
 	    castle_move(Position, Color, From, To, NewPosition)
 	;   % Check if this is an en passant move
 	    (Type = pawn, is_enpassant_move(From, To, Color, Position)) ->
@@ -67,42 +74,30 @@ simulate_move(From, To, Color, Position, NewPosition, PromotionPiece) :-
 	        CapturedPawnPos is To - 8  % Black pawn is one rank below
 	    ;   CapturedPawnPos is To + 8  % White pawn is one rank above
 	    ),
+	    find_piece_type(CapturedPawnPos, CapturedPiece, Position, OpponentColor),
 	    capture_piece(Position, OpponentColor, CapturedPawnPos, TempPosition),
 	    move_piece(TempPosition, Color, From, To, NewPosition)
 	;   % Check if this is a pawn promotion
 		Promoting = true,
 		bot_promotion(PromotionPiece),
 	    % Handle pawn promotion
-	    (   occupied(To, OpponentColor, Position) ->
-	        % Promotion with capture
-	        capture_piece(Position, OpponentColor, To, TempPosition),
-	        move_piece(TempPosition, Color, From, To, TempPosition2),
-	        promote_pawn(TempPosition2, Color, To, PromotionPiece, NewPosition)
-	    ;   % Promotion without capture
-	        move_piece(Position, Color, From, To, TempPosition),
-	        promote_pawn(TempPosition, Color, To, PromotionPiece, NewPosition)
-	    )
+	    move_piece(Position, Color, From, To, TempPosition),
+	    promote_pawn(TempPosition, Color, To, PromotionPiece, NewPosition)
 	;   % Check if there's an opponent piece to capture
 		Promoting = false,
-	    (   occupied(To, OpponentColor, Position) ->
-	        % Capture move: remove opponent piece first, then move our piece
-	        capture_piece(Position, OpponentColor, To, TempPosition),
-	        move_piece(TempPosition, Color, From, To, NewPosition)
-	    ;   % Normal move: just move our piece
-	        move_piece(Position, Color, From, To, NewPosition)
-	    )
+		move_piece(TempPosition, Color, From, To, NewPosition)
 	).
 
 % get_all_legal_moves: get all legal moves for a color
 get_all_legal_moves(Position, Color, LegalMoves) :-
-	findall(move(From, To, PromotionPiece), 
+	findall(move(From, To, _CapturedPiece, PromotionPiece), 
 	        (get_half(Position, Half, Color),
 	         get_piece_position(Half, From, _Type),
 	         is_legal_move(From, To, Color, Position, PromotionPiece)),
 	        LegalMoves).
 % faster version that does not check for king safety
 get_all_psuedo_legal_moves(Position, Color, LegalMoves) :-
-	findall(move(From, To, _PromotionPiece), 
+	findall(move(From, To, _CapturedPiece, _PromotionPiece), 
 	        (find_piece_type(From, Type, Position, Color),
 	        legal_move_for_piece(From, To, Type, Color, Position)),
 	        LegalMoves).
