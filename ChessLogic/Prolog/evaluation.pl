@@ -113,24 +113,6 @@ position_row_value(Color, Type, [PiecePos|RestPos], Value) :-
     position_value(Type, Pos, CurValue),
     Value is CurValue + RestValue.
 
-
-score_special(Position, Color, Counter, Value) :-
-    % Use get_game_status to check for special conditions
-    check_game_status(Position, Color, Counter, Status),
-    (   Status = checkmate ->
-        losing_value(Color, Value)
-    ;   invert(Color, OpponentColor),
-        check_game_status(Position, OpponentColor, Counter, OpponentStatus),
-        OpponentStatus = checkmate ->
-        winning_value(Color, Value)
-    ;   Status = draw ->
-        Value = 0
-    ;   Status = stalemate ->
-        Value = 0
-    ;   % Normal position evaluation
-        Value = null
-    ).
-
 piece_value(pawn, 100).
 piece_value(knight, 300).
 piece_value(bishop, 320).
@@ -145,7 +127,6 @@ piece_list_value(Type, PieceList, Value) :-
 
 score(Position, _Color, _Counter, Value) :-
     Position = position(WhiteHalf, BlackHalf),
-    % score_special(Position, Color, Counter, ValueSpecial), % too slow
     score_half(WhiteHalf, white, ValueWhite),
     score_half(BlackHalf, black, ValueBlack),
     Value is ValueWhite - ValueBlack, !.

@@ -91,7 +91,6 @@ minimax(Position, _Color, _Counter, move(64, 64, none, none), 0, Value, _Alpha, 
     Value is ValueWhite - ValueBlack, !.
 
 minimax(Position, Color, Counter, Move, Depth, Value, Alpha, Beta) :-
-    write(Depth),nl,
     (   (is_threefold_repetition(Position, Color) ; is_fifty_move(Counter)) ->
         Value is 0
     ;

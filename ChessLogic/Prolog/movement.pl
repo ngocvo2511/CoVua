@@ -61,28 +61,28 @@ simulate_move(From, To, Color, Position, NewPosition, CapturedPiece, PromotionPi
 	    % If there's an opponent piece at To, we need to capture it
 	    find_piece_type(To, Type, Position, OpponentColor),
 		CapturedPiece = Type,
-	    capture_piece(TempPosition, OpponentColor, To, TempPosition)
+	    capture_piece(Position, OpponentColor, To, TempPosition)
 	;   CapturedPiece = none, TempPosition = Position
 	),
 	% Check if this is a castling move
 	(   (Type = king, is_castling_move(Color, From, To)) ->
-	    castle_move(Position, Color, From, To, NewPosition)
+	    castle_move(TempPosition, Color, From, To, NewPosition)
 	;   % Check if this is an en passant move
-	    (Type = pawn, is_enpassant_move(From, To, Color, Position)) ->
+	    (Type = pawn, is_enpassant_move(From, To, Color, TempPosition)) ->
 	    % Handle en passant: capture the pawn and move our pawn
 	    (   Color = white ->
 	        CapturedPawnPos is To - 8  % Black pawn is one rank below
 	    ;   CapturedPawnPos is To + 8  % White pawn is one rank above
 	    ),
-	    find_piece_type(CapturedPawnPos, CapturedPiece, Position, OpponentColor),
-	    capture_piece(Position, OpponentColor, CapturedPawnPos, TempPosition),
-	    move_piece(TempPosition, Color, From, To, NewPosition)
+	    find_piece_type(CapturedPawnPos, CapturedPiece, TempPosition, OpponentColor),
+	    capture_piece(TempPosition, OpponentColor, CapturedPawnPos, Temp2Position),
+	    move_piece(Temp2Position, Color, From, To, NewPosition)
 	;   % Check if this is a pawn promotion
 		Promoting = true,
 		bot_promotion(PromotionPiece),
 	    % Handle pawn promotion
-	    move_piece(Position, Color, From, To, TempPosition),
-	    promote_pawn(TempPosition, Color, To, PromotionPiece, NewPosition)
+	    move_piece(TempPosition, Color, From, To, Temp2Position),
+	    promote_pawn(Temp2Position, Color, To, PromotionPiece, NewPosition)
 	;   % Check if there's an opponent piece to capture
 		Promoting = false,
 		move_piece(TempPosition, Color, From, To, NewPosition)
