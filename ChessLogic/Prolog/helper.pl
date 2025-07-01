@@ -1,21 +1,18 @@
+init :-
+	retractall(board(_,_,_)),
+	retractall(state(_)),
+	retractall(history(_)),
+	retractall(depth(_)),
+	retractall(stack(_,_,_)),
+	set_position(begin),
+	% Initialize default depth if not set
+	asserta(depth(2)).
+
 initial_pos(position(H1,H2)):-
 	PawnWhite = [8,9,10,11,12,13,14,15],
 	H1 = half_position(PawnWhite,[0,7],[1,6],[2,5],[3],[4],[queenside,kingside],[]),
 	PawnBlack = [48,49,50,51,52,53,54,55],
 	H2 = half_position(PawnBlack,[56,63],[57,62],[58,61],[59],[60],[queenside,kingside],[]).
-
-kiwipete_pos(position(half_position([8,9,10,13,14,15,28,35],[0,7],[18,36],[11,12],[21],[4],[queenside,kingside],[]),
-         half_position([48,50,51,53,44,46,25,23],[56,63],[41,45],[40,54],[52],[60],[queenside,kingside],[]))).
-
-endgame_pos(position(half_position([33,12,14],[25],[],[],[],[32],[],[]),
-         half_position([50,43,29],[39],[],[],[],[31],[],[]))).
-
-buggy_pos(position(H1, H2)) :-
-    PawnWhite = [8, 9, 10, 14, 15, 51],
-    H1 = half_position(PawnWhite, [0, 7], [1, 12], [2, 26], [3], [4], [queenside, kingside], []),
-
-    PawnBlack = [42, 48, 49, 53, 54, 55],
-    H2 = half_position(PawnBlack, [56, 63], [13, 57], [52, 58], [59], [61], [], []).
 
 set_position(begin) :-
 	retractall(board(_,_,_)),

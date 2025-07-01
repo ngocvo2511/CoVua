@@ -14,19 +14,21 @@ partition([],_Y,[],[]).
 append([],Ys,Ys).
 append([X|Xs],Ys,[X|Zs]) :- append(Xs,Ys,Zs).
 
-convert_captured_piece_to_value(CapturedPiece, Value) :-
-    (   var(CapturedPiece) -> Value = 0
-    ;   CapturedPiece = none -> Value = 0
-    ;   CapturedPiece = pawn -> Value = 1
-    ;   CapturedPiece = knight -> Value = 3
-    ;   CapturedPiece = bishop -> Value = 3
-    ;   CapturedPiece = rook -> Value = 5
-    ;   CapturedPiece = queen -> Value = 9
-    ).
 %Less or equal =<
 compare_move(MoveX, MoveY) :-
-    MoveX = move(FromX, ToX, CapturedPieceX, PromotionPieceX),
-    MoveY = move(FromY, ToY, CapturedPieceY, PromotionPieceY) ->
-    convert_captured_piece_to_value(CapturedPieceX, ValueX),
-    convert_captured_piece_to_value(CapturedPieceY, ValueY),
+    MoveX = move(FromX, ToX, MovedPieceX, CapturedPieceX, PromotedPieceX),
+    MoveY = move(FromY, ToY, MovedPieceY, CapturedPieceY, PromotedPieceY) ->
+    
+    piece_value(CapturedPieceX, CaptureValueX),
+    piece_value(CapturedPieceY, CaptureValueY),
+
+    piece_value(MovedPieceX, MovedValueX),
+    piece_value(MovedPieceY, MovedValueY),
+
+    piece_value(PromotedPieceX, PromotedValueX),
+    piece_value(PromotedPieceY, PromotedValueY),
+
+    ValueX is (10 * CaptureValueX - MovedValueX) + PromotedValueX,
+    ValueY is (10 * CaptureValueY - MovedValueY) + PromotedValueY,
+
     ValueX =< ValueY.

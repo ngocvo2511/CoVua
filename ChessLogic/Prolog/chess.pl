@@ -28,7 +28,7 @@ pick_piece(Pos, LegalMoves) :-
 	    % There is a piece at this position
 	    (   PieceColor = CurrentColor ->
 	        % It's the current player's piece, find legal moves
-	        findall(To, is_legal_move(Pos, To, PieceColor, Position, _PromotionPiece), LegalMoves)
+	        findall(To, is_legal_move(Pos, To, PieceColor, Position, _PromotedPiece), LegalMoves)
 	    ;   % It's the opponent's piece
 	        LegalMoves = []
 	    )
@@ -36,14 +36,14 @@ pick_piece(Pos, LegalMoves) :-
 	    LegalMoves = []
 	).
 % move piece from From to To with full validation
-place_piece(From, To, Status, PromotionPiece) :-
+place_piece(From, To, Status, PromotedPiece) :-
 	board(Position, Color, Counter),
 
 	% Check if it's a legal move
-	is_legal_move(From, To, Color, Position, PromotionPiece),
+	is_legal_move(From, To, Color, Position, PromotedPiece),
 	
 	% Make the move, wrap this with state(place) to make sure only this allow to print to screen
-	simulate_move(From, To, Color, Position, NewPosition, _CapturedPiece, PromotionPiece),
+	simulate_move(From, To, Color, Position, NewPosition, _MovedPiece, _CapturedPiece, PromotedPiece),
 	
 	% Update fifty-move counter
 	update_fifty_move_counter(From, To, Position, Color, Counter, NewCounter),
@@ -57,12 +57,4 @@ place_piece(From, To, Status, PromotionPiece) :-
 	retract(board(Position, Color, Counter)),
 	asserta(board(NewPosition, NextColor, NewCounter)).
 
-init :-
-	retractall(board(_,_,_)),
-	retractall(state(_)),
-	retractall(history(_)),
-	retractall(depth(_)),
-	retractall(stack(_,_,_)),
-	set_position(begin),
-	% Initialize default depth if not set
-	asserta(depth(3)).
+

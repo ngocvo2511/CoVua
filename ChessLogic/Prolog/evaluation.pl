@@ -113,11 +113,12 @@ position_row_value(Color, Type, [PiecePos|RestPos], Value) :-
     position_value(Type, Pos, CurValue),
     Value is CurValue + RestValue.
 
-piece_value(pawn, 100).
-piece_value(knight, 300).
-piece_value(bishop, 320).
-piece_value(rook, 500).
-piece_value(queen, 900).
+piece_value(pawn, 100) :- !.
+piece_value(knight, 300) :- !.
+piece_value(bishop, 320) :- !.
+piece_value(rook, 500) :- !.
+piece_value(queen, 900) :- !.
+piece_value(_, 0).
 
 piece_list_value(Type, PieceList, Value) :-
     length(PieceList, Count),
