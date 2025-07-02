@@ -56,6 +56,9 @@ endgame_pos(position(half_position([33,12,14],[25],[],[],[],[32],[],[]),
 sebas_pos(position(half_position([8,9,10,35,28,13,14,15],[0,7],[18,36],[11,12],[21],[4],[queenside,kingside],[]),
          half_position([48,25,50,51,44,53,46,23],[56,63],[41,45],[40,54],[52],[60],[queenside,kingside],[]))).
 
+test_pos(position(half_position([49],[],[],[],[],[4],[queenside,kingside],[]),
+         half_position([],[56],[],[],[],[60],[queenside,kingside],[]))).
+
 buggy_pos(position(H1, H2)) :-
     PawnWhite = [8, 9, 10, 14, 15, 51],
     H1 = half_position(PawnWhite, [0, 7], [1, 12], [2, 26], [3], [4], [queenside, kingside], []),
@@ -63,8 +66,8 @@ buggy_pos(position(H1, H2)) :-
     H2 = half_position(PawnBlack, [56, 63], [13, 57], [52, 58], [59], [61], [], []).
 
 test_position :-
-	Color = white,
-	sebas_pos(Position),
+	Color = black,
+	test_pos(Position),
 	set_position(Position, Color).
 
 test_time :-

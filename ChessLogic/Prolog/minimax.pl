@@ -48,12 +48,10 @@ get_best(Position, Color, Counter, Depth, Alpha, Beta) :-
     update_depth(Depth, NewDepth),
     %write('Depth: '), write(Depth), write(' Moves: '), write(MoveList), nl,
     %generate_move(Move, Color, Position, NewPosition),
-    get_all_psuedo_legal_moves(Position, Color, MoveList),
+    get_all_pseudo_legal_moves(Position, Color, MoveList),
     quicksort(MoveList, SortedMoveList),
-    %write('Sorted MoveList: '), write(SortedMoveList), nl,
     simulate_new_position_from_move_list(SortedMoveList, Move, Color, Position, NewPosition),
     update_alpha_beta(Color, Alpha, NewAlpha, Beta, NewBeta),
-    
     (   in_check(NewPosition, Color) ->
         (   SortedMoveList = [] ->
             Value is 0
@@ -75,7 +73,7 @@ prune(Value, Color, Alpha, Beta) :-
     (Color = white, Value >= Beta);
     (Color = black, Value =< Alpha).
 
-minimax(Position, Color, _Counter, move(64, 64, none, none, none), 0, Value, _Alpha, _Beta) :-
+minimax(Position, _Color, _Counter, move(64, 64, none, none, none), 0, Value, _Alpha, _Beta) :-
     % for counting nodes at final depth for testing
     count(Count),
     retract(count(Count)),
