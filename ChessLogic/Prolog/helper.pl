@@ -37,12 +37,12 @@ reset:-
 	retractall(history(_)).
 		
 check_game_status(Position, Color, Counter, Status) :-
-	position_to_assoc(Position, Assoc),
-    (   is_checkmate(Position, Color, Assoc) ->
+	position_to_board_list(Position, BoardList),
+    (   is_checkmate(Position, Color, BoardList) ->
         Status = checkmate
-    ;   is_stalemate(Position, Color, Assoc) ->
+    ;   is_stalemate(Position, Color, BoardList) ->
         Status = stalemate
-    ;   in_check(Position, Color, Assoc) ->
+    ;   in_check(Position, Color, BoardList) ->
         Status = check
     ;	is_threefold_repetition(Position, Color) ->
         Status = draw

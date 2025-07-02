@@ -22,12 +22,12 @@ update_alpha_beta(Color,Alpha,NewAlpha,Beta,NewBeta) :-
 bot_move(From, To, Status) :-
     init_minimax,
     board(Position, Color, Counter),
-    position_to_assoc(Position, Assoc),
+    position_to_board_list(Position, BoardList),
     depth(Depth),
     losing_value(white,Alpha),
 	losing_value(black,Beta),
     asserta(count(0)),
-    minimax(Position, Color, Counter, Move, Depth, _Value, Alpha, Beta, Assoc),
+    minimax(Position, Color, Counter, Move, Depth, _Value, Alpha, Beta, BoardList),
     retract(count(Count)),
     write(Count),nl,
     %write('Depth: '), write(Depth), write(' Count: '), write(Count), nl,
@@ -37,29 +37,28 @@ bot_move(From, To, Status) :-
     board(NewPosition, NewColor, NewCounter),
     check_game_status(NewPosition, NewColor, NewCounter, Status).
 
-simulate_new_position_from_move_list([Move|_], Move, Color, Position, NewPosition, Assoc) :-
+simulate_new_position_from_move_list([Move|_], Move, Color, Position, NewPosition, BoardList) :-
     Move = move(From, To, MovedPiece, CapturedPiece, PromotionPiece),
-    simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotionPiece, Assoc).
-simulate_new_position_from_move_list([_|Rest], Move, Color, Position, NewPosition, Assoc) :-
-    simulate_new_position_from_move_list(Rest, Move, Color, Position, NewPosition, Assoc).
+    simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotionPiece, BoardList).
+simulate_new_position_from_move_list([_|Rest], Move, Color, Position, NewPosition, BoardList) :-
+    simulate_new_position_from_move_list(Rest, Move, Color, Position, NewPosition, BoardList).
 % simulate_new_position_from_move_list([], _, _, Position, Position, _).
 
-get_best(Position, Color, Counter, Depth, Alpha, Beta, Assoc) :-
+get_best(Position, Color, Counter, Depth, Alpha, Beta, BoardList) :-
     invert(Color, Op),
     update_depth(Depth, NewDepth),
-    %write('Depth: '), write(Depth), write(' Moves: '), write(MoveList), nl,
     %generate_move(Move, Color, Position, NewPosition),
-    get_all_pseudo_legal_moves(Position, Color, MoveList, Assoc),
+    get_all_pseudo_legal_moves(Position, Color, MoveList, BoardList),
     quicksort(MoveList, SortedMoveList),
-    simulate_new_position_from_move_list(SortedMoveList, Move, Color, Position, NewPosition, Assoc),
-    position_to_assoc(NewPosition, NewAssoc),
+    simulate_new_position_from_move_list(SortedMoveList, Move, Color, Position, NewPosition, BoardList),
+    position_to_board_list(NewPosition, NewBoardList),
     update_alpha_beta(Color, Alpha, NewAlpha, Beta, NewBeta),
-    (   in_check(NewPosition, Color, NewAssoc) ->
+    (   in_check(NewPosition, Color, NewBoardList) ->
         (   SortedMoveList = [] ->
             Value is 0
         ;   losing_value(Color, Value)
         )
-    ;   minimax(NewPosition, Op, Counter, _Move, NewDepth, Value, NewAlpha, NewBeta, NewAssoc)
+    ;   minimax(NewPosition, Op, Counter, _Move, NewDepth, Value, NewAlpha, NewBeta, NewBoardList)
     ),
     compare_move(Move, Value, Color),
     prune(Value, Color, Alpha, Beta), !, fail.
@@ -75,7 +74,7 @@ prune(Value, Color, Alpha, Beta) :-
     (Color = white, Value >= Beta);
     (Color = black, Value =< Alpha).
 
-minimax(Position, _Color, _Counter, move(64, 64, none, none, none), 0, Value, _Alpha, _Beta, _Assoc) :-
+minimax(Position, _Color, _Counter, move(64, 64, none, none, none), 0, Value, _Alpha, _Beta, _BoardList) :-
     % for counting nodes at final depth for testing
     count(Count),
     retract(count(Count)),
@@ -88,7 +87,7 @@ minimax(Position, _Color, _Counter, move(64, 64, none, none, none), 0, Value, _A
         
 
 
-minimax(Position, Color, Counter, Move, Depth, Value, Alpha, Beta, Assoc) :-
+minimax(Position, Color, Counter, Move, Depth, Value, Alpha, Beta, BoardList) :-
     count(Count),
     retract(count(Count)),
     NewCount is Count + 1,
@@ -98,7 +97,7 @@ minimax(Position, Color, Counter, Move, Depth, Value, Alpha, Beta, Assoc) :-
     ;
         losing_value(Color, Worst),
         push(move(64, 64, none, none, none), Worst),
-        not(get_best(Position, Color, Counter, Depth, Alpha, Beta, Assoc)),
+        not(get_best(Position, Color, Counter, Depth, Alpha, Beta, BoardList)),
         pop(Move, Value)
     ), 
 !.

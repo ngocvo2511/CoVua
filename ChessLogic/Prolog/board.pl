@@ -24,33 +24,6 @@ exist(Field,half_position(_,_,_,_,X,_,_,_),queen):-
 exist(Field,half_position(_,_,_,_,_,X,_,_),king):-
 	member(Field,X).
 
-% occupied: true if there is a piece in the Field
-occupied(Field,white,position(Stones,_),_Assoc):- exist(Field,Stones,_).	
-occupied(Field,black,position(_,Stones),_Assoc):- exist(Field,Stones,_).
-
-% unoccupied: true if the position is valid and not occupied by any piece
-unoccupied(Field,Position,Assoc):-
-	not(occupied(Field,white,Position,Assoc)),
-	not(occupied(Field,black,Position,Assoc)),
-	valid_field(Field).
-
-% Invert color
-invert(white, black).
-invert(black, white).
-
-% find_piece_color: determine which color owns the piece at given position
-find_piece_color(Pos,Color,Position,Assoc) :-
-	occupied(Pos,white,Position,Assoc),
-	Color = white,!.
-find_piece_color(Pos,Color,Position,Assoc) :-
-	occupied(Pos,black,Position,Assoc),
-	Color = black,!.
-
-% find_piece_type: determine the type of piece at given position
-find_piece_type(Pos,Type,Position,Color,_Assoc) :-
-	get_half(Position,Half,Color),
-	exist(Pos,Half,Type).
-
 % =================================
 % Board manipulation predicates
 % =================================
@@ -84,18 +57,18 @@ remove(X,[A|Old],[A|New]):-
 	remove(X,Old,New).
 
 % update_half: update half position in full position
-update_half(position(_,Y),Half,white,position(Half,Y),_Assoc).
-update_half(position(X,_),Half,black,position(X,Half),_Assoc).
+update_half(position(_,Y),Half,white,position(Half,Y),_BoardList).
+update_half(position(X,_),Half,black,position(X,Half),_BoardList).
 
 combine_half(H1,H2,white,position(H1,H2)).
 combine_half(H1,H2,black,position(H2,H1)).
 
 % move_piece: move a piece from one position to another within same color
-move_piece(Position, Color, From, To, NewPosition, Assoc) :-
+move_piece(Position, Color, From, To, NewPosition, BoardList) :-
 	invert(Color, OpponentColor),
     get_half(Position, Half, Color),
     get_half(Position, OpponentHalf, OpponentColor),
-    get_assoc(From, Assoc, [Type, _]),
+    nth0(From, BoardList, [Type, _]),
     extract(Half, Type, PieceList),
     extract(Half, castle, CastleList),
     remove(From, PieceList, TempList),
@@ -117,11 +90,11 @@ move_piece(Position, Color, From, To, NewPosition, Assoc) :-
 	(	(Type = pawn, abs(To-From) =:= 16) -> 
 		combine(OpponentHalf, enpassant, [To], OpponentNewHalf),
 		combine_half(Temp3Half, OpponentNewHalf, Color, NewPosition)
-	;	update_half(Position, Temp3Half, Color, NewPosition, Assoc)
+	;	update_half(Position, Temp3Half, Color, NewPosition, BoardList)
 	).
 
 % actually moving the piece for castling moves
-castle_piece(Position, Color, KingFrom, KingTo, NewPosition, Assoc) :-
+castle_piece(Position, Color, KingFrom, KingTo, NewPosition, BoardList) :-
 	
 	% Determine rook positions based on castling type
 	(   % Kingside castling
@@ -137,20 +110,20 @@ castle_piece(Position, Color, KingFrom, KingTo, NewPosition, Assoc) :-
 	),
 	
 	% Move king first
-	move_piece(Position, Color, KingFrom, KingTo, TempPosition, Assoc),
+	move_piece(Position, Color, KingFrom, KingTo, TempPosition, BoardList),
 	% Then move rook
-	move_piece(TempPosition, Color, RookFrom, RookTo, NewPosition, Assoc).
+	move_piece(TempPosition, Color, RookFrom, RookTo, NewPosition, BoardList).
 
 % quick check if king castling
-is_castling_move(white, 4, 2, _Assoc).
-is_castling_move(white, 4, 6, _Assoc).
-is_castling_move(black, 60, 58, _Assoc).
-is_castling_move(black, 60, 62, _Assoc).
+is_castling_move(white, 4, 2, _BoardList).
+is_castling_move(white, 4, 6, _BoardList).
+is_castling_move(black, 60, 58, _BoardList).
+is_castling_move(black, 60, 62, _BoardList).
 
 % remove opponent piece from position (color is opponent)
-capture_piece(Position, Color, CapturePos, NewPosition, Assoc) :-
+capture_piece(Position, Color, CapturePos, NewPosition, BoardList) :-
     get_half(Position, Half, Color),
-    get_assoc(CapturePos, Assoc, [Type, _]),
+    nth0(CapturePos, BoardList, [Type, _]),
     extract(Half, Type, PieceList),
     extract(Half, castle, CastleList),
     
@@ -165,7 +138,7 @@ capture_piece(Position, Color, CapturePos, NewPosition, Assoc) :-
             combine(Temp1Half, castle, TempCastleList, Temp2Half)
     ;   Temp2Half = Temp1Half
     ),
-    update_half(Position, Temp2Half, Color, NewPosition, Assoc).
+    update_half(Position, Temp2Half, Color, NewPosition, BoardList).
 
 % is_fifty_move: check if fifty move rule applies (100 half-moves)
 is_fifty_move(Counter) :-
@@ -179,16 +152,16 @@ increment_fifty_move_counter(OldCounter, NewCounter) :-
     NewCounter is OldCounter + 1.
 
 % check_pawn_move: check if the moved piece is a pawn
-check_pawn_move(From, _Position, Color, Assoc) :-
-    get_assoc(From, Assoc, [pawn, Color]).
+check_pawn_move(From, _Position, Color, BoardList) :-
+    nth0(From, BoardList, [pawn, Color]).
 
 % check_capture: check if a piece was captured in the move
-check_capture(To, _Position, Color, Assoc) :-
+check_capture(To, _Position, Color, BoardList) :-
     invert(Color, OpponentColor),
-    get_assoc(To, Assoc, [_Type, OpponentColor]).
+    nth0(To, BoardList, [_Type, OpponentColor]).
 
 % update_fifty_move_counter: update counter based on move type
-update_fifty_move_counter(From, To, Position, Color, OldCounter, NewCounter, Assoc) :-
-    (check_pawn_move(From, Position, Color, Assoc) ; check_capture(To, Position, Color, Assoc)) ->
+update_fifty_move_counter(From, To, Position, Color, OldCounter, NewCounter, BoardList) :-
+    (check_pawn_move(From, Position, Color, BoardList) ; check_capture(To, Position, Color, BoardList)) ->
         reset_fifty_move_counter(NewCounter)
     ;   increment_fifty_move_counter(OldCounter, NewCounter).

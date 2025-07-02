@@ -2,14 +2,8 @@
 
 test_check :-
 	only_king_and_rooks(Position),
-	set_position(Position,white),
-	write('Testing check detection:'), nl,
-	board(Pos, _, _),
-	write('White king in check: '),
-	(in_check(Pos, white, _Assoc) -> write('Yes') ; write('No')), nl,
-	write('Black king in check: '),
-	(in_check(Pos, black, _Assoc) -> write('Yes') ; write('No')), nl.
-	
+	set_position(Position,white).
+
 test_pawn_promotion :-
 	only_king_and_pawns(Position),
 	set_position(Position,white).
@@ -79,12 +73,12 @@ test_position :-
 
 test_time :-
 	initial_pos(Position),
-	get_all_legal_moves(Position, white, _MoveList, _Assoc).
+	get_all_legal_moves(Position, white, _MoveList, _BoardList).
 
 test_incheck :-
 	board(Pos, _Color, _Counter),
-	(in_check(Pos, white, _Assoc) -> write('Yes') ; write('No')), nl,
-	(in_check(Pos, black, _Assoc) -> write('Yes') ; write('No')), nl.
+	(in_check(Pos, white, _) -> write('Yes') ; write('No')), nl,
+	(in_check(Pos, black, _) -> write('Yes') ; write('No')), nl.
 
 start_perft(Position, Color, Depth) :- 
 	asserta(perft_stack(0)),
@@ -93,13 +87,14 @@ start_perft(Position, Color, Depth) :-
 	write('Total nodes: '), write(Count), nl.
 
 perft(Position, Color, Depth) :-
-	get_all_legal_moves(Position, Color, MoveList, _Assoc),
+	position_to_board_list(Position, BoardList),
+	get_all_legal_moves(Position, Color, MoveList, BoardList),
 	(   Depth > 0 ->
 		NewDepth is Depth - 1,
 		invert(Color, NextColor),
 		forall(member(Move, MoveList), (
 			Move = move(From, To, MovedPiece, CapturedPiece, PromotionPiece),
-			simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotionPiece, _Assoc),
+			simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotionPiece, BoardList),
 			perft(NewPosition, NextColor, NewDepth)
 		))
 	;   retract(perft_stack(Count)),

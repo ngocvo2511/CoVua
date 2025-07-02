@@ -47,9 +47,9 @@ process_and_add_move(Move) :-
     ;   % Process the actual move
         history_board(Position, Color, Counter),
         Move = move(From, To, MovedPiece, CapturedPiece, PromotedPiece), 
-        position_to_assoc(Position, Assoc),
-        simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotedPiece, Assoc),
-        update_fifty_move_counter(From, To, Position, Color, Counter, NewCounter, Assoc),
+        position_to_board_list(Position, BoardList),
+        simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotedPiece, BoardList),
+        update_fifty_move_counter(From, To, Position, Color, Counter, NewCounter, BoardList),
         invert(Color, NewColor),
         retract(history_board(_, _, _)),
         asserta(history_board(NewPosition, NewColor, NewCounter)),
