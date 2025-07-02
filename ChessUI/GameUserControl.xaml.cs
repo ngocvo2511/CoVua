@@ -98,7 +98,7 @@ namespace ChessUI
             else gameState = new GameState2P(gameStateForLoad, board);
             ShowGameInformation(gameStateForLoad.depth);
             DrawBoard(gameState.Board);
-            foreach (var piece in gameState.CapturedRedPiece) DrawCapturedGrid(piece);
+            foreach (var piece in gameState.CapturedWhitePiece) DrawCapturedGrid(piece);
             foreach (var piece in gameState.CapturedBlackPiece) DrawCapturedGrid(piece);
             if (gameState.Moved.Any()) ShowPrevMove(gameState.Moved.First().Item1);
             if (gameState.timeRemainingBlack != 0)
@@ -327,7 +327,7 @@ namespace ChessUI
             gameState = new GameState2P(startPlayer, Board.Initial());
             TurnTextBlock.Text = (startPlayer == Player.Black) ? "Đen" : "Trắng";
             BlackCapturedGrid.Children.Clear();
-            RedCapturedGrid.Children.Clear();
+            WhiteCapturedGrid.Children.Clear();
             redClock.Text = null;
             blackClock.Text = null;
             WarningTextBlock.Text = null;
@@ -630,7 +630,7 @@ namespace ChessUI
             }
             else
             {
-                RedCapturedGrid.Children.Add(image);
+                WhiteCapturedGrid.Children.Add(image);
             }
         }
         private void UndoCapturedGrid(Piece piece)
@@ -644,9 +644,9 @@ namespace ChessUI
             }
             else
             {
-                int count = RedCapturedGrid.Children.Count;
+                int count = WhiteCapturedGrid.Children.Count;
                 if (count > 0)
-                    RedCapturedGrid.Children.RemoveAt(count - 1);
+                    WhiteCapturedGrid.Children.RemoveAt(count - 1);
             }
         }
         private void UndoAiCapturedGrid(Piece piece)

@@ -230,9 +230,9 @@ namespace ChessUI
 
         private void ConfirmMenu_YesButtonClicked(object sender, RoutedEventArgs e)
         {
-            Sound.PlayButtonClickSound();
-            CreateMainMenu();
             PrologEngine.Cleanup();
+            Sound.PlayButtonClickSound();
+            CreateMainMenu();            
         }
         #endregion
 

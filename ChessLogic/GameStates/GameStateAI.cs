@@ -33,7 +33,7 @@ namespace ChessLogic.GameStates.GameState
                 if (undo.Item2 != null)
                 {
                     if (undo.Item2.Color == Player.Black) CapturedBlackPiece.RemoveAt(CapturedBlackPiece.Count - 1);
-                    else CapturedRedPiece.RemoveAt(CapturedRedPiece.Count - 1);
+                    else CapturedWhitePiece.RemoveAt(CapturedWhitePiece.Count - 1);
                 }
                 if (i == 0) AiCapturedPiece = undo.Item2;
                 else CapturedPiece = undo.Item2;

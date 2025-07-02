@@ -15,7 +15,7 @@ namespace ChessLogic.GameStates.GameState
         public Piece CapturedPiece { get; set; }
         public int timeRemainingRed { get; set; }
         public int timeRemainingBlack { get; set; }
-        public List<Piece> CapturedRedPiece { get; set; }
+        public List<Piece> CapturedWhitePiece { get; set; }
         public List<Piece> CapturedBlackPiece { get; set; }
         //public Stack<int> noCapture { get; set; }
 
@@ -28,7 +28,7 @@ namespace ChessLogic.GameStates.GameState
             Board = board;
             this.Moved = new Stack<Tuple<Move,Piece>>();
             this.CapturedBlackPiece = new List<Piece>();
-            this.CapturedRedPiece = new List<Piece>();
+            this.CapturedWhitePiece = new List<Piece>();
             //this.noCapture = new Stack<int>();
             this.stateHistory = new Dictionary<string, int>();
             //stateString = new Stack<string>();
@@ -45,7 +45,7 @@ namespace ChessLogic.GameStates.GameState
             //this.stateHistory = stateHistory;
             //this.stateString = stateString;
             this.CapturedBlackPiece = CapturedBlackPiece;
-            this.CapturedRedPiece = CapturedRedPiece;
+            this.CapturedWhitePiece = CapturedRedPiece;
             timeRemainingBlack = blackTime;
             timeRemainingRed = redTime;
             //this.noCapture = noCapture;
@@ -68,7 +68,7 @@ namespace ChessLogic.GameStates.GameState
             if (CapturedPiece != null)
             {
                 if (CapturedPiece.Color == Player.Black) CapturedBlackPiece.Add(CapturedPiece);
-                else CapturedRedPiece.Add(CapturedPiece);
+                else CapturedWhitePiece.Add(CapturedPiece);
             }
             //bool capture = move.Execute(Board);
 

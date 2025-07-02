@@ -35,7 +35,7 @@ namespace ChessLogic
             gameStateForSave.historyBoard = PrologEngine.GetRawHistory();
             gameStateForSave.CapturedWhitePiece = new List<string>();
             gameStateForSave.CapturedBlackPiece = new List<string>();
-            foreach (var piece in gameState.CapturedRedPiece) gameStateForSave.CapturedWhitePiece.Add(piece.ToString());
+            foreach (var piece in gameState.CapturedWhitePiece) gameStateForSave.CapturedWhitePiece.Add(piece.ToString());
             foreach (var piece in gameState.CapturedBlackPiece) gameStateForSave.CapturedBlackPiece.Add(piece.ToString());
             return gameStateForSave;
         }  

@@ -134,7 +134,7 @@
                     Style="{StaticResource BorderStyle2}"/>
             <UniformGrid x:Name="BlackCapturedGrid" Grid.Row="2" Margin="10"
                          Rows="3" Columns="5"/>
-            <UniformGrid x:Name="RedCapturedGrid" Grid.Row="4" Margin="10" 
+            <UniformGrid x:Name="WhiteCapturedGrid" Grid.Row="4" Margin="10" 
                          Rows="3" Columns="5"/>
 
             <Border Grid.Row="5" Margin="10"

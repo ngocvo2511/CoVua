@@ -1,17 +1,16 @@
 {
   "GameType": "GameState2P",
   "depth": 0,
-  "CurrentPlayer": "White",
-  "timeRemainingWhite": 592,
-  "timeRemainingBlack": 591,
-  "historyBoard": "[move(64,64,none,none,none),move(9,25,pawn,none,null),move(50,34,pawn,none,null),move(25,34,pawn,pawn,null),move(49,41,pawn,none,null),move(8,24,pawn,none,null),move(41,33,pawn,none,null),move(24,33,pawn,pawn,null),move(48,32,pawn,none,null),move(33,40,pawn,pawn,null),move(56,40,rook,pawn,null),move(0,40,rook,rook,null),move(57,40,knight,rook,null)]",
+  "CurrentPlayer": "Black",
+  "timeRemainingWhite": 569,
+  "timeRemainingBlack": 543,
+  "historyBoard": "[move(64,64,none,none,none),move(13,29,pawn,none,null),move(53,37,pawn,none,null),move(6,21,knight,none,null),move(54,46,pawn,none,null),move(14,30,pawn,none,null),move(37,30,pawn,pawn,null),move(5,23,bishop,none,null),move(30,23,pawn,bishop,null),move(4,6,king,none,null),move(46,38,pawn,none,null),move(21,38,knight,pawn,null),move(55,47,pawn,none,null),move(38,23,knight,pawn,null)]",
   "CapturedWhitePiece": [
     "wP",
-    "wR"
+    "wB"
   ],
   "CapturedBlackPiece": [
     "bP",
-    "bP",
-    "bR"
+    "bP"
   ]
 }
