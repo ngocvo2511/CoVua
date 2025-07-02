@@ -101,7 +101,7 @@ namespace ChessLogic
             needsPromotion = false;
             try
             {
-                using (var q = new PlQuery($"place_piece({fromPos}, {toPos}, Status)"))
+                using (var q = new PlQuery($"place_piece({fromPos}, {toPos}, Status, 'null')"))
                 {
                     if (q.NextSolution())
                     {
@@ -129,18 +129,12 @@ namespace ChessLogic
             try
             {
                 Console.WriteLine($"Attempting promotion: from={fromPos}, to={toPos}, piece={promotionPiece}");
-                using (var q = new PlQuery($"place_piece_with_promotion({fromPos}, {toPos}, '{promotionPiece}', Status)"))
+                using (var q = new PlQuery($"place_piece({fromPos}, {toPos}, Status, '{promotionPiece}')"))
                 {
                     if (q.NextSolution())
                     {
                         status = q.Variables["Status"].ToString().ToUpper();
                         Console.WriteLine($"Promotion successful: {status}");
-                        using (var qq = new PlQuery("current_predicate(undo/0)."))
-                        {
-                            Console.WriteLine(qq.NextSolution()
-                                ? "✅ undo/0 vẫn tồn tại."
-                                : "❌ undo/0 không tồn tại sau khi phong cấp.");
-                        }
                         return true;
                     }
                     else
