@@ -37,18 +37,6 @@ namespace ChessLogic
             gameStateForSave.CapturedBlackPiece = new List<string>();
             foreach (var piece in gameState.CapturedRedPiece) gameStateForSave.CapturedWhitePiece.Add(piece.ToString());
             foreach (var piece in gameState.CapturedBlackPiece) gameStateForSave.CapturedBlackPiece.Add(piece.ToString());
-            List<Tuple<Move, Piece>> currentMoved = gameState.Moved.ToList();
-            currentMoved.Reverse();
-            foreach (var moved in currentMoved)
-            {
-                gameStateForSave.Moved.Add(moved.Item1.FromPos.Row.ToString());
-                gameStateForSave.Moved.Add(moved.Item1.FromPos.Column.ToString());
-                gameStateForSave.Moved.Add(moved.Item1.ToPos.Row.ToString());
-                gameStateForSave.Moved.Add(moved.Item1.ToPos.Column.ToString());
-                if (moved.Item2 == null) gameStateForSave.Moved.Add("n");
-                else gameStateForSave.Moved.Add(moved.Item2.ToString());
-            }
-
             return gameStateForSave;
         }  
         public static GameStateForLoad fromSave(GameStateForSave gameStateForSave)
@@ -91,24 +79,6 @@ namespace ChessLogic
                     whitePiece.Add(CreatePiece(Player.White));
                 }
             }
-            Stack<Tuple<Move, Piece>> Moved = new Stack<Tuple<Move, Piece>>();
-            int x = 0;
-            while (x < gameStateForSave.Moved.Count)
-            {
-                Position fromPos = new Position(int.Parse(gameStateForSave.Moved[x]), int.Parse(gameStateForSave.Moved[x + 1]));
-                Position toPos = new Position(int.Parse(gameStateForSave.Moved[x + 2]), int.Parse(gameStateForSave.Moved[x + 3]));
-                Move move = new NormalMove(fromPos, toPos);
-                Piece capturedPiece = null;
-                if (gameStateForSave.Moved[x + 4] == "n") capturedPiece = null;
-                else if (mapping.TryGetValue(gameStateForSave.Moved[x + 4], out var CreatePiece))
-                {
-                    Player color = gameStateForSave.Moved[x + 4].StartsWith("b") ? Player.Black : Player.White;
-                    capturedPiece = CreatePiece(color);
-                }
-                Moved.Push(Tuple.Create(move, capturedPiece));
-                x += 5;
-            }
-            gameStateForLoad.Moved = Moved;
             gameStateForLoad.CapturedBlackPiece = blackPiece;
             gameStateForLoad.CapturedWhitePiece = whitePiece;
             return gameStateForLoad;

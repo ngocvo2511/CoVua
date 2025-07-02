@@ -1,11 +1,12 @@
 {
-  "GameType": "GameStateAI",
-  "depth": 3,
-  "CurrentPlayer": "White",
-  "Moved": [],
-  "timeRemainingWhite": 596,
-  "timeRemainingBlack": 600,
-  "historyBoard": "[board(position(half_position([8,9,10,11,12,13,14,15],[0,7],[1,6],[2,5],[3],[4],[queenside,kingside],[]),half_position([48,49,50,51,52,53,54,55],[56,63],[57,62],[58,61],[59],[60],[queenside,kingside],[])),white,0)]",
+  "GameType": "GameState2P",
+  "depth": 0,
+  "CurrentPlayer": "Black",
+  "timeRemainingWhite": 597,
+  "timeRemainingBlack": 598,
+  "historyBoard": "[move(64,64,none,none,none),move(10,26,pawn,none,null),move(51,35,pawn,none,null),move(26,35,pawn,pawn,null)]",
   "CapturedWhitePiece": [],
-  "CapturedBlackPiece": []
+  "CapturedBlackPiece": [
+    "bP"
+  ]
 }

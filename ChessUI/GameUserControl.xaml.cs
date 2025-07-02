@@ -88,9 +88,12 @@ namespace ChessUI
         {
             InitializeComponent();
             InitializeBoard();
-            PrologEngine.setHistoryBoard(gameStateForLoad.historyBoard);
-            if(gameStateForLoad.depth!=0) PrologEngine.SetDepth(gameStateForLoad.depth);
+            // Khởi tạo Prolog engine
+            string rootPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\.."));
+            string prologPath = System.IO.Path.Combine(rootPath, "ChessLogic", "Prolog", "chess.pl");
+            PrologEngine.InitializeGameLoad(prologPath, gameStateForLoad);
             Board board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
+            gameStateForLoad.Moved = PrologEngine.ParseHistory(gameStateForLoad.historyBoard);
             if (gameStateForLoad.GameType == "GameStateAI") gameState = new GameStateAI(gameStateForLoad,board);
             else gameState = new GameState2P(gameStateForLoad, board);
             ShowGameInformation(gameStateForLoad.depth);
@@ -223,7 +226,7 @@ namespace ChessUI
                 case 4:
                     blackInfo.Text = "Máy (Độ khó: Khó)";
                     break;
-                case 1:
+                default:
                     blackInfo.Text = "Người chơi 2";
                     break;
             }
@@ -305,7 +308,7 @@ namespace ChessUI
             if (gameState.IsGameOver())
             {
                 UnableClick();
-                moveList = new Stack<Tuple<Move, Piece>>(gameState.Moved.ToArray());
+                moveList = new Stack<Tuple<Move,Piece>>(gameState.Moved.ToArray());
                 HideHighlights();
                 CellGrid.IsEnabled = false;
                 if (redTimer != null) StopTimer();
@@ -539,7 +542,7 @@ namespace ChessUI
                     {
                         gameState.Result = Result.Win(gameState.CurrentPlayer.Opponent(), gameStatus == "CHECKMATE" ? EndReason.Checkmate : EndReason.Stalemate);
                         UnableClick();
-                        moveList = new Stack<Tuple<Move, Piece>>(gameState.Moved.ToArray());
+                        moveList = new Stack<Tuple<Move,Piece>>(gameState.Moved.ToArray());
                         HideHighlights();
                         CellGrid.IsEnabled = false;
                         if (redTimer != null) StopTimer();
@@ -604,7 +607,7 @@ namespace ChessUI
                     if (status == "CHECKMATE" || status == "STALEMATE")
                     {
                         UnableClick();
-                        moveList = new Stack<Tuple<Move, Piece>>(gameState.Moved.ToArray());
+                        moveList = new Stack<Tuple<Move,Piece>>(gameState.Moved.ToArray());
                         HideHighlights();
                         CellGrid.IsEnabled = false;
                         if (redTimer != null) StopTimer();

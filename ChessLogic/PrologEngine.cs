@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using ChessLogic.GameStates;
+using ChessLogic.Pieces;
 using SbsSW.SwiPlCs;
 using SbsSW.SwiPlCs.Exceptions;
 
@@ -27,37 +30,27 @@ namespace ChessLogic
                 throw new Exception("Không thể load file Prolog.");
             }
 
-            if (isAI)
-            {
-                if (!PlQuery.PlCall("game_mode(hxc)."))
-                {
-                    throw new Exception("Không thể khởi tạo bàn cờ.");
-                }
-
-                if (color == Player.Black)
-                {
-                    if (!PlQuery.PlCall("set_first_player(black)."))
-                    {
-                        throw new Exception("Không thể khởi tạo bàn cờ cho người chơi đen.");
-                    }
-                }
-            }
-            else
-            {
-                if (!PlQuery.PlCall("game_mode(hxh)."))
-                {
-                    throw new Exception("Không thể khởi tạo bàn cờ.");
-                }
-            }
-
-
-
-
             // Khởi tạo bàn cờ
             if (!PlQuery.PlCall("init."))
             {
                 throw new Exception("Không thể khởi tạo bàn cờ.");
             }
+        }
+        public static void InitializeGameLoad(string prologFile, GameStateForLoad gameStateForLoad)
+        {
+            if (!_isInitialized)
+            {
+                // Khởi tạo Prolog engine
+                PlEngine.Initialize(new string[] { "-q", "-f", "none" });
+                _isInitialized = true;
+            }
+
+            if (!PlQuery.PlCall($"consult('{prologFile.Replace("\\", "/")}')"))
+            {
+                throw new Exception("Không thể load file Prolog.");
+            }
+            setHistoryMove(gameStateForLoad.historyBoard);
+            if (gameStateForLoad.depth != 0) SetDepth(gameStateForLoad.depth);
         }
 
         public static List<Move> GetLegalMoves(int fromPos)
@@ -343,16 +336,16 @@ namespace ChessLogic
 
         public static string GetRawHistory()
         {
-            using (var q = new PlQuery("history(H)"))
+            using (var q = new PlQuery("get_history_moves(H)"))
             {
                 if (q.NextSolution())
                     return q.Variables["H"].ToString();
             }
             return null;
         }
-        public static void setHistoryBoard(string rawHistory)
+        public static void setHistoryMove(string rawHistory)
         {
-            using( var q = new PlQuery($"set_new_history({rawHistory})"))
+            using( var q = new PlQuery($"set_history_moves({rawHistory})"))
             {
                 if (!q.NextSolution())
                 {
@@ -389,6 +382,41 @@ namespace ChessLogic
             catch (PlException ex)
             {
                 Console.WriteLine($"Lỗi khi đặt độ sâu: {ex.Message}");
+            }
+        }
+
+        public static Stack<Tuple<Move,Piece>> ParseHistory(string historyString)
+        {
+            var stack = new Stack<Tuple<Move, Piece>>();
+
+            var clean = historyString.Trim('[', ']');
+            var moveRegex = new Regex(@"move\((\d+),(\d+),(\w+),(\w+),\w+\)");
+
+            foreach (Match match in moveRegex.Matches(clean))
+            {
+                int from = int.Parse(match.Groups[1].Value);
+                if (from == 64) continue;
+                int to = int.Parse(match.Groups[2].Value);
+                string capturedPieceStr = match.Groups[4].Value;
+
+                Move move = new NormalMove(Position.IntToPosition(from),Position.IntToPosition(to));
+                var captured = ParsePiece(capturedPieceStr);
+
+                stack.Push(Tuple.Create(move, captured));
+            }
+            return stack;
+        }
+        private static Piece ParsePiece(string pieceStr)
+        {
+            switch (pieceStr)
+            {
+                case "king": return new King(Player.Black);
+                case "pawn": return new Pawn(Player.Black);
+                case "rook": return new Rook(Player.Black);
+                case "bishop": return new Bishop(Player.Black);
+                case "queen": return new Queen(Player.Black);
+                case "knight": return new Knight(Player.Black);
+                default: return null;
             }
         }
     }

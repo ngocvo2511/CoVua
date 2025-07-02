@@ -13,12 +13,12 @@ namespace ChessLogic.GameStates.GameState
             if (!Moved.Any()) return;
             UndoStateString();
             var undo = Moved.Pop();
-            Move undoMove = new NormalMove(undo.Item1.ToPos, undo.Item1.FromPos);
-            undoMove.Execute(Board);
-            Board[undo.Item1.ToPos] = undo.Item2;
+            //Move undoMove = new NormalMove(undo.Item1.ToPos, undo.Item1.FromPos);
+            //undoMove.Execute(Board);
+            //Board[undo.Item1.ToPos] = undo.Item2;
             if (undo.Item2 != null)
             {
-                if (undo.Item2.Color == Player.Black) CapturedBlackPiece.RemoveAt(CapturedBlackPiece.Count - 1);
+                if (CurrentPlayer == Player.White) CapturedBlackPiece.RemoveAt(CapturedBlackPiece.Count - 1);
                 else CapturedRedPiece.RemoveAt(CapturedRedPiece.Count - 1);
             }
             CurrentPlayer = CurrentPlayer.Opponent();
