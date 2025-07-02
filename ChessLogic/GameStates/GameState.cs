@@ -63,7 +63,7 @@ namespace ChessLogic.GameStates.GameState
 
         public void MakeMove(Move move)
         {
-            //Moved.Push(Tuple.Create(move, Tuple.Create(Board[move.ToPos],promotedPiece)));
+            Moved.Push(Tuple.Create(move, Board[move.ToPos]));
             CapturedPiece = Board[move.ToPos];
             if (CapturedPiece != null)
             {
