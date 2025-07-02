@@ -27,31 +27,7 @@ namespace ChessLogic
                 throw new Exception("Không thể load file Prolog.");
             }
 
-            if (isAI)
-            {
-                if (!PlQuery.PlCall("game_mode(hxc)."))
-                {
-                    throw new Exception("Không thể khởi tạo bàn cờ.");
-                }
-
-                if (color == Player.Black)
-                {
-                    if (!PlQuery.PlCall("set_first_player(black)."))
-                    {
-                        throw new Exception("Không thể khởi tạo bàn cờ cho người chơi đen.");
-                    }
-                }
-            }
-            else
-            {
-                if (!PlQuery.PlCall("game_mode(hxh)."))
-                {
-                    throw new Exception("Không thể khởi tạo bàn cờ.");
-                }
-            }
-
-
-
+            
 
             // Khởi tạo bàn cờ
             if (!PlQuery.PlCall("init."))
