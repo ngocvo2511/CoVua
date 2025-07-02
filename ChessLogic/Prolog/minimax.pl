@@ -28,7 +28,6 @@ bot_move(From, To, Status) :-
     asserta(count(0)),
     minimax(Position, Color, Counter, Move, Depth, _Value, Alpha, Beta),
     retract(count(Count)),
-    write(Count),nl,
     %write('Depth: '), write(Depth), write(' Count: '), write(Count), nl,
     Move = move(From, To, _MovedPiece, _CapturedPiece, PromotionPiece),
     place_piece(From, To, Status, PromotionPiece),
