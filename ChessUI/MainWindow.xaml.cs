@@ -230,7 +230,7 @@ namespace ChessUI
 
         private void ConfirmMenu_YesButtonClicked(object sender, RoutedEventArgs e)
         {
-            PrologEngine.Cleanup();
+            PrologEngine.Reset();
             Sound.PlayButtonClickSound();
             CreateMainMenu();            
         }
@@ -354,7 +354,7 @@ namespace ChessUI
 
         private void NewButtonClicked(object sender, RoutedEventArgs e)
         {
-            PrologEngine.Cleanup();
+            PrologEngine.Reset();
             Sound.PlayButtonClickSound();
             CreateSelectGameModeMenu();
         }
@@ -387,7 +387,7 @@ namespace ChessUI
 
         private void GameOverMenu_HomeButtonClicked(object sender, RoutedEventArgs e)
         {
-            PrologEngine.Cleanup();
+            PrologEngine.Reset();
             Sound.PlayButtonClickSound();
             CreateMainMenu();
         }
@@ -412,7 +412,7 @@ namespace ChessUI
 
         private void CloseApp(object sender, RoutedEventArgs e)
         {
-            PrologEngine.Cleanup();
+            PrologEngine.Reset();
             Application.Current.Shutdown();
         }
     }
