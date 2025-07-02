@@ -1,12 +1,12 @@
 {
-  "GameType": "GameState2P",
-  "depth": 0,
-  "CurrentPlayer": "Black",
-  "timeRemainingWhite": 597,
-  "timeRemainingBlack": 598,
-  "historyBoard": "[move(64,64,none,none,none),move(10,26,pawn,none,null),move(51,35,pawn,none,null),move(26,35,pawn,pawn,null)]",
-  "CapturedWhitePiece": [],
-  "CapturedBlackPiece": [
-    "bP"
-  ]
+  "GameType": "GameStateAI",
+  "depth": 3,
+  "CurrentPlayer": "White",
+  "timeRemainingWhite": 598,
+  "timeRemainingBlack": 600,
+  "historyBoard": "[move(64,64,none,none,none),move(10,26,pawn,none,none),move(62,45,knight,none,none),move(12,28,pawn,none,none),move(45,28,knight,pawn,none)]",
+  "CapturedWhitePiece": [
+    "wP"
+  ],
+  "CapturedBlackPiece": []
 }
