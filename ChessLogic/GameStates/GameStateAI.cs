@@ -37,6 +37,7 @@ namespace ChessLogic.GameStates.GameState
                 }
                 if (i == 0) AiCapturedPiece = undo.Item2;
                 else CapturedPiece = undo.Item2;
+                CurrentPlayer = CurrentPlayer.Opponent();
                 //noCapture.Pop();
             }
             CurrentPlayer = Player.White;
