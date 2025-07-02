@@ -1,3 +1,13 @@
+init :-
+	retractall(board(_,_,_)),
+	retractall(state(_)),
+	retractall(history(_)),
+	retractall(depth(_)),
+	retractall(stack(_,_,_)),
+	set_position(begin),
+	% Initialize default depth if not set
+	asserta(depth(3)).
+
 initial_pos(position(H1,H2)):-
 	PawnWhite = [8,9,10,11,12,13,14,15],
 	H1 = half_position(PawnWhite,[0,7],[1,6],[2,5],[3],[4],[queenside,kingside],[]),
@@ -9,7 +19,7 @@ set_position(begin) :-
 	initial_pos(Position),
 	asserta(board(Position, white, 0)),
 	init_history(Position, white),!.
-	
+
 set_position(Position, Color) :- 
 	retractall(board(_,_,_)),
 	asserta(board(Position,Color,0)),
@@ -24,7 +34,6 @@ skip_turn:-
 reset:-	
 	retractall(human(_)),
 	retractall(board(_,_,_)),
-	retractall(state(_)),
 	retractall(history(_)).
 		
 check_game_status(Position, Color, Counter, Status) :-
@@ -73,3 +82,4 @@ get_piece_at(position(WhiteHalf, BlackHalf), Pos, Piece) :-
     ;   Piece = empty
     ).
 
+debugging.
