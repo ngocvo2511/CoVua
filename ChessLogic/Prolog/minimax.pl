@@ -22,11 +22,12 @@ update_alpha_beta(Color,Alpha,NewAlpha,Beta,NewBeta) :-
 bot_move(From, To, Status) :-
     init_minimax,
     board(Position, Color, Counter),
+    position_to_assoc(Position, Assoc),
     depth(Depth),
     losing_value(white,Alpha),
 	losing_value(black,Beta),
     asserta(count(0)),
-    minimax(Position, Color, Counter, Move, Depth, _Value, Alpha, Beta),
+    minimax(Position, Color, Counter, Move, Depth, _Value, Alpha, Beta, Assoc),
     retract(count(Count)),
     write(Count),nl,
     %write('Depth: '), write(Depth), write(' Count: '), write(Count), nl,
@@ -36,28 +37,29 @@ bot_move(From, To, Status) :-
     board(NewPosition, NewColor, NewCounter),
     check_game_status(NewPosition, NewColor, NewCounter, Status).
 
-simulate_new_position_from_move_list([Move|_], Move, Color, Position, NewPosition) :-
+simulate_new_position_from_move_list([Move|_], Move, Color, Position, NewPosition, Assoc) :-
     Move = move(From, To, MovedPiece, CapturedPiece, PromotionPiece),
-    simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotionPiece).
-simulate_new_position_from_move_list([_|Rest], Move, Color, Position, NewPosition) :-
-    simulate_new_position_from_move_list(Rest, Move, Color, Position, NewPosition).
+    simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotionPiece, Assoc).
+simulate_new_position_from_move_list([_|Rest], Move, Color, Position, NewPosition, Assoc) :-
+    simulate_new_position_from_move_list(Rest, Move, Color, Position, NewPosition, Assoc).
 % simulate_new_position_from_move_list([], _, _, Position, Position, _).
 
-get_best(Position, Color, Counter, Depth, Alpha, Beta) :-
+get_best(Position, Color, Counter, Depth, Alpha, Beta, Assoc) :-
     invert(Color, Op),
     update_depth(Depth, NewDepth),
     %write('Depth: '), write(Depth), write(' Moves: '), write(MoveList), nl,
     %generate_move(Move, Color, Position, NewPosition),
-    get_all_pseudo_legal_moves(Position, Color, MoveList),
+    get_all_pseudo_legal_moves(Position, Color, MoveList, Assoc),
     quicksort(MoveList, SortedMoveList),
-    simulate_new_position_from_move_list(SortedMoveList, Move, Color, Position, NewPosition),
+    simulate_new_position_from_move_list(SortedMoveList, Move, Color, Position, NewPosition, Assoc),
+    position_to_assoc(NewPosition, NewAssoc),
     update_alpha_beta(Color, Alpha, NewAlpha, Beta, NewBeta),
-    (   in_check(NewPosition, Color) ->
+    (   in_check(NewPosition, Color, NewAssoc) ->
         (   SortedMoveList = [] ->
             Value is 0
         ;   losing_value(Color, Value)
         )
-    ;   minimax(NewPosition, Op, Counter, _Move, NewDepth, Value, NewAlpha, NewBeta)
+    ;   minimax(NewPosition, Op, Counter, _Move, NewDepth, Value, NewAlpha, NewBeta, NewAssoc)
     ),
     compare_move(Move, Value, Color),
     prune(Value, Color, Alpha, Beta), !, fail.
@@ -73,7 +75,7 @@ prune(Value, Color, Alpha, Beta) :-
     (Color = white, Value >= Beta);
     (Color = black, Value =< Alpha).
 
-minimax(Position, _Color, _Counter, move(64, 64, none, none, none), 0, Value, _Alpha, _Beta) :-
+minimax(Position, _Color, _Counter, move(64, 64, none, none, none), 0, Value, _Alpha, _Beta, _Assoc) :-
     % for counting nodes at final depth for testing
     count(Count),
     retract(count(Count)),
@@ -86,17 +88,17 @@ minimax(Position, _Color, _Counter, move(64, 64, none, none, none), 0, Value, _A
         
 
 
-minimax(Position, Color, Counter, Move, Depth, Value, Alpha, Beta) :-
-    % count(Count),
-    % retract(count(Count)),
-    % NewCount is Count + 1,
-    % asserta(count(NewCount)),
+minimax(Position, Color, Counter, Move, Depth, Value, Alpha, Beta, Assoc) :-
+    count(Count),
+    retract(count(Count)),
+    NewCount is Count + 1,
+    asserta(count(NewCount)),
     (   (is_threefold_repetition(Position, Color) ; is_fifty_move(Counter)) ->
         Value is 0
     ;
         losing_value(Color, Worst),
         push(move(64, 64, none, none, none), Worst),
-        not(get_best(Position, Color, Counter, Depth, Alpha, Beta)),
+        not(get_best(Position, Color, Counter, Depth, Alpha, Beta, Assoc)),
         pop(Move, Value)
     ), 
 !.

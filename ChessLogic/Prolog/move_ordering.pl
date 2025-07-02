@@ -19,16 +19,19 @@ compare_move(MoveX, MoveY) :-
     MoveX = move(FromX, ToX, MovedPieceX, CapturedPieceX, PromotedPieceX),
     MoveY = move(FromY, ToY, MovedPieceY, CapturedPieceY, PromotedPieceY) ->
     
-    piece_value(CapturedPieceX, CaptureValueX),
-    piece_value(CapturedPieceY, CaptureValueY),
+    piece_value(CapturedPieceX, CapturedPieceValueX),
+    piece_value(CapturedPieceY, CapturedPieceValueY),
 
-    piece_value(MovedPieceX, MovedValueX),
-    piece_value(MovedPieceY, MovedValueY),
+    piece_value(MovedPieceX, MovedPieceValueX),
+    piece_value(MovedPieceY, MovedPieceValueY),
 
-    piece_value(PromotedPieceX, PromotedValueX),
-    piece_value(PromotedPieceY, PromotedValueY),
+    (CapturedPieceValueX = 0 -> CaptureValueX = 0 ; CaptureValueX = 10 * CapturedPieceValueX - MovedPieceValueX),
+    (CapturedPieceValueY = 0 -> CaptureValueY = 0 ; CaptureValueY = 10 * CapturedPieceValueY - MovedPieceValueY),
 
-    ValueX is (10 * CaptureValueX - MovedValueX) + PromotedValueX,
-    ValueY is (10 * CaptureValueY - MovedValueY) + PromotedValueY,
+    piece_value(PromotedPieceX, PromotedPieceValueX),
+    piece_value(PromotedPieceY, PromotedPieceValueY),
+
+    ValueX is CaptureValueX + PromotedPieceValueX,
+    ValueY is CaptureValueY + PromotedPieceValueY,
 
     ValueX =< ValueY.

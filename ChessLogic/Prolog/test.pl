@@ -6,9 +6,9 @@ test_check :-
 	write('Testing check detection:'), nl,
 	board(Pos, _, _),
 	write('White king in check: '),
-	(in_check(Pos, white) -> write('Yes') ; write('No')), nl,
+	(in_check(Pos, white, _Assoc) -> write('Yes') ; write('No')), nl,
 	write('Black king in check: '),
-	(in_check(Pos, black) -> write('Yes') ; write('No')), nl.
+	(in_check(Pos, black, _Assoc) -> write('Yes') ; write('No')), nl.
 	
 test_pawn_promotion :-
 	only_king_and_pawns(Position),
@@ -38,6 +38,11 @@ enpassant_position(position(H1, H2)) :-
     H1 = half_position([35],[],[],[],[],[4],[],[]),
     H2 = half_position([52],[],[],[],[],[60],[],[]).
 
+castling_position(position(H1, H2)) :-
+    H1 = half_position([],[0,7],[],[],[],[4],[queenside,kingside],[]),
+    H2 = half_position([],[56,63],[],[],[],[60],[queenside,kingside],[]).
+
+
 
 threefold_position(position(H1, H2)) :-
 	H1 = half_position([],[1],[],[],[],[4],[],[]),
@@ -66,18 +71,20 @@ buggy_pos(position(H1, H2)) :-
     H2 = half_position(PawnBlack, [56, 63], [13, 57], [52, 58], [59], [61], [], []).
 
 test_position :-
-	Color = black,
-	test_pos(Position),
+	retract(depth(_)),
+	asserta(depth(4)),
+	Color = white,
+	castling_position(Position),
 	set_position(Position, Color).
 
 test_time :-
 	initial_pos(Position),
-	get_all_legal_moves(Position, white, _MoveList).
+	get_all_legal_moves(Position, white, _MoveList, _Assoc).
 
 test_incheck :-
 	board(Pos, _Color, _Counter),
-	(in_check(Pos, white) -> write('Yes') ; write('No')), nl,
-	(in_check(Pos, black) -> write('Yes') ; write('No')), nl.
+	(in_check(Pos, white, _Assoc) -> write('Yes') ; write('No')), nl,
+	(in_check(Pos, black, _Assoc) -> write('Yes') ; write('No')), nl.
 
 start_perft(Position, Color, Depth) :- 
 	asserta(perft_stack(0)),
@@ -86,13 +93,13 @@ start_perft(Position, Color, Depth) :-
 	write('Total nodes: '), write(Count), nl.
 
 perft(Position, Color, Depth) :-
-	get_all_legal_moves(Position, Color, MoveList),
+	get_all_legal_moves(Position, Color, MoveList, _Assoc),
 	(   Depth > 0 ->
 		NewDepth is Depth - 1,
 		invert(Color, NextColor),
 		forall(member(Move, MoveList), (
 			Move = move(From, To, MovedPiece, CapturedPiece, PromotionPiece),
-			simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotionPiece),
+			simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotionPiece, _Assoc),
 			perft(NewPosition, NextColor, NewDepth)
 		))
 	;   retract(perft_stack(Count)),

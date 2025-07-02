@@ -37,11 +37,12 @@ reset:-
 	retractall(history(_)).
 		
 check_game_status(Position, Color, Counter, Status) :-
-    (   is_checkmate(Position, Color) ->
+	position_to_assoc(Position, Assoc),
+    (   is_checkmate(Position, Color, Assoc) ->
         Status = checkmate
-    ;   is_stalemate(Position, Color) ->
+    ;   is_stalemate(Position, Color, Assoc) ->
         Status = stalemate
-    ;   in_check(Position, Color) ->
+    ;   in_check(Position, Color, Assoc) ->
         Status = check
     ;	is_threefold_repetition(Position, Color) ->
         Status = draw
@@ -61,25 +62,5 @@ get_current_board(Position, Color, Counter) :-
 	% Create the final position list
 	Position = [[PawnWhite, RookWhite, KnightWhite, BishopWhite, QueenWhite, KingWhite],
 	                    [PawnBlack, RookBlack, KnightBlack, BishopBlack, QueenBlack, KingBlack]].
-
-% Helper to get piece at a position
-get_piece_at(position(WhiteHalf, BlackHalf), Pos, Piece) :-
-    WhiteHalf = half_position(WhitePawns, WhiteRooks, WhiteKnights, WhiteBishops, WhiteQueens, WhiteKings, _, _),
-    BlackHalf = half_position(BlackPawns, BlackRooks, BlackKnights, BlackBishops, BlackQueens, BlackKings, _, _),
-    
-    (   member(Pos, WhitePawns) -> Piece = pawn
-    ;   member(Pos, WhiteRooks) -> Piece = rook
-    ;   member(Pos, WhiteKnights) -> Piece = knight
-    ;   member(Pos, WhiteBishops) -> Piece = bishop
-    ;   member(Pos, WhiteQueens) -> Piece = queen
-    ;   member(Pos, WhiteKings) -> Piece = king
-    ;   member(Pos, BlackPawns) -> Piece = pawn
-    ;   member(Pos, BlackRooks) -> Piece = rook
-    ;   member(Pos, BlackKnights) -> Piece = knight
-    ;   member(Pos, BlackBishops) -> Piece = bishop
-    ;   member(Pos, BlackQueens) -> Piece = queen
-    ;   member(Pos, BlackKings) -> Piece = king
-    ;   Piece = empty
-    ).
 
 debugging.

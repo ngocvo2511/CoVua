@@ -111,21 +111,21 @@ is_attacked_by_king(Pos, _Color, Kings) :-
 	).
 
 
-multiple_steps_to_enemy(Field,Direction,Next,Color,Position):-
+multiple_steps_to_enemy(Field,Direction,Next,Color,Position,Assoc):-
 	invert(Color,FriendColor),
-	one_step(Field,Direction,Next,FriendColor,Position),
-	occupied(Next,Color,Position),!.
-multiple_steps_to_enemy(Field,Direction,Next,Color,Position):-
+	one_step(Field,Direction,Next,FriendColor,Position,Assoc),
+	occupied(Next,Color,Position,Assoc),!.
+multiple_steps_to_enemy(Field,Direction,Next,Color,Position,Assoc):-
 	invert(Color,FriendColor),
-	one_step(Field,Direction,FieldNew,FriendColor,Position),
-	multiple_steps_to_enemy(FieldNew,Direction,Next,Color,Position),!.
+	one_step(Field,Direction,FieldNew,FriendColor,Position,Assoc),
+	multiple_steps_to_enemy(FieldNew,Direction,Next,Color,Position,Assoc),!.
 
-inverse_long_move(From,Color,Type,Position, Direction, To) :-
+inverse_long_move(Type, From, Color, Position, Direction, To, Assoc) :-
 	piece_direction(Type, Direction),
-	multiple_steps_to_enemy(From, Direction, To, Color, Position).
+	multiple_steps_to_enemy(From, Direction, To, Color, Position, Assoc).
 
-is_attacked_on_line(Pos, Color, Position, Rooks, Bishops, Queens) :- 
-    inverse_long_move(Pos, Color, queen, Position, Direction, To),
+is_attacked_on_line(Pos, Color, Position, Rooks, Bishops, Queens, Assoc) :- 
+    inverse_long_move(queen, Pos, Color, Position, Direction, To, Assoc),
     (
         member(Direction, [7, -7, 9, -9]) ->
             (member(To, Bishops) ; member(To, Queens))
@@ -136,16 +136,16 @@ is_attacked_on_line(Pos, Color, Position, Rooks, Bishops, Queens) :-
 
 
 % main predicate to check if a position is under attack
-is_under_attack(Pos, Color, Position) :-
+is_under_attack(Pos, Color, Position, Assoc) :-
 	invert(Color, EnemyColor),
 	get_half(Position, half_position(Pawns, Rooks, Knights, Bishops, Queens, Kings, _, _), EnemyColor),
 	(   is_attacked_by_pawn(Pos, EnemyColor, Pawns)
 	;   is_attacked_by_knight(Pos, EnemyColor, Knights)
 	;  	is_attacked_by_king(Pos, EnemyColor, Kings)
-	;   is_attacked_on_line(Pos, EnemyColor, Position, Rooks, Bishops, Queens)
+	;   is_attacked_on_line(Pos, EnemyColor, Position, Rooks, Bishops, Queens, Assoc)
 	).
 
 % check if king of given color is in check
-in_check(Position, Color) :-
+in_check(Position, Color, Assoc) :-
 	find_king(Position, Color, KingPos),
-	is_under_attack(KingPos, Color, Position).
+	is_under_attack(KingPos, Color, Position, Assoc).
