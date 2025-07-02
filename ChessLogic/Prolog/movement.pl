@@ -87,7 +87,8 @@ simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece,
 		Promoting = false,
 		move_piece(TempPosition, Color, From, To, NewPosition)
 	),
-	(var(CapturedPiece) -> CapturedPiece = none ; true).
+	(var(CapturedPiece) -> CapturedPiece = none ; true),
+	(var(PromotedPiece) -> PromotedPiece = none ; true).
 
 % get_all_legal_moves: get all legal moves for a color
 get_all_legal_moves(Position, Color, LegalMoves) :-

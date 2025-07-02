@@ -6,7 +6,7 @@ init :-
 	retractall(stack(_,_,_)),
 	set_position(begin),
 	% Initialize default depth if not set
-	asserta(depth(2)).
+	asserta(depth(3)).
 
 initial_pos(position(H1,H2)):-
 	PawnWhite = [8,9,10,11,12,13,14,15],

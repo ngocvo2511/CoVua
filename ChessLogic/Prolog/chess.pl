@@ -1,10 +1,11 @@
 :- dynamic 
 	human/1, % human player color, if predicate not exist then bot will play that turn
 	board/3, % board state, color, fifty-move counter
-	history/1, % moves history
+	history/2, % moves history
 	depth/1,
 	stack/3,
-	count/1.
+	count/1,
+	history_board/3.
 
 	
 :- [history].
@@ -43,14 +44,14 @@ place_piece(From, To, Status, PromotedPiece) :-
 	is_legal_move(From, To, Color, Position, PromotedPiece),
 	
 	% Make the move, wrap this with state(place) to make sure only this allow to print to screen
-	simulate_move(From, To, Color, Position, NewPosition, _MovedPiece, _CapturedPiece, PromotedPiece),
+	simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotedPiece),
 	
 	% Update fifty-move counter
 	update_fifty_move_counter(From, To, Position, Color, Counter, NewCounter),
 	
 	% Switch to opposite player's turn
 	invert(Color, NextColor),
-	add_to_history(NewPosition, NextColor, NewCounter),
+	add_to_history(NewPosition, NextColor, NewCounter, move(From, To, MovedPiece, CapturedPiece, PromotedPiece)),
 	% Check for game ending conditions
 	check_game_status(NewPosition, NextColor, NewCounter, Status),
 	
