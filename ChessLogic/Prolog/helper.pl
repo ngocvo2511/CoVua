@@ -4,6 +4,7 @@ init :-
 	retractall(history(_)),
 	retractall(depth(_)),
 	retractall(stack(_,_,_)),
+	init_precomputed_move,
 	set_position(begin),
 	% Initialize default depth if not set
 	asserta(depth(3)).

@@ -22,7 +22,7 @@ test_checkmate :-
 
 only_king_and_rooks(position(H1, H2)) :-
     H1 = half_position([],[],[],[],[],[4],[queenside,kingside],[]),
-    H2 = half_position([],[8, 23],[],[],[],[60],[queenside,kingside],[]).
+    H2 = half_position([],[7, 23],[],[],[],[60],[queenside,kingside],[]).
 	
 only_king_and_pawns(position(H1, H2)) :-
     H1 = half_position([48],[],[],[],[],[4],[queenside,kingside],[]),
@@ -101,3 +101,54 @@ perft(Position, Color, Depth) :-
 		NewCount is Count + 1,
 		asserta(perft_stack(NewCount))
 	).
+
+% Test attack data generation
+test_attack_data :-
+    test_attack_data_initial,
+    test_attack_data_check,
+    test_attack_data_pin.
+
+test_attack_data_initial :-
+    write('Testing attack data generation for initial position...'), nl,
+    initial_pos(Position),
+    position_to_board_list(Position, BoardList),
+    Board = board(Position, white, 0),
+    generate_attack_data(Board, BoardList, AttackData),
+    AttackData = attack_data(InCheck, InDoubleCheck, PinExist, CheckRay, PinRay, 
+                            OpponentKnightAttacks, OpponentAttackMapNoPawns, 
+                            OpponentAttackMap, OpponentPawnAttackMap, OpponentSlidingAttackMap),
+    write('InCheck: '), write(InCheck), nl,
+    write('InDoubleCheck: '), write(InDoubleCheck), nl,
+    write('PinExist: '), write(PinExist), nl,
+    write('Test passed!'), nl.
+
+test_attack_data_check :-
+    write('Testing attack data generation for check position...'), nl,
+    checkmate_position(Position),
+    position_to_board_list(Position, BoardList),
+    Board = board(Position, white, 0),
+    generate_attack_data(Board, BoardList, AttackData),
+    AttackData = attack_data(InCheck, InDoubleCheck, PinExist, CheckRay, PinRay, 
+                            OpponentKnightAttacks, OpponentAttackMapNoPawns, 
+                            OpponentAttackMap, OpponentPawnAttackMap, OpponentSlidingAttackMap),
+    write('InCheck: '), write(InCheck), nl,
+    write('InDoubleCheck: '), write(InDoubleCheck), nl,
+    write('PinExist: '), write(PinExist), nl,
+    write('Test passed!'), nl.
+
+test_attack_data_pin :-
+    write('Testing attack data generation for pin position...'), nl,
+    % Create a position with a pin
+    H1 = half_position([],[4],[],[],[],[0],[],[]),
+    H2 = half_position([],[8],[],[],[],[56],[],[]),
+    Position = position(H1, H2),
+    position_to_board_list(Position, BoardList),
+    Board = board(Position, white, 0),
+    generate_attack_data(Board, BoardList, AttackData),
+    AttackData = attack_data(InCheck, InDoubleCheck, PinExist, CheckRay, PinRay, 
+                            OpponentKnightAttacks, OpponentAttackMapNoPawns, 
+                            OpponentAttackMap, OpponentPawnAttackMap, OpponentSlidingAttackMap),
+    write('InCheck: '), write(InCheck), nl,
+    write('InDoubleCheck: '), write(InDoubleCheck), nl,
+    write('PinExist: '), write(PinExist), nl,
+    write('Test passed!'), nl.

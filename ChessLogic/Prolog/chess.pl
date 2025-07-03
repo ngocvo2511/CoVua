@@ -5,10 +5,9 @@
 	depth/1,
 	stack/3,
 	count/1,
-	history_board/3.
+	history_board/3,
+	move_direction/2.
 
-
-	
 :- [history].
 :- [board].
 :- [move_ordering].
@@ -16,7 +15,9 @@
 :- [movement].
 :- [helper].
 :- [minimax].
+:- [fen].
 :- [evaluation].
+:- [precomputed_move].
 :- [test].
 
 % =================================

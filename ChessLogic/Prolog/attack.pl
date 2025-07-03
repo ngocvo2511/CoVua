@@ -43,73 +43,28 @@ is_attacked_by_pawn(Pos, Color, Pawns) :-
                 member(PawnPos, Pawns)
             )
         )
-    ).
+    ).  
 
 
 is_attacked_by_knight(Pos, _Color, Knights) :-
-    (
-        KnightPos is Pos + 15,
-        Direction is KnightPos - Pos,
-        valid_field(KnightPos),
-        not(crosses_edge(Pos, KnightPos, Direction)),
-        member(KnightPos, Knights)
-    ;
-        KnightPos is Pos + 17,
-        Direction is KnightPos - Pos,
-        valid_field(KnightPos),
-        not(crosses_edge(Pos, KnightPos, Direction)),
-        member(KnightPos, Knights)
-    ;
-        KnightPos is Pos - 15,
-        Direction is KnightPos - Pos,
-        valid_field(KnightPos),
-        not(crosses_edge(Pos, KnightPos, Direction)),
-        member(KnightPos, Knights)
-    ;
-        KnightPos is Pos - 17,
-        Direction is KnightPos - Pos,
-        valid_field(KnightPos),
-        not(crosses_edge(Pos, KnightPos, Direction)),
-        member(KnightPos, Knights)
-    ;
-        KnightPos is Pos + 6,
-        Direction is KnightPos - Pos,
-        valid_field(KnightPos),
-        not(crosses_edge(Pos, KnightPos, Direction)),
-        member(KnightPos, Knights)
-    ;
-        KnightPos is Pos + 10,
-        Direction is KnightPos - Pos,
-        valid_field(KnightPos),
-        not(crosses_edge(Pos, KnightPos, Direction)),
-        member(KnightPos, Knights)
-    ;
-        KnightPos is Pos - 6,
-        Direction is KnightPos - Pos,
-        valid_field(KnightPos),
-        not(crosses_edge(Pos, KnightPos, Direction)),
-        member(KnightPos, Knights)
-    ;
-        KnightPos is Pos - 10,
-        Direction is KnightPos - Pos,
-        valid_field(KnightPos),
-        not(crosses_edge(Pos, KnightPos, Direction)),
-        member(KnightPos, Knights)
-    ).
+    % Generate all possible knight move offsets
+    KnightDirections = [15, 17, -15, -17, 6, 10, -6, -10],
+    % Check each potential knight position
+    member(Direction, KnightDirections),
+    KnightPos is Pos + Direction,
+    valid_field(KnightPos),
+    not(crosses_edge(Pos, KnightPos, Direction)),
+    member(KnightPos, Knights).
 
 is_attacked_by_king(Pos, _Color, Kings) :-
-	Kings = [KingPos],
-	(
-		KingPos is Pos + 1, valid_field(KingPos), Direction is KingPos - Pos, not(crosses_edge(Pos, KingPos, Direction)) ; % right
-		KingPos is Pos - 1, valid_field(KingPos), Direction is KingPos - Pos, not(crosses_edge(Pos, KingPos, Direction)) ; % left
-		KingPos is Pos + 8, valid_field(KingPos), Direction is KingPos - Pos, not(crosses_edge(Pos, KingPos, Direction)) ; % up
-		KingPos is Pos - 8, valid_field(KingPos), Direction is KingPos - Pos, not(crosses_edge(Pos, KingPos, Direction)) ; % down
-		KingPos is Pos + 9, valid_field(KingPos), Direction is KingPos - Pos, not(crosses_edge(Pos, KingPos, Direction)) ; % up-right
-		KingPos is Pos + 7, valid_field(KingPos), Direction is KingPos - Pos, not(crosses_edge(Pos, KingPos, Direction)) ; % up-left
-		KingPos is Pos - 7, valid_field(KingPos), Direction is KingPos - Pos, not(crosses_edge(Pos, KingPos, Direction)) ; % down-left
-		KingPos is Pos - 9, valid_field(KingPos), Direction is KingPos - Pos, not(crosses_edge(Pos, KingPos, Direction))    % down-right
-	).
-
+    Kings = [KingPos],
+    % Generate all possible king move directions/offsets
+    KingDirections = [1, -1, 8, -8, 9, 7, -7, -9],
+    % Check each potential king position
+    member(Direction, KingDirections),
+    KingPos is Pos + Direction,
+    valid_field(KingPos),
+    not(crosses_edge(Pos, KingPos, Direction)).
 
 multiple_steps_to_enemy(Field,Direction,Next,Color,Position,BoardList):-
 	invert(Color,FriendColor),
@@ -150,3 +105,89 @@ is_under_attack(Pos, Color, Position, BoardList) :-
 in_check(Position, Color, BoardList) :-
 	find_king(Position, Color, KingPos),
 	is_under_attack(KingPos, Color, Position, BoardList).
+
+% ============================================
+% attack data
+% ============================================
+
+% inCheck, inDoubleCheck, pinExist, checkRay, 
+% pinRay, opponentKnightAttacks, opponentAttackMapNoPawns
+% opponentAttackMap, opponentPawnAttackMap, opponentSlidingAttackMap
+
+generate_attack_data(Board, BoardList, AttackData) :- 
+    AttackData = attack_data(
+        InCheck, 
+        InDoubleCheck, 
+        PinExist, 
+        CheckRay, 
+        PinRay, 
+        OpponentKnightAttacks, 
+        OpponentAttackMapNoPawns,
+        OpponentAttackMap, 
+        OpponentPawnAttackMap, 
+        OpponentSlidingAttackMap
+    ),
+    calculate_attack_data(Board, BoardList, AttackData).
+
+calculate_attack_data(board(Position, Color, _), BoardList, attack_data(InCheck, InDoubleCheck, PinExist, CheckRay, PinRay, OpponentKnightAttacks, OpponentAttackMapNoPawns, OpponentAttackMap, OpponentPawnAttackMap, OpponentSlidingAttackMap)) :-
+    
+    gen_sliding_attack_map(board(Position, Color, _), BoardList, OpponentSlidingAttackMap).
+
+
+gen_sliding_attack_map(board(Position, Color, _), BoardList, SlidingAttackMap) :-
+    invert(Color, EnemyColor),
+    get_half(Position, half_position(_, Rooks, _, Bishops, Queens, _, _, _), EnemyColor),
+    
+    % Generate attack map for orthogonal pieces (rooks and queens)
+    append(Rooks, Queens, OrthogonalPieces),
+    write('Orthogonal Pieces: '), write(OrthogonalPieces), nl,
+    gen_sliding_attack_map_for_orthogonal(OrthogonalPieces, BoardList, Color, OrthogonalAttackMap),
+
+    write('Orthogonal Attack Map: '), write(OrthogonalAttackMap), nl
+    append(Bishops, Queens, DiagonalPieces),
+    gen_sliding_attack_map_for_diagonal(DiagonalPieces, BoardList, Color, DiagonalAttackMap),
+
+    % Combine both attack maps
+    SlidingAttackMap is OrthogonalAttackMap \/ DiagonalAttackMap.
+
+% Generate attack map for orthogonal pieces (rooks and queens)
+gen_sliding_attack_map_for_orthogonal(Pieces, BoardList, Color, SlidingAttackMap) :-
+    go_sliding(Pieces, newpiece, 8, BoardList, Color, 0, SlidingAttackMap1),
+    go_sliding(Pieces, newpiece, -8, BoardList, Color, SlidingAttackMap1, SlidingAttackMap2),
+    go_sliding(Pieces, newpiece, -1, BoardList, Color, SlidingAttackMap2, SlidingAttackMap3),
+    go_sliding(Pieces, newpiece, 1,  BoardList, Color, SlidingAttackMap3, SlidingAttackMap).
+
+gen_sliding_attack_map_for_diagonal(Pieces, BoardList, Color, SlidingAttackMap) :-
+    go_sliding(Pieces, newpiece, 7, BoardList, Color, 0, SlidingAttackMap1),
+    go_sliding(Pieces, newpiece, -7, BoardList, Color, SlidingAttackMap1, SlidingAttackMap2),
+    go_sliding(Pieces, newpiece, 9, BoardList, Color, SlidingAttackMap2, SlidingAttackMap3),
+    go_sliding(Pieces, newpiece, -9,  BoardList, Color, SlidingAttackMap3, SlidingAttackMap).
+
+
+go_sliding([Piece|Pieces], newpiece, Direction, BoardList, Color, SlidingAttackMap, NewSlidingAttackMap) :- 
+    From is Piece + Direction,
+    go_sliding(Pieces, From, Direction, BoardList, Color, SlidingAttackMap, NewSlidingAttackMap)
+    , !.
+
+go_sliding([], _, _, _, _, SlidingAttackMap, SlidingAttackMap).
+
+go_sliding(PieceList, From, Direction, BoardList, Color, SlidingAttackMap, NewSlidingAttackMap) :-
+    From \= newpiece,
+    opposite_direction(Direction, OppositeDirection),
+    (   valid_field(From), move_direction(From, OppositeDirection)
+    ->  To is From + Direction,
+        write(From), nl,
+        AccSlidingAttackMap is SlidingAttackMap \/ (1 << From),
+        (   nth0(From, BoardList, [Type, PieceColor])
+        ->  (   (Type = king, PieceColor = Color)
+            ->  go_sliding(PieceList, To, Direction, BoardList, Color, AccSlidingAttackMap, NewSlidingAttackMap)
+            ;   go_sliding(PieceList, newpiece, Direction, BoardList, Color, AccSlidingAttackMap, NewSlidingAttackMap)
+            )
+        ;   go_sliding(PieceList, To, Direction, BoardList, Color, AccSlidingAttackMap, NewSlidingAttackMap)
+        )
+    ;   go_sliding(PieceList, newpiece, Direction, BoardList, Color, SlidingAttackMap, NewSlidingAttackMap)
+    ), !.
+go_sliding([], newpiece, _, _, _, SlidingAttackMap, SlidingAttackMap).
+
+% ...existing code...
+
