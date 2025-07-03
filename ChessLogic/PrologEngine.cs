@@ -186,19 +186,15 @@ namespace ChessLogic
         public static string GetGameStatus()
         {
             // Kiểm tra trạng thái hiện tại của ván cờ
-            using (var q = new PlQuery("board(Position, Color)"))
+            using (var q = new PlQuery("board(Position,Color,Counter), check_game_status(Position, Color, Counter, Status)"))
             {
                 if (q.NextSolution())
                 {
-                    if (PlQuery.PlCall("board(Position, Color), is_checkmate(Color, Position)"))
-                        return "CHECKMATE";
-                    if (PlQuery.PlCall("board(Position, Color), is_stalemate(Color, Position)"))
-                        return "STALEMATE";
-                    if (PlQuery.PlCall("board(Position, Color), in_check(Color, Position)"))
-                        return "CHECK";
+                    string status = q.Variables["Status"].ToString().ToUpper();
+                    return status;
                 }
+                return "";
             }
-            return "NORMAL";
         }
 
         public static void Reset()
@@ -434,10 +430,9 @@ namespace ChessLogic
                 return result;
             });
 
-        public class MakeMoveWithPromotionResult { public bool Success; public string Status; }
-        public static Task<MakeMoveWithPromotionResult> MakeMoveWithPromotionAsync(int fromPos, int toPos, string promotionPiece)
+        public static Task<MakeMoveResult> MakeMoveWithPromotionAsync(int fromPos, int toPos, string promotionPiece)
             => PrologThread.Instance.Enqueue(() => {
-                var result = new MakeMoveWithPromotionResult();
+                var result = new MakeMoveResult();
                 result.Success = MakeMoveWithPromotion(fromPos, toPos, promotionPiece, out result.Status);
                 return result;
             });

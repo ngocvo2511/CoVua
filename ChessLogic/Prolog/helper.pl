@@ -44,9 +44,9 @@ check_game_status(Position, Color, Counter, Status) :-
     ;   in_check(Position, Color) ->
         Status = check
     ;	is_threefold_repetition(Position, Color) ->
-        Status = draw
+        Status = threefoldrepetition
     ;	is_fifty_move(Counter) ->
-        Status = draw
+        Status = fiftymoverule
     ;	Status = safe
     ).
 

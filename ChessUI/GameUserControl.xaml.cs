@@ -266,7 +266,7 @@ namespace ChessUI
             UndoButton.IsEnabled = true;
             SaveButton.IsEnabled = true;
         }
-        private async void HandleMove(Move move)
+        private async void HandleMove(Move move, PrologEngine.MakeMoveResult result)
         {
             isRedTurn = !isRedTurn;
             if (redTimer != null) SwitchTurn();
@@ -279,15 +279,51 @@ namespace ChessUI
             ShowPrevMove(move);
             DrawCapturedGrid(gameState.CapturedPiece);
             TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
+
+            // Kiểm tra trạng thái ván cờ sau khi đi
+            string gameStatus = result.Status.ToUpper();
+            WarningTextBlock.Text = gameStatus == "CHECK" ? "Chiếu tướng!" : null;
+
+            if (gameStatus == "CHECKMATE" || gameStatus == "STALEMATE")
+            {
+                gameState.Result = Result.Win(gameState.CurrentPlayer.Opponent(), gameStatus == "CHECKMATE" ? EndReason.Checkmate : EndReason.Stalemate);
+                UnableClick();
+                moveList = new Stack<Tuple<Move, Piece>>(gameState.Moved.ToArray());
+                HideHighlights();
+                CellGrid.IsEnabled = false;
+                if (redTimer != null) StopTimer();
+                RaiseGameOverEvent(gameState);
+            }
+            else if (gameStatus == "THREEFOLDREPETITION")
+            {
+                gameState.Result = Result.Draw(EndReason.ThreefoldRepetition);
+                UnableClick();
+                moveList = new Stack<Tuple<Move, Piece>>(gameState.Moved.ToArray());
+                HideHighlights();
+                CellGrid.IsEnabled = false;
+                if (redTimer != null) StopTimer();
+                RaiseGameOverEvent(gameState);
+            }
+            else if (gameStatus == "FIFTYMOVERULE")
+            {
+                gameState.Result = Result.Draw(EndReason.FiftyMoveRule);
+                UnableClick();
+                moveList = new Stack<Tuple<Move, Piece>>(gameState.Moved.ToArray());
+                HideHighlights();
+                CellGrid.IsEnabled = false;
+                if (redTimer != null) StopTimer();
+                RaiseGameOverEvent(gameState);
+            }
+
             await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Render);
             if (gameState is GameStateAI AI)
             {
                 await Task.Delay(500); // Delay to simulate thinking time
                 Move prevMove = gameState.Moved.First().Item1;
-                var result = await PrologEngine.AiMoveAsync();
-                if (result.HasValue)
+                var result1 = await PrologEngine.AiMoveAsync();
+                if (result1.HasValue)
                 {
-                    var (status, from, to) = result.Value;
+                    var (status, from, to) = result1.Value;
                     gameState.MakeMove(new NormalMove(Position.IntToPosition(from), Position.IntToPosition(to)));
                     gameState.Board = Board.FromPrologPosition(await PrologEngine.GetCurrentPositionAsync());
                     isRedTurn = !isRedTurn;
@@ -308,15 +344,15 @@ namespace ChessUI
             }
 
             AbleClick();
-            if (gameState.IsGameOver())
-            {
-                UnableClick();
-                moveList = new Stack<Tuple<Move, Piece>>(gameState.Moved.ToArray());
-                HideHighlights();
-                CellGrid.IsEnabled = false;
-                if (redTimer != null) StopTimer();
-                RaiseGameOverEvent(gameState);
-            }
+            //if (gameState.IsGameOver())
+            //{
+            //    UnableClick();
+            //    moveList = new Stack<Tuple<Move, Piece>>(gameState.Moved.ToArray());
+            //    HideHighlights();
+            //    CellGrid.IsEnabled = false;
+            //    if (redTimer != null) StopTimer();
+            //    RaiseGameOverEvent(gameState);
+            //}
         }
         public void Review()
         {
@@ -379,7 +415,8 @@ namespace ChessUI
                 {
                     ShowPrevMove(gameState.Moved.First().Item1);
                 }
-                WarningTextBlock.Text = gameState.Board.IsInCheck(gameState.CurrentPlayer) ? "Chiếu tướng!" : null;
+                string status = PrologEngine.GetGameStatusAsync().Result;
+                WarningTextBlock.Text = status == "CHECK" ? "Chiếu tướng!" : null;
                 TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
 
                 UndoCapturedGrid(gameState.CapturedPiece);
@@ -454,7 +491,20 @@ namespace ChessUI
             moveCache.Clear();
             foreach (Move move in moves)
             {
-                moveCache[move.ToPos] = move;
+                // Phân loại lại move: nếu là tốt đi chéo tới ô trống thì là EnPassant
+                var from = move.FromPos;
+                var to = move.ToPos;
+                Piece piece = gameState.Board[from];
+                Move realMove;
+                if (piece != null && piece.Type == PieceType.Pawn && from.Column != to.Column && gameState.Board[to] == null)
+                {
+                    realMove = new EnPassant(from, to);
+                }
+                else
+                {
+                    realMove = new NormalMove(from, to);
+                }
+                moveCache[to] = realMove;
             }
         }
 
@@ -536,22 +586,7 @@ namespace ChessUI
                 var result = await PrologEngine.MakeMoveAsync(fromPos, toPos);
                 if (result.Success)
                 {
-                    HandleMove(move);
-
-                    // Kiểm tra trạng thái ván cờ sau khi đi
-                    string gameStatus = result.Status.ToUpper();
-                    WarningTextBlock.Text = gameStatus == "CHECK" ? "Chiếu tướng!" : null;
-
-                    if (gameStatus == "CHECKMATE" || gameStatus == "STALEMATE")
-                    {
-                        gameState.Result = Result.Win(gameState.CurrentPlayer.Opponent(), gameStatus == "CHECKMATE" ? EndReason.Checkmate : EndReason.Stalemate);
-                        UnableClick();
-                        moveList = new Stack<Tuple<Move, Piece>>(gameState.Moved.ToArray());
-                        HideHighlights();
-                        CellGrid.IsEnabled = false;
-                        if (redTimer != null) StopTimer();
-                        RaiseGameOverEvent(gameState);
-                    }
+                    HandleMove(move, result);
                 }
                 else if (result.NeedsPromotion)
                 {
@@ -601,7 +636,7 @@ namespace ChessUI
                 if (result.Success)
                 {
                     Move promMove = new PawnPromotion(from, to, type);
-                    HandleMove(promMove);
+                    HandleMove(promMove, result);
 
                     WarningTextBlock.Text = result.Status == "CHECK" ? "Chiếu tướng!" : null;
 
