@@ -228,21 +228,21 @@ namespace ChessUI
             mainWindowGrid.Children.Add(confirmMenu);
         }
 
-        private void ConfirmMenu_YesButtonClicked(object sender, RoutedEventArgs e)
+        private async void ConfirmMenu_YesButtonClicked(object sender, RoutedEventArgs e)
         {
-            PrologEngine.Reset();
+            await PrologEngine.ResetAsync();
             Sound.PlayButtonClickSound();
             CreateMainMenu();            
         }
         #endregion
 
         #region ViewGameAI
-        private void CreateViewGameAI(int difficulty)
+        private async void CreateViewGameAI(int difficulty)
         {
             onGame = true;
             if (gameUserControl != null) gameUserControl.ResetTimer();
             color = settingsModel.HumanFirst ? Player.White : Player.Black;
-            gameUserControl = new GameUserControl(color, settingsModel.IsTimeLimit ? settingsModel.TimeLimit * 60 : 0, true, difficulty);
+            gameUserControl = await GameUserControl.Create(color, settingsModel.IsTimeLimit ? settingsModel.TimeLimit * 60 : 0, true, difficulty);
             gameUserControl.PauseButtonClicked += PauseButtonClicked;
             gameUserControl.SaveButtonClicked += SaveButtonClicked;
             gameUserControl.GameOver += OnGameOver;
@@ -254,12 +254,12 @@ namespace ChessUI
         #endregion
 
         #region ViewGame2P
-        private void CreateViewGame2P()
+        private async void CreateViewGame2P()
         {
             onGame = true;
             if (gameUserControl != null) gameUserControl.ResetTimer();
             color = settingsModel.HumanFirst ? Player.White : Player.Black;
-            gameUserControl = new GameUserControl(color, settingsModel.IsTimeLimit ? settingsModel.TimeLimit * 60 : 0, false);
+            gameUserControl = await GameUserControl.Create(color, settingsModel.IsTimeLimit ? settingsModel.TimeLimit * 60 : 0, false);
             gameUserControl.PauseButtonClicked += PauseButtonClicked;
             gameUserControl.SaveButtonClicked += SaveButtonClicked;
             gameUserControl.GameOver += OnGameOver;
@@ -271,11 +271,11 @@ namespace ChessUI
         #endregion
 
         #region ViewGameLoad
-        private void CreateViewGameLoad(GameStateForLoad gameStateForLoad)
+        private async void CreateViewGameLoad(GameStateForLoad gameStateForLoad)
         {
             onGame = true;
             if (gameUserControl != null) gameUserControl.ResetTimer();
-            gameUserControl = new GameUserControl(gameStateForLoad);
+            gameUserControl = await GameUserControl.Create(gameStateForLoad);
             gameUserControl.PauseButtonClicked += PauseButtonClicked;
             gameUserControl.SaveButtonClicked += SaveButtonClicked;
             gameUserControl.GameOver += OnGameOver;
@@ -352,9 +352,9 @@ namespace ChessUI
             CloseAMenu();
         }
 
-        private void NewButtonClicked(object sender, RoutedEventArgs e)
+        private async void NewButtonClicked(object sender, RoutedEventArgs e)
         {
-            PrologEngine.Reset();
+            await PrologEngine.ResetAsync();
             Sound.PlayButtonClickSound();
             CreateSelectGameModeMenu();
         }
@@ -385,9 +385,9 @@ namespace ChessUI
             }
         }
 
-        private void GameOverMenu_HomeButtonClicked(object sender, RoutedEventArgs e)
+        private async void GameOverMenu_HomeButtonClicked(object sender, RoutedEventArgs e)
         {
-            PrologEngine.Reset();
+            await PrologEngine.ResetAsync();
             Sound.PlayButtonClickSound();
             CreateMainMenu();
         }
@@ -410,9 +410,9 @@ namespace ChessUI
             CreateConfirmMenu(true);
         }
 
-        private void CloseApp(object sender, RoutedEventArgs e)
+        private async void CloseApp(object sender, RoutedEventArgs e)
         {
-            PrologEngine.Reset();
+            await PrologEngine.ResetAsync();
             Application.Current.Shutdown();
         }
     }

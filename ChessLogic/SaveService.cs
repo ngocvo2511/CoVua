@@ -7,14 +7,24 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace ChessLogic
 {
     public class SaveService
     {
-        public static void Save(GameState gameState, string fileName)
+        public static async Task Save(GameState gameState, string fileName, int timeRed, int timeBlack)
         {
-            GameStateForSave gameStateForSave = ToSave(gameState);
+            GameStateForSave gameStateForSave = await ToSave(gameState);
+            gameStateForSave.depth = (int)((gameState is GameStateAI) ? await PrologEngine.GetDepthAsync() : 0);
+            gameStateForSave.CurrentPlayer = (await PrologEngine.GetCurrentPlayerAsync() == Player.White) ? "White" : "Black";
+            gameStateForSave.timeRemainingWhite = timeRed;
+            gameStateForSave.timeRemainingBlack = timeBlack;
+            gameStateForSave.historyBoard = await PrologEngine.GetRawHistoryAsync();
+            gameStateForSave.CapturedWhitePiece = new List<string>();
+            gameStateForSave.CapturedBlackPiece = new List<string>();
+            foreach (var piece in gameState.CapturedWhitePiece) gameStateForSave.CapturedWhitePiece.Add(piece.ToString());
+            foreach (var piece in gameState.CapturedBlackPiece) gameStateForSave.CapturedBlackPiece.Add(piece.ToString());
             File.WriteAllText(fileName, JsonSerializer.Serialize(gameStateForSave, new JsonSerializerOptions { WriteIndented = true }));
         }
         public static GameStateForLoad Load(string fileName)
@@ -24,15 +34,15 @@ namespace ChessLogic
             GameStateForLoad gameStateForLoad = fromSave(gameStateForSave);
             return gameStateForLoad;
         }
-        public static GameStateForSave ToSave(GameState gameState)
+        public static async Task<GameStateForSave> ToSave(GameState gameState)
         {
             GameStateForSave gameStateForSave = new GameStateForSave();
             gameStateForSave.GameType = gameState is GameState2P? "GameState2P" : "GameStateAI";
-            gameStateForSave.depth = (int)((gameState is GameStateAI) ? PrologEngine.GetDepth() : 0);
-            gameStateForSave.CurrentPlayer = (PrologEngine.GetCurrentPlayer() == Player.White) ? "White" : "Black";
+            gameStateForSave.depth = (int)((gameState is GameStateAI) ? await PrologEngine.GetDepthAsync() : 0);
+            gameStateForSave.CurrentPlayer = (await PrologEngine.GetCurrentPlayerAsync() == Player.White) ? "White" : "Black";
             gameStateForSave.timeRemainingWhite = gameState.timeRemainingRed;
             gameStateForSave.timeRemainingBlack = gameState.timeRemainingBlack;
-            gameStateForSave.historyBoard = PrologEngine.GetRawHistory();
+            gameStateForSave.historyBoard = await PrologEngine.GetRawHistoryAsync();
             gameStateForSave.CapturedWhitePiece = new List<string>();
             gameStateForSave.CapturedBlackPiece = new List<string>();
             foreach (var piece in gameState.CapturedWhitePiece) gameStateForSave.CapturedWhitePiece.Add(piece.ToString());

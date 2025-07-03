@@ -63,8 +63,18 @@ namespace ChessLogic.GameStates.GameState
 
         public void MakeMove(Move move)
         {
-            Moved.Push(Tuple.Create(move, Board[move.ToPos]));
-            CapturedPiece = Board[move.ToPos];
+            if(move.Type == MoveType.EnPassant)
+            {
+                var capturePos = new Position(move.FromPos.Row, move.ToPos.Column);
+                Moved.Push(Tuple.Create(move, Board[capturePos]));
+                CapturedPiece = Board[capturePos];
+            }
+            else
+            {
+                Moved.Push(Tuple.Create(move, Board[move.ToPos]));
+                CapturedPiece = Board[move.ToPos];
+            }
+
             if (CapturedPiece != null)
             {
                 if (CapturedPiece.Color == Player.Black) CapturedBlackPiece.Add(CapturedPiece);
