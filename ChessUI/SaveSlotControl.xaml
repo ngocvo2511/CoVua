@@ -11,36 +11,52 @@
         <Grid>
             <Border Style="{StaticResource BorderStyle1}" Padding="10" Height="450" Width="450">
                 <Grid>
+                    <!-- Nút đóng nằm độc lập -->
                     <Button x:Name="CloseButton"
-                        HorizontalAlignment="Right" VerticalAlignment="Top"
-                        Background="Transparent"
-                        Foreground="Black"
-                        BorderThickness="0"
-                        Width="30" Height="30" 
-                        Margin="0,10,10,0"
-                        Click="CloseButton_Click">
+            HorizontalAlignment="Right" VerticalAlignment="Top"
+            Background="Transparent"
+            Foreground="Black"
+            BorderThickness="0"
+            Width="30" Height="30" 
+            Margin="0,10,10,0"
+            Click="CloseButton_Click">
                         <iconPacks:PackIconMaterial Kind="Close" Height="20" Width="20"/>
                     </Button>
-                    <StackPanel>
-                        <TextBlock x:Name="title" 
-                               Style="{StaticResource TextStyle1}" 
-                               FontSize="50"
-                               Margin="0,0,0,10" 
-                               HorizontalAlignment="Center" />
-                        <ListBox Name="SaveSlotList"
-                             BorderThickness="0" 
-                             Background="Transparent" MouseUp="SaveSlotList_MouseUp">
+
+                    <!-- Nội dung chính -->
+                    <Grid Margin="0,50,0,0">
+                        <!-- đẩy xuống để tránh nút đóng -->
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Tiêu đề -->
+                        <TextBlock x:Name="title"
+                   Style="{StaticResource TextStyle1}"
+                   FontSize="50"
+                   Margin="0,0,0,10"
+                   HorizontalAlignment="Center"/>
+
+                        <!-- Danh sách cuộn -->
+                        <ListBox x:Name="SaveSlotList"
+                 Grid.Row="1"
+                 BorderThickness="0"
+                 Background="Transparent"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 MouseUp="SaveSlotList_MouseUp">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <Grid Margin="5" Height="50">
-                                        <TextBlock Text="{Binding}" FontSize="16"
-                                               Style="{StaticResource TextStyle2}"
-                                               Margin="10,0,0,0" />
+                                        <TextBlock Text="{Binding}"
+                                   FontSize="16"
+                                   Style="{StaticResource TextStyle2}"
+                                   Margin="10,0,0,0"/>
                                     </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
-                    </StackPanel>
+                    </Grid>
                 </Grid>
             </Border>
             <Border x:Name="ConfirmationDialogContainer" Background="#80000000" Visibility="Collapsed" 

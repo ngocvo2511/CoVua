@@ -25,14 +25,14 @@ namespace ChessUI
     public partial class SaveSlotControl : UserControl
     {
         public ObservableCollection<string> SaveSlots { get; set; } = new ObservableCollection<string>();
-        private readonly string[] SaveFiles = new string[5]
-        {
-            "save1.chess",
-            "save2.chess",
-            "save3.chess",
-            "save4.chess",
-            "save5.chess"
-        };
+        //private readonly string[] SaveFiles = new string[5]
+        //{
+        //    "save1.chess",
+        //    "save2.chess",
+        //    "save3.chess",
+        //    "save4.chess",
+        //    "save5.chess"
+        //};
         private readonly string SaveDirectory;
         private bool isSave;
         private GameState currentGameState;
@@ -69,9 +69,9 @@ namespace ChessUI
         {
             SaveSlots.Clear();
 
-            for (int i = 0; i < SaveFiles.Length; i++)
+            for (int i = 0; i < 10; i++)
             {
-                string filePath = System.IO.Path.Combine(SaveDirectory, SaveFiles[i]);
+                string filePath = System.IO.Path.Combine(SaveDirectory,"save"+ (i+1) +".chess");
 
                 if (File.Exists(filePath))
                 {
@@ -116,8 +116,8 @@ namespace ChessUI
         private void SaveSlotList_MouseUp(object sender, MouseButtonEventArgs e)
         {
             int index = SaveSlotList.SelectedIndex;
-            if (index < 0 || index > SaveFiles.Count()) return;
-            string filePath = System.IO.Path.Combine(SaveDirectory, SaveFiles[index]);
+            if (index < 0 || index >= 10) return;
+            string filePath = System.IO.Path.Combine(SaveDirectory, "save" + (index+1) + ".chess");
             if (isSave == true)
             {
                 if (File.Exists(filePath))

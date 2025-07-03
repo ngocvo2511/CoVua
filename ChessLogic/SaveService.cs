@@ -85,7 +85,10 @@ namespace ChessLogic
         }
     }
     public class SaveHistory { 
-    
+        public static void Save(GameState gameState)
+        {
+
+        }
     }
 }
 
