@@ -95,7 +95,7 @@ namespace ChessLogic
             needsPromotion = false;
             try
             {
-                using (var q = new PlQuery($"place_piece({fromPos}, {toPos}, Status, 'null')"))
+                using (var q = new PlQuery($"place_piece({fromPos}, {toPos}, Status, 'none')"))
                 {
                     if (q.NextSolution())
                     {
@@ -203,6 +203,7 @@ namespace ChessLogic
 
         public static void Reset()
         {
+            if (_isInitialized == false) return;
             // Reset trạng thái bàn cờ
             PlQuery.PlCall("reset");
             PlQuery.PlCall("set_position(begin)");

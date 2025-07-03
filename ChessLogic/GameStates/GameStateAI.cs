@@ -15,7 +15,7 @@ namespace ChessLogic.GameStates.GameState
             this.depth = depth;
             value = new ValuePiece();
         }
-        public GameStateAI(GameStateForLoad gameState, Board board) : base(gameState.CurrentPlayer, board, gameState.timeRemainingWhite, gameState.timeRemainingBlack,gameState.Moved,gameState.CapturedWhitePiece,gameState.CapturedWhitePiece)
+        public GameStateAI(GameStateForLoad gameState, Board board) : base(gameState.CurrentPlayer, board, gameState.timeRemainingWhite, gameState.timeRemainingBlack,gameState.Moved,gameState.CapturedWhitePiece,gameState.CapturedBlackPiece)
         {
             this.depth = gameState.depth;
             value = new ValuePiece();
@@ -32,11 +32,12 @@ namespace ChessLogic.GameStates.GameState
                 Board[undo.Item1.ToPos] = undo.Item2;
                 if (undo.Item2 != null)
                 {
-                    if (undo.Item2.Color == Player.Black) CapturedBlackPiece.RemoveAt(CapturedBlackPiece.Count - 1);
+                    if (CurrentPlayer == Player.Black) CapturedBlackPiece.RemoveAt(CapturedBlackPiece.Count - 1);
                     else CapturedWhitePiece.RemoveAt(CapturedWhitePiece.Count - 1);
                 }
                 if (i == 0) AiCapturedPiece = undo.Item2;
                 else CapturedPiece = undo.Item2;
+                CurrentPlayer = CurrentPlayer.Opponent();
                 //noCapture.Pop();
             }
             CurrentPlayer = Player.White;
