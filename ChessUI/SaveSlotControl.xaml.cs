@@ -113,27 +113,29 @@ namespace ChessUI
             remove { RemoveHandler(SelectedLoadSlotEvent, value); }
         }
 
-        private void SaveSlotList_MouseUp(object sender, MouseButtonEventArgs e)
+        private async void SaveSlotList_MouseUp(object sender, MouseButtonEventArgs e)
         {
             int index = SaveSlotList.SelectedIndex;
             if (index < 0 || index > SaveFiles.Count()) return;
             string filePath = System.IO.Path.Combine(SaveDirectory, SaveFiles[index]);
             if (isSave == true)
             {
+                int timeRed = currentGameState.timeRemainingRed;
+                int timeBlack = currentGameState.timeRemainingBlack;
                 if (File.Exists(filePath))
                 {
-                    ShowConfirmationDialog("Bạn có muốn ghi đè trận đấu trước đó?", result =>
+                    ShowConfirmationDialog("Bạn có muốn ghi đè trận đấu trước đó?", async result =>
                     {
                         if (result)
                         {
-                            SaveService.Save(currentGameState, filePath);
+                            await SaveService.Save(currentGameState, filePath, timeRed, timeBlack);
                             LoadFileToList();
                         }
                     });
                 }
                 else
                 {
-                    SaveService.Save(currentGameState, filePath);
+                    await SaveService.Save(currentGameState, filePath, timeRed, timeBlack);
                     LoadFileToList();
                 }
             }

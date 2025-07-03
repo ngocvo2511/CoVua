@@ -1,0 +1,10 @@
+{
+  "GameType": "GameState2P",
+  "depth": 0,
+  "CurrentPlayer": "Black",
+  "timeRemainingWhite": 599,
+  "timeRemainingBlack": 599,
+  "historyBoard": "[move(64,64,none,none,none),move(11,27,pawn,none,null)]",
+  "CapturedWhitePiece": [],
+  "CapturedBlackPiece": []
+}
