@@ -1,7 +1,8 @@
 % Initialize default depth if not set
 init_minimax :-
     (depth(_) -> true ; asserta(depth(3))),
-    (stack(_, _, _) -> true ; asserta(stack(_, _, 0))).
+    retractall(stack(_, _, _)), % Clear any existing stack
+    asserta(stack(_, _, 0)).
 
 update_depth(Depth, NewDepth) :-
     NewDepth is Depth-1, !.	
@@ -22,14 +23,12 @@ update_alpha_beta(Color,Alpha,NewAlpha,Beta,NewBeta) :-
 bot_move(From, To, Status) :-
     init_minimax,
     board(Position, Color, Counter),
-    position_to_board_list(Position, BoardList),
     Board = board(Position, Color, Counter),
-    generate_attack_data(Board, BoardList, AttackData),
     depth(Depth),
     losing_value(white,Alpha),
 	losing_value(black,Beta),
     asserta(count(0)),
-    minimax(Position, Color, Counter, Move, Depth, _Value, Alpha, Beta, BoardList, AttackData),
+    minimax(Position, Color, Counter, Move, Depth, _Value, Alpha, Beta),
     retract(count(Count)),
     write(Count),nl,
     %write('Depth: '), write(Depth), write(' Count: '), write(Count), nl,
@@ -46,23 +45,37 @@ simulate_new_position_from_move_list([_|Rest], Move, Color, Position, NewPositio
     simulate_new_position_from_move_list(Rest, Move, Color, Position, NewPosition, BoardList, AttackData).
 % simulate_new_position_from_move_list([], _, _, Position, Position, _).
 
-get_best(Position, Color, Counter, Depth, Alpha, Beta, BoardList, AttackData) :-
+get_best(Position, Color, Counter, Depth, Alpha, Beta) :-
     invert(Color, Op),
     update_depth(Depth, NewDepth),
     %generate_move(Move, Color, Position, NewPosition),
+    position_to_board_list(Position, BoardList),
+    generate_attack_data(board(Position, Color, Counter), BoardList, AttackData),
+    AttackData = attack_data(
+        InCheck, 
+        _InDoubleCheck, 
+        _PinExist, 
+        _CheckRay, 
+        _PinRay, 
+        _OpponentKnightAttacks, 
+        _OpponentAttackMapNoPawns,
+        _OpponentAttackMap, 
+        _OpponentPawnAttackMap, 
+        _OpponentSlidingAttackMap
+    ),   
+
     get_all_pseudo_legal_moves(Position, Color, MoveList, BoardList, AttackData),
-    quicksort(MoveList, SortedMoveList),
+        debugging,
+    quicksort(MoveList, SortedMoveList,AttackData),
     simulate_new_position_from_move_list(SortedMoveList, Move, Color, Position, NewPosition, BoardList, AttackData),
-    position_to_board_list(NewPosition, NewBoardList),
     NewBoard = board(NewPosition, Op, Counter),
-    generate_attack_data(NewBoard, NewBoardList, NewAttackData),
     update_alpha_beta(Color, Alpha, NewAlpha, Beta, NewBeta),
-    (   in_check(NewPosition, Color, NewBoardList, NewAttackData) ->
-        (   SortedMoveList = [] ->
+    (   SortedMoveList = [] ->
+        (   InCheck = false ->
             Value is 0
         ;   losing_value(Color, Value)
         )
-    ;   minimax(NewPosition, Op, Counter, _Move, NewDepth, Value, NewAlpha, NewBeta, NewBoardList, NewAttackData)
+    ;   minimax(NewPosition, Op, Counter, _Move, NewDepth, Value, NewAlpha, NewBeta)
     ),
     compare_move(Move, Value, Color),
     prune(Value, Color, Alpha, Beta), !, fail.
@@ -78,7 +91,7 @@ prune(Value, Color, Alpha, Beta) :-
     (Color = white, Value >= Beta);
     (Color = black, Value =< Alpha).
 
-minimax(Position, _Color, _Counter, move(64, 64, none, none, none), 0, Value, _Alpha, _Beta, _BoardList, _AttackData) :-
+minimax(Position, _Color, _Counter, move(64, 64, none, none, none), 0, Value, _Alpha, _Beta) :-
     % for counting nodes at final depth for testing
     count(Count),
     retract(count(Count)),
@@ -91,7 +104,7 @@ minimax(Position, _Color, _Counter, move(64, 64, none, none, none), 0, Value, _A
         
 
 
-minimax(Position, Color, Counter, Move, Depth, Value, Alpha, Beta, BoardList, AttackData) :-
+minimax(Position, Color, Counter, Move, Depth, Value, Alpha, Beta) :-
     count(Count),
     retract(count(Count)),
     NewCount is Count + 1,
@@ -101,7 +114,7 @@ minimax(Position, Color, Counter, Move, Depth, Value, Alpha, Beta, BoardList, At
     ;
         losing_value(Color, Worst),
         push(move(64, 64, none, none, none), Worst),
-        not(get_best(Position, Color, Counter, Depth, Alpha, Beta, BoardList, AttackData)),
+        not(get_best(Position, Color, Counter, Depth, Alpha, Beta)),
         pop(Move, Value)
     ), 
 !.

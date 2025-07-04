@@ -71,7 +71,7 @@ test_position :-
 	retract(depth(_)),
 	asserta(depth(4)),
 	Color = white,
-	castling_position(Position),
+	test_pos(Position),
 	set_position(Position, Color).
 
 test_time :-

@@ -66,19 +66,19 @@ is_attacked_by_king(Pos, _Color, Kings) :-
     valid_field(KingPos),
     not(crosses_edge(Pos, KingPos, Direction)).
 
-multiple_steps_to_enemy(Field,Direction,Next,Color,Position,BoardList):-
+multiple_steps_to_enemy(Field,Direction,Next,Color,Position,BoardList, AttackData):-
 	invert(Color,FriendColor),
-	one_step(Field,Direction,Next,FriendColor,Position,BoardList),
+	one_step(Field,Direction,Next,FriendColor,Position,BoardList, AttackData),
 	nth0(Next, BoardList, [_, Color]),
 	!.
-multiple_steps_to_enemy(Field,Direction,Next,Color,Position,BoardList):-
+multiple_steps_to_enemy(Field,Direction,Next,Color,Position,BoardList, AttackData):-
 	invert(Color,FriendColor),
-	one_step(Field,Direction,FieldNew,FriendColor,Position,BoardList),
-	multiple_steps_to_enemy(FieldNew,Direction,Next,Color,Position,BoardList),!.
+	one_step(Field,Direction,FieldNew,FriendColor,Position,BoardList, AttackData),
+	multiple_steps_to_enemy(FieldNew,Direction,Next,Color,Position,BoardList, AttackData),!.
 
 inverse_long_move(Type, From, Color, Position, Direction, To, BoardList) :-
 	piece_direction(Type, Direction),
-	multiple_steps_to_enemy(From, Direction, To, Color, Position, BoardList).
+	multiple_steps_to_enemy(From, Direction, To, Color, Position, BoardList, AttackData).
 
 is_attacked_on_line(Pos, Color, Position, Rooks, Bishops, Queens, BoardList) :- 
     inverse_long_move(queen, Pos, Color, Position, Direction, To, BoardList),
@@ -92,7 +92,7 @@ is_attacked_on_line(Pos, Color, Position, Rooks, Bishops, Queens, BoardList) :-
 
 
 % main predicate to check if a position is under attack
-is_under_attack(Pos, Color, Position, BoardList) :-
+is_under_attack(Pos, Color, Position, BoardList, AttackData) :-
 	invert(Color, EnemyColor),
 	get_half(Position, half_position(Pawns, Rooks, Knights, Bishops, Queens, Kings, _, _), EnemyColor),
 	(   is_attacked_by_pawn(Pos, EnemyColor, Pawns)
@@ -102,9 +102,9 @@ is_under_attack(Pos, Color, Position, BoardList) :-
 	).
 
 % check if king of given color is in check
-in_check(Position, Color, BoardList, BoardList) :-
+in_check(Position, Color, BoardList, AttackData) :-
 	find_king(Position, Color, KingPos),
-	is_under_attack(KingPos, Color, Position, BoardList).
+	is_under_attack(KingPos, Color, Position, BoardList, AttackData).
 
 % ============================================
 % attack data

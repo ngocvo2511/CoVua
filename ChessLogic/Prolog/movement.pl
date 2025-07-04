@@ -11,23 +11,107 @@ is_legal_move(From, To, Color, Position, BoardList, AttackData) :-
 	not(in_check(NewPosition, Color, BoardList, AttackData)).
 
 % legal_move_for_piece: generate individual legal moves based on piece type
-legal_move_for_piece(pawn, From, To, Color, Position, BoardList, AttackData) :-
-	pawn_move(Color, From, Position, To, BoardList, AttackData).
+legal_move_for_piece(pawn, From, To, Color, Position, BoardList, AttackData) :-	
+	pawn_move(Color, From, Position, To, BoardList, AttackData),
+	AttackData = attack_data(
+        InCheck, 
+        _InDoubleCheck, 
+        PinExist, 
+        CheckRay, 
+        PinRay, 
+        _OpponentKnightAttacks, 
+        _OpponentAttackMapNoPawns,
+        _OpponentAttackMap, 
+        _OpponentPawnAttackMap, 
+        _OpponentSlidingAttackMap
+    ),
+	(not(is_pinned(From, PinExist, PinRay)); is_moving_along_ray(Position, Color, From, To)),
+	(InCheck = false; square_is_in_check_ray(To, InCheck, CheckRay)).
 
 legal_move_for_piece(rook, From, To, Color, Position, BoardList, AttackData) :-
-	long_move(rook, From, Color, Position, To, BoardList, AttackData).
+	long_move(rook, From, Color, Position, To, BoardList, AttackData),
+	AttackData = attack_data(
+        InCheck, 
+        InDoubleCheck, 
+        PinExist, 
+        CheckRay, 
+        PinRay, 
+        _OpponentKnightAttacks, 
+        _OpponentAttackMapNoPawns,
+        _OpponentAttackMap, 
+        _OpponentPawnAttackMap, 
+        _OpponentSlidingAttackMap
+    ),
+	(not(is_pinned(From, PinExist, PinRay)); is_moving_along_ray(Position, Color, From, To)),
+	(InCheck = false; square_is_in_check_ray(To, InCheck, CheckRay)).
 
 legal_move_for_piece(knight, From, To, Color, Position, BoardList, AttackData) :-
-	short_move(knight, From, Color, Position, To, BoardList, AttackData).
+	short_move(knight, From, Color, Position, To, BoardList, AttackData),
+	AttackData = attack_data(
+        InCheck, 
+        InDoubleCheck, 
+        PinExist, 
+        CheckRay, 
+        PinRay, 
+        _OpponentKnightAttacks, 
+        _OpponentAttackMapNoPawns,
+        _OpponentAttackMap, 
+        _OpponentPawnAttackMap, 
+        _OpponentSlidingAttackMap
+    ),
+	not(is_pinned(From, PinExist, PinRay)),
+	(InCheck = false; square_is_in_check_ray(To, InCheck, CheckRay)).
 
 legal_move_for_piece(bishop, From, To, Color, Position, BoardList, AttackData) :-
-	long_move(bishop, From, Color, Position, To, BoardList, AttackData).
+	long_move(bishop, From, Color, Position, To, BoardList, AttackData),
+	AttackData = attack_data(
+        InCheck, 
+        InDoubleCheck, 
+        PinExist, 
+        CheckRay, 
+        PinRay, 
+        _OpponentKnightAttacks, 
+        _OpponentAttackMapNoPawns,
+        _OpponentAttackMap, 
+        _OpponentPawnAttackMap, 
+        _OpponentSlidingAttackMap
+    ),
+	(not(is_pinned(From, PinExist, PinRay)); is_moving_along_ray(Position, Color, From, To)),
+	(InCheck = false; square_is_in_check_ray(To, InCheck, CheckRay)).
 
 legal_move_for_piece(queen, From, To, Color, Position, BoardList, AttackData) :-
-	long_move(queen, From, Color, Position, To, BoardList, AttackData).
+	long_move(queen, From, Color, Position, To, BoardList, AttackData),
+	AttackData = attack_data(
+        InCheck, 
+        InDoubleCheck, 
+        PinExist, 
+        CheckRay, 
+        PinRay, 
+        _OpponentKnightAttacks, 
+        _OpponentAttackMapNoPawns,
+        _OpponentAttackMap, 
+        _OpponentPawnAttackMap, 
+        _OpponentSlidingAttackMap
+    ),
+	(not(is_pinned(From, PinExist, PinRay)); is_moving_along_ray(Position, Color, From, To)),
+	(InCheck = false; square_is_in_check_ray(To, InCheck, CheckRay)).
 
 legal_move_for_piece(king, From, To, Color, Position, BoardList, AttackData) :-
-	short_move(king, From, Color, Position, To, BoardList, AttackData).
+	short_move(king, From, Color, Position, To, BoardList, AttackData),
+	AttackData = attack_data(
+        InCheck, 
+        InDoubleCheck, 
+        PinExist, 
+        CheckRay, 
+        PinRay, 
+        _OpponentKnightAttacks, 
+        _OpponentAttackMapNoPawns,
+        _OpponentAttackMap, 
+        _OpponentPawnAttackMap, 
+        _OpponentSlidingAttackMap
+    ),
+	(not(is_pinned(From, PinExist, PinRay)); is_moving_along_ray(Position, Color, From, To)),
+	(InCheck = false; square_is_in_check_ray(To, InCheck, CheckRay)).
 
 % Add castling moves for king
 legal_move_for_piece(king, From, To, Color, Position, BoardList, AttackData) :-
@@ -88,6 +172,19 @@ is_move_legal(Position, Color, BoardList, AttackData, move(From, To, MovedPiece,
 % faster version that does not check for king safety
 get_all_pseudo_legal_moves(Position, Color, LegalMoves, BoardList, AttackData) :-
 	invert(Color, OpponentColor),
+	AttackData = attack_data(
+        InCheck, 
+        InDoubleCheck, 
+        _PinExist, 
+        _CheckRay, 
+        _PinRay, 
+        _OpponentKnightAttacks, 
+        _OpponentAttackMapNoPawns,
+        _OpponentAttackMap, 
+        _OpponentPawnAttackMap, 
+        _OpponentSlidingAttackMap
+    ),
+	(InDoubleCheck = true -> MovedPiece = king ; true),
 	findall(move(From, To, MovedPiece, CapturedPiece, PromotedPiece), 
 	        (	nth0(From, BoardList, [MovedPiece, Color]),
 	         	legal_move_for_piece(MovedPiece, From, To, Color, Position, BoardList, AttackData),
@@ -270,47 +367,95 @@ castling_move_check(Color, Position, From, To, BoardList, AttackData) :-
 
 % Kingside castling (short castling)
 castling_move(white, kingside, Position, From, To, BoardList, AttackData) :-
+	AttackData = attack_data(
+        _InCheck, 
+        _InDoubleCheck, 
+        _PinExist, 
+        _CheckRay, 
+        _PinRay, 
+        _OpponentKnightAttacks, 
+        _OpponentAttackMapNoPawns,
+        OpponentAttackMap, 
+        _OpponentPawnAttackMap, 
+        _OpponentSlidingAttackMap
+    ),
 	From = 4,  % White king starting position
 	To = 6,    % King moves to g1 (position 6)
 	nth0(5, BoardList, empty),
 	nth0(6, BoardList, empty),
 	% king and squares it passes through are not under attack
-	not(is_under_attack(4, white, Position, BoardList, AttackData)),  % King not in check
-	not(is_under_attack(5, white, Position, BoardList, AttackData)),  % f1 not under attack
-	not(is_under_attack(6, white, Position, BoardList, AttackData)), !.  % g1 not under attack
+	not(square_is_attacked(4, OpponentAttackMap)),  % King not in check
+	not(square_is_attacked(5, OpponentAttackMap)),  % f1 not under attack
+	not(square_is_attacked(6, OpponentAttackMap)).
 
 castling_move(black, kingside, Position, From, To, BoardList, AttackData) :-
+	AttackData = attack_data(
+        _InCheck, 
+        _InDoubleCheck, 
+        _PinExist, 
+        _CheckRay, 
+        _PinRay, 
+        _OpponentKnightAttacks, 
+        _OpponentAttackMapNoPawns,
+        OpponentAttackMap, 
+        _OpponentPawnAttackMap, 
+        _OpponentSlidingAttackMap
+    ),
 	From = 60,  % Black king starting position
 	To = 62,    % King moves to g8 (position 62)
 	nth0(61, BoardList, empty),
 	nth0(62, BoardList, empty),
 	% king and squares it passes through are not under attack
-	not(is_under_attack(60, black, Position, BoardList, AttackData)),  % King not in check
-	not(is_under_attack(61, black, Position, BoardList, AttackData)),  % f8 not under attack
-	not(is_under_attack(62, black, Position, BoardList, AttackData)), !.  % g8 not under attack
+	not(square_is_attacked(60, OpponentAttackMap)),  % King not in check
+	not(square_is_attacked(61, OpponentAttackMap)),  % f8 not under attack
+	not(square_is_attacked(62, OpponentAttackMap)), !.  % g8 not under attack
 
 % Queenside castling (long castling)
 castling_move(white, queenside, Position, From, To, BoardList, AttackData) :-
+	AttackData = attack_data(
+        _InCheck, 
+        _InDoubleCheck, 
+        _PinExist, 
+        _CheckRay, 
+        _PinRay, 
+        _OpponentKnightAttacks, 
+        _OpponentAttackMapNoPawns,
+        OpponentAttackMap, 
+        _OpponentPawnAttackMap, 
+        _OpponentSlidingAttackMap
+    ),
 	From = 4,  % White king starting position
 	To = 2,    % King moves to c1 (position 2)
 	nth0(1, BoardList, empty),
 	nth0(2, BoardList, empty),
 	nth0(3, BoardList, empty),
 	% Additional check: king and squares it passes through are not under attack
-	not(is_under_attack(4, white, Position, BoardList, AttackData)),  % King not in check
-	not(is_under_attack(3, white, Position, BoardList, AttackData)),  % d1 not under attack
-	not(is_under_attack(2, white, Position, BoardList, AttackData)), !.  % c1 not under attack
+	not(square_is_attacked(4, OpponentAttackMap)),  % King not in check
+	not(square_is_attacked(3, OpponentAttackMap)),  % d1 not under attack
+	not(square_is_attacked(2, OpponentAttackMap)), !.  % c1 not under attack
 
 castling_move(black, queenside, Position, From, To, BoardList, AttackData) :-
+	AttackData = attack_data(
+        _InCheck, 
+        _InDoubleCheck, 
+        _PinExist, 
+        _CheckRay, 
+        _PinRay, 
+        _OpponentKnightAttacks, 
+        _OpponentAttackMapNoPawns,
+        OpponentAttackMap, 
+        _OpponentPawnAttackMap, 
+        _OpponentSlidingAttackMap
+    ),
 	From = 60,  % Black king starting position
 	To = 58,    % King moves to c8 (position 58)
 	nth0(57, BoardList, empty),
 	nth0(58, BoardList, empty),
 	nth0(59, BoardList, empty),
 	% Additional check: king and squares it passes through are not under attack
-	not(is_under_attack(60, black, Position, BoardList, AttackData)),  % King not in check
-	not(is_under_attack(59, black, Position, BoardList, AttackData)),  % d8 not under attack
-	not(is_under_attack(58, black, Position, BoardList, AttackData)), !.  % c8 not under attack
+	not(square_is_attacked(60, OpponentAttackMap)),  % King not in check
+	not(square_is_attacked(59, OpponentAttackMap)),  % d8 not under attack
+	not(square_is_attacked(58, OpponentAttackMap)), !.  % c8 not under attack
 
 % long_move: move for long distance (rook, bishop, queen)
 long_move(Type, From, Color, Position, To, BoardList, AttackData):-
@@ -375,3 +520,27 @@ is_enpassant_move(From, To, black, Position, _BoardList, AttackData) :-
 	get_half(Position, half_position(_,_,_,_,_,_,_,EnpassantList), black),
 	member(OpponentPawnPos, EnpassantList),  % Get opponent pawn position
 	abs(To - OpponentPawnPos) =:= 8.         % Target square is 8 squares away from opponent pawn
+
+% =================================
+% Special checking functions
+% =================================
+
+is_pinned(Square, PinExist, PinRay) :-
+	PinExist = true,
+	getbit(PinRay, Square) = 1.
+
+is_moving_along_ray(Position, Color, From, To) :-
+	get_half(Position, Half, Color),
+	find_king(Half, Color, KingPos),
+	Diff is abs(To - From),
+	Dir is abs(Direction),
+	Diff \= 0,
+	Diff mod Dir =:= 0.
+
+square_is_in_check_ray(Square, InCheck, CheckRay) :-
+	InCheck = true,
+	getbit(CheckRay, Square) = 1.
+
+square_is_attacked(Square, OpponentAttackMap) :-
+	getbit(OpponentAttackMap, Square) = 1.
+
