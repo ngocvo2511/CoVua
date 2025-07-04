@@ -143,8 +143,10 @@ calculate_attack_data(board(Position, Color, _), BoardList, attack_data(InCheck,
     PawnCheck = data(InCheck2, InDoubleCheck2, CheckRay2, false),
     get_pawn_attack_map(Pawns, Color, BoardList, 0, OpponentPawnAttackMap, KingPos, PawnCheck, data(InCheck, InDoubleCheck, CheckRay, _)),
     attack_bitboard(EnemyKingPos, king, KingAttackMap),
-    OpponentAttackMapNoPawns is OpponentSlidingAttackMap \/ OpponentKnightAttacks \/ OpponentPawnAttackMap \/ KingAttackMap,
-    OpponentAttackMap is OpponentSlidingAttackMap \/ OpponentKnightAttacks \/ OpponentPawnAttackMap \/ KingAttackMap.
+    OpponentAttackMapNoPawns is OpponentSlidingAttackMap \/ OpponentKnightAttacks \/ KingAttackMap,
+    OpponentAttackMap is OpponentSlidingAttackMap \/ OpponentKnightAttacks \/ OpponentPawnAttackMap \/ KingAttackMap,
+    write(OpponentAttackMapNoPawns), nl,
+    write(OpponentAttackMap), nl.
 
 get_knight_attack_map([KnightPos|RestKnights], Color, BoardList, OpponentKnightAttacks, NewOpponentKnightAttacks, KingPos, data(InCheck1, InDoubleCheck1, CheckRay1, IsKnightCheck1), NewKnightCheck) :-
     attack_bitboard(KnightPos, knight, KnightAttackMap),
@@ -180,8 +182,6 @@ get_pawn_attack_map([], _, _, OpponentPawnAttacks, OpponentPawnAttacks, _, data(
 gen_sliding_attack_map(Color, BoardList, SlidingAttackMap, pieces(OrthogonalPieces, DiagonalPieces)) :-
     gen_sliding_attack_map_for_orthogonal(OrthogonalPieces, BoardList, Color, OrthogonalAttackMap),
     gen_sliding_attack_map_for_diagonal(DiagonalPieces, BoardList, Color, DiagonalAttackMap),
-    write(OrthogonalAttackMap), nl,
-    write(DiagonalAttackMap), nl,
     % Combine both attack maps
     SlidingAttackMap is OrthogonalAttackMap \/ DiagonalAttackMap.
 
@@ -201,7 +201,6 @@ gen_sliding_attack_map_for_diagonal(Pieces, BoardList, Color, SlidingAttackMap) 
 go_sliding([], _, _, _, _, SlidingAttackMap, SlidingAttackMap).
 
 go_sliding([Piece|Pieces], newpiece, Direction, BoardList, Color, SlidingAttackMap, NewSlidingAttackMap) :- 
-    write('go_sliding: newpiece'), nl,
     From is Piece + Direction,
     go_sliding([Piece|Pieces], From, Direction, BoardList, Color, SlidingAttackMap, NewSlidingAttackMap)
     , !.
@@ -212,7 +211,6 @@ go_sliding([Piece|Pieces], From, Direction, BoardList, Color, SlidingAttackMap, 
     valid_field(From), 
     move_direction(From, OppositeDirection),
     To is From + Direction,     
-    write('go_sliding: From: '), write(From), nl,
 
     AccSlidingAttackMap is SlidingAttackMap \/ (1 << From),
     (   nth0(From, BoardList, [Type, PieceColor])
