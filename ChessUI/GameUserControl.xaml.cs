@@ -278,36 +278,33 @@ namespace ChessUI
             DrawBoard(gameState.Board);
             ShowPrevMove(move);
             DrawCapturedGrid(gameState.CapturedPiece);
-            TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
 
             // Kiểm tra trạng thái ván cờ sau khi đi
             string gameStatus = result.Status.ToUpper();
-            WarningTextBlock.Text = gameStatus == "CHECK" ? "Chiếu tướng!" : null;
+            WarningTextBlock.Text = gameStatus == "CHECK" || gameStatus == "CHECKMATE" ? "Chiếu tướng!" : null;
+            TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
 
-            if (gameStatus == "CHECKMATE" || gameStatus == "STALEMATE")
+            if (gameStatus == "CHECKMATE")
             {
-                gameState.Result = Result.Win(gameState.CurrentPlayer.Opponent(), gameStatus == "CHECKMATE" ? EndReason.Checkmate : EndReason.Stalemate);
-                UnableClick();
-                moveList = new Stack<Tuple<Move, Piece>>(gameState.Moved.ToArray());
-                HideHighlights();
-                CellGrid.IsEnabled = false;
-                if (redTimer != null) StopTimer();
-                RaiseGameOverEvent(gameState);
+                gameState.Result = Result.Win(gameState.CurrentPlayer.Opponent(), EndReason.Checkmate);
+            }
+            else if (gameStatus == "STALEMATE")
+            {
+                gameState.Result = Result.Draw(EndReason.Stalemate);
             }
             else if (gameStatus == "THREEFOLDREPETITION")
             {
                 gameState.Result = Result.Draw(EndReason.ThreefoldRepetition);
-                UnableClick();
-                moveList = new Stack<Tuple<Move, Piece>>(gameState.Moved.ToArray());
-                HideHighlights();
-                CellGrid.IsEnabled = false;
-                if (redTimer != null) StopTimer();
-                RaiseGameOverEvent(gameState);
             }
             else if (gameStatus == "FIFTYMOVERULE")
             {
                 gameState.Result = Result.Draw(EndReason.FiftyMoveRule);
+            }
+
+            if (gameState.Result != null)
+            {
                 UnableClick();
+                await Task.Delay(500);
                 moveList = new Stack<Tuple<Move, Piece>>(gameState.Moved.ToArray());
                 HideHighlights();
                 CellGrid.IsEnabled = false;
@@ -328,14 +325,42 @@ namespace ChessUI
                     gameState.Board = Board.FromPrologPosition(await PrologEngine.GetCurrentPositionAsync());
                     isRedTurn = !isRedTurn;
                     if (redTimer != null) SwitchTurn();
-
-                    WarningTextBlock.Text = status == "CHECK" ? "Chiếu tướng!" : null;
-                    TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
                     DrawCapturedGrid(gameState.CapturedPiece);
                     DrawBoard(gameState.Board);
                     HidePrevMove(prevMove);
                     ShowPrevMove(gameState.Moved.First().Item1);
                     Sound.PlayMoveSound();
+
+                    WarningTextBlock.Text = status == "CHECK" || status == "CHECKMATE" ? "Chiếu tướng!" : null;
+                    TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
+
+                    if (status == "CHECKMATE")
+                    {
+                        gameState.Result = Result.Win(gameState.CurrentPlayer.Opponent(), EndReason.Checkmate);
+                    }
+                    else if (status == "STALEMATE")
+                    {
+                        gameState.Result = Result.Draw(EndReason.Stalemate);
+                    }
+                    else if (status == "THREEFOLDREPETITION")
+                    {
+                        gameState.Result = Result.Draw(EndReason.ThreefoldRepetition);
+                    }
+                    else if (status == "FIFTYMOVERULE")
+                    {
+                        gameState.Result = Result.Draw(EndReason.FiftyMoveRule);
+                    }
+
+                    if (gameState.Result != null)
+                    {
+                        UnableClick();
+                        await Task.Delay(500);
+                        moveList = new Stack<Tuple<Move, Piece>>(gameState.Moved.ToArray());
+                        HideHighlights();
+                        CellGrid.IsEnabled = false;
+                        if (redTimer != null) StopTimer();
+                        RaiseGameOverEvent(gameState);
+                    }
                 }
                 else
                 {
