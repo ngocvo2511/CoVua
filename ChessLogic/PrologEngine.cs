@@ -390,9 +390,9 @@ namespace ChessLogic
             }
         }
 
-        public static Stack<Tuple<Move,Piece>> ParseHistory(string historyString)
+        public static Stack<Tuple<Move,Tuple<Piece,string>>> ParseHistory(string historyString)
         {
-            var stack = new Stack<Tuple<Move, Piece>>();
+            var stack = new Stack<Tuple<Move, Tuple<Piece, string>>>();
 
             var clean = historyString.Trim('[', ']');
             var moveRegex = new Regex(@"move\((\d+),(\d+),(\w+),(\w+),\w+\)");
@@ -402,12 +402,14 @@ namespace ChessLogic
                 int from = int.Parse(match.Groups[1].Value);
                 if (from == 64) continue;
                 int to = int.Parse(match.Groups[2].Value);
+                string promotedPiece = match.Groups[5].Value;
                 string capturedPieceStr = match.Groups[4].Value;
 
                 Move move = new NormalMove(Position.IntToPosition(from),Position.IntToPosition(to));
                 var captured = ParsePiece(capturedPieceStr);
+                var promoted = promotedPiece;
 
-                stack.Push(Tuple.Create(move, captured));
+                stack.Push(Tuple.Create(move, Tuple.Create(captured,promoted)));
             }
             return stack;
         }

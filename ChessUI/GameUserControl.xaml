@@ -109,6 +109,14 @@
                         </iconPacks:PackIconModern.RenderTransform>
                     </iconPacks:PackIconModern>
                 </Button>
+                <Button x:Name="PlayButton"
+                        Style="{StaticResource ButtonStyle2}"
+                        Margin="0,0,0,10"
+                        Click="PlayButton_Click"
+                        Visibility="Hidden">
+                    <iconPacks:PackIconFontAwesome Kind="PlaySolid" Margin="10,0,0,0" 
+                               Width="50" Height="50" />
+                </Button>
             </StackPanel>
 
             <Border Grid.Row="1" Margin="10"

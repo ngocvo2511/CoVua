@@ -7,7 +7,7 @@ namespace ChessLogic.GameStates.GameState
     public abstract class GameState
     {
         public Board Board { get; set; }
-        public Stack<Tuple<Move,Piece>> Moved { get; set; }
+        public Stack<Tuple<Move,Tuple<Piece,string>>> Moved { get; set; }
         public Player CurrentPlayer { get; set; }
 
         public Result Result { get; set; } = null;
@@ -26,7 +26,7 @@ namespace ChessLogic.GameStates.GameState
         {
             CurrentPlayer = player;
             Board = board;
-            this.Moved = new Stack<Tuple<Move,Piece>>();
+            this.Moved = new Stack<Tuple<Move,Tuple<Piece, string>>>();
             this.CapturedBlackPiece = new List<Piece>();
             this.CapturedWhitePiece = new List<Piece>();
             //this.noCapture = new Stack<int>();
@@ -37,7 +37,7 @@ namespace ChessLogic.GameStates.GameState
             timeRemainingBlack = timeLimit;
             timeRemainingRed = timeLimit;
         }
-        public GameState(Player player, Board board, int redTime, int blackTime, Stack<Tuple<Move,Piece>> Moved, List<Piece> CapturedWhitePiece, List<Piece> CapturedBlackPiece)
+        public GameState(Player player, Board board, int redTime, int blackTime, Stack<Tuple<Move,Tuple<Piece, string>>> Moved, List<Piece> CapturedWhitePiece, List<Piece> CapturedBlackPiece)
         {
             CurrentPlayer = player;
             Board = board;
@@ -66,12 +66,12 @@ namespace ChessLogic.GameStates.GameState
             if(move.Type == MoveType.EnPassant)
             {
                 var capturePos = new Position(move.FromPos.Row, move.ToPos.Column);
-                Moved.Push(Tuple.Create(move, Board[capturePos]));
+                Moved.Push(Tuple.Create(move, Tuple.Create(Board[capturePos],"none")));
                 CapturedPiece = Board[capturePos];
             }
             else
             {
-                Moved.Push(Tuple.Create(move, Board[move.ToPos]));
+                Moved.Push(Tuple.Create(move, Tuple.Create(Board[move.ToPos],"none")));
                 CapturedPiece = Board[move.ToPos];
             }
 

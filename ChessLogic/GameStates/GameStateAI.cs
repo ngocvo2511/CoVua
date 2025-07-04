@@ -29,33 +29,33 @@ namespace ChessLogic.GameStates.GameState
                 var undo = Moved.Pop();
                 Move undoMove = new NormalMove(undo.Item1.ToPos, undo.Item1.FromPos);
                 undoMove.Execute(Board);
-                Board[undo.Item1.ToPos] = undo.Item2;
-                if (undo.Item2 != null)
+                Board[undo.Item1.ToPos] = undo.Item2.Item1;
+                if (undo.Item2.Item1 != null)
                 {
                     if (CurrentPlayer == Player.Black) CapturedBlackPiece.RemoveAt(CapturedBlackPiece.Count - 1);
                     else CapturedWhitePiece.RemoveAt(CapturedWhitePiece.Count - 1);
                 }
-                if (i == 0) AiCapturedPiece = undo.Item2;
-                else CapturedPiece = undo.Item2;
+                if (i == 0) AiCapturedPiece = undo.Item2.Item1;
+                else CapturedPiece = undo.Item2.Item1;
                 CurrentPlayer = CurrentPlayer.Opponent();
                 //noCapture.Pop();
             }
             CurrentPlayer = Player.White;
         }
         #region MinMax Algorithm
-        private void MakeTestMove(Move move)
-        {
-            Moved.Push(Tuple.Create(move, Board[move.ToPos]));
-            move.Execute(Board);
-            CurrentPlayer = CurrentPlayer.Opponent();
-        }
+        //private void MakeTestMove(Move move)
+        //{
+        //    Moved.Push(Tuple.Create(move, Board[move.ToPos]));
+        //    move.Execute(Board);
+        //    CurrentPlayer = CurrentPlayer.Opponent();
+        //}
         private void UndoTestMove()
         {
             if (!Moved.Any()) return;
             var undo = Moved.Pop();
             Move undoMove = new NormalMove(undo.Item1.ToPos, undo.Item1.FromPos);
             undoMove.Execute(Board);
-            Board[undo.Item1.ToPos] = undo.Item2;
+            Board[undo.Item1.ToPos] = undo.Item2.Item1;
             CurrentPlayer = CurrentPlayer.Opponent();
         }
         public void AiMove(CancellationToken token)

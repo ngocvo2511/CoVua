@@ -34,7 +34,7 @@ namespace ChessUI
         private Brush redBrush = new SolidColorBrush(Colors.Red);
         private Brush blackBrush = new SolidColorBrush(Colors.Black);
         private CancellationTokenSource cts = new CancellationTokenSource();
-        private Stack<Tuple<Move, Piece>> moveList;
+        private Stack<Tuple<Move, Tuple<Piece, string>>> moveList;
         private bool isReview = false;
 
         public GameUserControl(Player color, int timeLimit, bool isAI, int difficult = 1)
@@ -138,9 +138,11 @@ namespace ChessUI
                 CellGrid.IsEnabled = false;
                 cts.Cancel();
                 gameState.TimeForfeit();
+                moveList = new Stack<Tuple<Move, Tuple<Piece, string>>>(gameState.Moved.ToArray());     
+                SaveHistory.Save(gameState);
                 RaiseGameOverEvent(gameState);
                 return;
-            }
+            }   
             if (gameState.timeRemainingRed < 60)
             {
                 redClock.Foreground = redBrush;
@@ -159,6 +161,8 @@ namespace ChessUI
                 CellGrid.IsEnabled = false;
                 cts.Cancel();
                 gameState.TimeForfeit();
+                moveList = new Stack<Tuple<Move, Tuple<Piece, string>>>(gameState.Moved.ToArray());
+                SaveHistory.Save(gameState);
                 RaiseGameOverEvent(gameState);
                 return;
             }
@@ -305,10 +309,11 @@ namespace ChessUI
             {
                 UnableClick();
                 await Task.Delay(500);
-                moveList = new Stack<Tuple<Move, Piece>>(gameState.Moved.ToArray());
+                moveList = new Stack<Tuple<Move, Tuple<Piece, string>>>(gameState.Moved.ToArray());
                 HideHighlights();
                 CellGrid.IsEnabled = false;
                 if (redTimer != null) StopTimer();
+                SaveHistory.Save(gameState);
                 RaiseGameOverEvent(gameState);
             }
 
@@ -355,10 +360,11 @@ namespace ChessUI
                     {
                         UnableClick();
                         await Task.Delay(500);
-                        moveList = new Stack<Tuple<Move, Piece>>(gameState.Moved.ToArray());
+                        moveList = new Stack<Tuple<Move, Tuple<Piece, string>>>(gameState.Moved.ToArray());
                         HideHighlights();
                         CellGrid.IsEnabled = false;
                         if (redTimer != null) StopTimer();
+                        SaveHistory.Save(gameState);
                         RaiseGameOverEvent(gameState);
                     }
                 }
@@ -381,6 +387,7 @@ namespace ChessUI
         }
         public void Review()
         {
+            PrologEngine.Reset();
             isReview = true;
             Board newBoard = Board.Initial();
             Player startPlayer;
@@ -410,20 +417,24 @@ namespace ChessUI
             {
                 if (gameState.Moved.Count == 0) return;
                 var move = gameState.Moved.Pop();
-                Move doMove = new NormalMove(move.Item1.ToPos, move.Item1.FromPos);
-                doMove.Execute(gameState.Board);
-                gameState.Board[doMove.FromPos] = move.Item2;
+                //Move doMove = new NormalMove(move.Item1.ToPos, move.Item1.FromPos);
+                //doMove.Execute(gameState.Board);
+                //gameState.Board[doMove.FromPos] = move.Item2;
+                //DrawBoard(gameState.Board);
+                PrologEngine.Undo();
+                gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
                 DrawBoard(gameState.Board);
                 if (gameState.Moved.Count != 0)
                 {
                     ShowPrevMove(gameState.Moved.First().Item1);
                 }
-                gameState.CapturedPiece = move.Item2;
+                gameState.CapturedPiece = move.Item2.Item1;
                 moveList.Push(move);
                 gameState.CurrentPlayer = gameState.CurrentPlayer.Opponent();
                 UndoCapturedGrid(gameState.CapturedPiece);
+                string status = PrologEngine.GetGameStatus();
+                WarningTextBlock.Text = status == "CHECK" ? "Chiếu tướng!" : null;
                 TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
-                WarningTextBlock.Text = gameState.Board.IsInCheck(gameState.CurrentPlayer) ? "Chiếu tướng!" : null;
                 //gameState.noCapture.Pop();
             }
             else
@@ -456,27 +467,57 @@ namespace ChessUI
             Sound.PlayButtonClickSound();
             if (moveList.Count == 0) return;
             if (gameState.Moved.Count != 0) HidePrevMove(gameState.Moved.First().Item1);
-            bool capture = moveList.Peek().Item1.Execute(gameState.Board);
+            //bool capture = moveList.Peek().Item1.Execute(gameState.Board);
 
-            if (capture)
-            {
-                //gameState.noCapture.Push(0);
+            //if (capture)
+            //{
+            //gameState.noCapture.Push(0);
+            //}
+            //else
+            //{
+            //if (gameState.noCapture.Count == 0) gameState.noCapture.Push(1);
+            //else gameState.noCapture.Push(gameState.noCapture.Peek() + 1);
+            //}
+            var move = moveList.Pop();
+            int fromPos = (7 - move.Item1.FromPos.Row) * 8 + move.Item1.FromPos.Column;
+            int toPos = (7 - move.Item1.ToPos.Row) * 8 + move.Item1.ToPos.Column;
+            if (move.Item2.Item2 != null) //nước promote
+            {                
+                if (PrologEngine.MakeMoveWithPromotion(fromPos, toPos, move.Item2.Item2, out var status))
+                {
+                    WarningTextBlock.Text = (status == "CHECK" || status == "CHECKMATE" || status == "STALEMATE") ? "Chiếu tướng!" : null;
+                }
             }
             else
             {
-                //if (gameState.noCapture.Count == 0) gameState.noCapture.Push(1);
-                //else gameState.noCapture.Push(gameState.noCapture.Peek() + 1);
+                if(PrologEngine.MakeMove(fromPos, toPos, out var status,out var needsPromotion))
+                {
+                    WarningTextBlock.Text = (status == "CHECK" || status == "CHECKMATE" || status == "STALEMATE") ? "Chiếu tướng!" : null;
+                }
             }
-            gameState.Moved.Push(moveList.Pop());
+            gameState.Moved.Push(move);
+            gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
             DrawBoard(gameState.Board);
+            ShowPrevMove(move.Item1);
+            DrawCapturedGrid(gameState.CapturedPiece);
             if (gameState.Moved.Count != 0)
             {
                 ShowPrevMove(gameState.Moved.First().Item1);
             }
-            DrawCapturedGrid(gameState.Moved.Peek().Item2);
+            DrawCapturedGrid(gameState.Moved.Peek().Item2.Item1);
             gameState.CurrentPlayer = gameState.CurrentPlayer.Opponent();
-            WarningTextBlock.Text = gameState.Board.IsInCheck(gameState.CurrentPlayer) ? "Chiếu tướng!" : null;
+            //WarningTextBlock.Text = gameState.Board.IsInCheck(gameState.CurrentPlayer) ? "Chiếu tướng!" : null;
             TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
+        }
+        private void PlayButton_Click(object sender, RoutedEventArgs e)
+        {
+            Sound.PlayButtonClickSound();
+            if (isReview == true)
+            {
+                DoButton.Visibility = Visibility.Collapsed;
+                isReview = false;
+                AbleClick();
+            }
         }
         private void InitializeBoard()
         {
@@ -667,7 +708,7 @@ namespace ChessUI
                     if (status == "CHECKMATE" || status == "STALEMATE")
                     {
                         UnableClick();
-                        moveList = new Stack<Tuple<Move, Piece>>(gameState.Moved.ToArray());
+                        moveList = new Stack<Tuple<Move, Tuple<Piece, string>>>(gameState.Moved.ToArray());
                         HideHighlights();
                         CellGrid.IsEnabled = false;
                         if (redTimer != null) StopTimer();

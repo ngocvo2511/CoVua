@@ -14,7 +14,7 @@ namespace ChessLogic.GameStates
         public int timeRemainingWhite { get; set; }
         public int timeRemainingBlack { get; set; }
         public string historyBoard { get; set; }
-        public Stack<Tuple<Move, Piece>> Moved { get; set; }
+        public Stack<Tuple<Move, Tuple<Piece, string>>> Moved { get; set; }
         public List<Piece> CapturedWhitePiece { get; set; }
         public List<Piece> CapturedBlackPiece { get; set; }
     }

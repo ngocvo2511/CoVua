@@ -3,6 +3,7 @@ using ChessLogic.GameStates.GameState;
 using ChessLogic.Pieces;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -96,6 +97,23 @@ namespace ChessLogic
     }
     public class SaveHistory { 
         public static void Save(GameState gameState)
+        {
+            string gameMode = (gameState is GameState2P) ? "2P" : "AI";
+            string historyString = PrologEngine.GetRawHistory();
+            int depth = (int)((gameState is GameStateAI) ? PrologEngine.GetDepth() : 0);
+            HistoryRecord historyRecord = new HistoryRecord(gameMode, gameState.Result, historyString, depth);
+            string fileName = $"{gameMode}_{DateTime.Now:yyyyMMdd_HHmmss}.History";
+            string json = JsonSerializer.Serialize(historyRecord, new JsonSerializerOptions { WriteIndented = true });
+            string projectRoot = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\");
+            string SaveDirectory = System.IO.Path.Combine(projectRoot, "SaveHistory");
+            if (!Directory.Exists(SaveDirectory))
+            {
+                Directory.CreateDirectory(SaveDirectory);
+            }
+            string filePath = Path.Combine(SaveDirectory, fileName);
+            File.WriteAllText(filePath, json);
+        }
+        public static void Load()
         {
 
         }
