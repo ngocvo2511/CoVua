@@ -55,8 +55,11 @@ endgame_pos(position(half_position([33,12,14],[25],[],[],[],[32],[],[]),
 sebas_pos(position(half_position([8,9,10,35,28,13,14,15],[0,7],[18,36],[11,12],[21],[4],[queenside,kingside],[]),
          half_position([48,25,50,51,44,53,46,23],[56,63],[41,45],[40,54],[52],[60],[queenside,kingside],[]))).
 
-test_pos(position(half_position([49],[],[],[],[],[4],[queenside,kingside],[]),
-         half_position([],[56],[],[],[],[60],[queenside,kingside],[]))).
+test_pos(position(half_position([],[],[],[],[],[27],[queenside,kingside],[]),
+         half_position([],[],[51,24,30,48,54,0,3,6],[],[],[63],[queenside,kingside],[]))).
+
+pin_pos(position(half_position([],[],[],[],[],[27],[queenside,kingside],[]),
+		half_position([],[51,24,30],[],[48,54,0],[3,6],[63],[queenside,kingside],[]))).
 
 buggy_pos(position(H1, H2)) :-
     PawnWhite = [8, 9, 10, 14, 15, 51],

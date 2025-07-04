@@ -3,8 +3,10 @@
 % ============================================
 
 % Dynamic predicate to store precomputed attack maps
-:- dynamic attack/3.
+:- dynamic attack_bitboard/3.
+:- dynamic attack_bitboard/4.
 
+% can be used to check if a square can be arrived
 opposite_direction(1, -1).
 opposite_direction(-1, 1).
 opposite_direction(8, -8).
@@ -14,86 +16,93 @@ opposite_direction(-9, 9).
 opposite_direction(7, -7).
 opposite_direction(-7, 7).
 
-% % Generate all precomputed attack maps for knight and king pieces
-% generate_precomputed_moves :-
-%     % Clear any existing attack data
-%     retractall(attack(_, _, _)),
-    
-%     % Generate attack maps for all squares (0-63)
-%     generate_all_squares(0).
+calculate_knights_bitboard :-
+    retractall(attack_bitboard(_, knight, _)),
+    calculate_knights_for_all_squares.
 
-% % Generate attack maps for all squares starting from Square
-% generate_all_squares(Square) :-
-%     Square > 63, !.  % Base case: finished all squares
-% generate_all_squares(Square) :-
-%     Square =< 63,
-    
-%     % Generate knight attack map for this square
-%     generate_knight_attack_map(Square, KnightBitboard),
-%     assert(attack(knight, Square, KnightBitboard)),
-    
-%     % Generate king attack map for this square
-%     generate_king_attack_map(Square, KingBitboard),
-%     assert(attack(king, Square, KingBitboard)),
-    
-%     % Continue with next square
-%     NextSquare is Square + 1,
-%     generate_all_squares(NextSquare).
+calculate_knights_for_all_squares :-
+    between(0, 63, Square),
+    calculate_knight_bitboard_for_square(Square),
+    fail.
+calculate_knights_for_all_squares.
 
-% % Generate knight attack bitboard for a given square
-% generate_knight_attack_map(Square, KnightBitboard) :-
-%     % Knight move offsets
-%     KnightMoves = [15, 17, -15, -17, 6, 10, -6, -10],
-%     generate_piece_attacks(Square, KnightMoves, 0, KnightBitboard).
+calculate_knight_bitboard_for_square(Square) :-
+    KnightMoves = [-17, -15, -10, -6, 6, 10, 15, 17],
+    findall(To, (
+        member(Move, KnightMoves),
+        To is Square + Move,
+        valid_field(To),
+        not(crosses_edge(Square, To, Move))
+    ), ValidMoves),
+    moves_to_bitboard(ValidMoves, Bitboard),
+    asserta(attack_bitboard(Square, knight, Bitboard)).
 
-% % Generate king attack bitboard for a given square
-% generate_king_attack_map(Square, KingBitboard) :-
-%     % King move offsets
-%     KingMoves = [1, -1, 8, -8, 9, -9, 7, -7],
-%     generate_piece_attacks(Square, KingMoves, 0, KingBitboard).
+calculate_kings_bitboard :-
+    retractall(attack_bitboard(_, king, _)),
+    calculate_kings_for_all_squares.
 
-% % Generate attack bitboard for a piece from a given square with given move offsets
-% generate_piece_attacks(_, [], Bitboard, Bitboard).
-% generate_piece_attacks(Square, [Move|RestMoves], AccBitboard, FinalBitboard) :-
-%     TargetSquare is Square + Move,
-%     (   (valid_field(TargetSquare), not(crosses_edge(Square, TargetSquare, Move))) ->
-%         % Valid target square - set bit in bitboard
-%         NewBitboard is AccBitboard \/ (1 << TargetSquare)
-%     ;   % Invalid target square - keep current bitboard
-%         NewBitboard = AccBitboard
-%     ),
-%     generate_piece_attacks(Square, RestMoves, NewBitboard, FinalBitboard).
+calculate_kings_for_all_squares :-
+    between(0, 63, Square),
+    calculate_king_bitboard_for_square(Square),
+    fail.
+calculate_kings_for_all_squares.
 
-% % Edge crossing detection (using the one from movement.pl)
-% % This predicate should be available from movement.pl when files are loaded
+calculate_king_bitboard_for_square(Square) :-
+    KingMoves = [-9, -8, -7, -1, 1, 7, 8, 9],
+    findall(To, (
+        member(Move, KingMoves),
+        To is Square + Move,
+        valid_field(To),
+        not(crosses_edge(Square, To, Move))
+    ), ValidMoves),
+    moves_to_bitboard(ValidMoves, Bitboard),
+    asserta(attack_bitboard(Square, king, Bitboard)).
 
-% % Utility predicate to display all precomputed moves (for debugging)
-% show_all_attacks :-
-%     forall(attack(Type, Square, Bitboard),
-%            format('attack(~w, ~w, ~w)~n', [Type, Square, Bitboard])).
+calculate_pawns_bitboard :-
+    retractall(attack_bitboard(_, pawn, _, _)),
+    calculate_pawns_for_all_squares.
 
-% % Utility predicate to get attack map for a specific piece and square
-% get_attack_map(Type, Square, Bitboard) :-
-%     attack(Type, Square, Bitboard).
+calculate_pawns_for_all_squares :-
+    between(0, 63, Square),
+    calculate_pawn_bitboard_for_square(Square, white),
+    calculate_pawn_bitboard_for_square(Square, black),
+    fail.
+calculate_pawns_for_all_squares.
 
-% % Utility predicate to check if a square is attacked by a piece at a given position
-% is_square_attacked(Type, FromSquare, ToSquare) :-
-%     attack(Type, FromSquare, Bitboard),
-%     AttackBit is 1 << ToSquare,
-%     (Bitboard /\ AttackBit) =\= 0.
+calculate_pawn_bitboard_for_square(Square, Color) :-
+    (   Color = white ->
+        PawnMoves = [9, 7]  % White pawns attack diagonally up
+    ;   Color = black ->
+        PawnMoves = [-7, -9]    % Black pawns attack diagonally down
+    ),
+    findall(To, (
+        member(Move, PawnMoves),
+        To is Square + Move,
+        valid_field(To),
+        not(crosses_edge(Square, To, Move))
+    ), ValidMoves),
+    moves_to_bitboard(ValidMoves, Bitboard),
+    asserta(attack_bitboard(Square, pawn, Color, Bitboard)).
 
-% % Initialize precomputed moves when file is loaded
-% :- initialization(generate_precomputed_moves).
-
-
+% Convert list of square indices to bitboard (tail recursive)
+moves_to_bitboard(Squares, Bitboard) :-
+    moves_to_bitboard(Squares, 0, Bitboard).
+moves_to_bitboard([], Acc, Acc).
+moves_to_bitboard([Square|Rest], Acc, Bitboard) :-
+    NewAcc is Acc \/ (1 << Square),
+    moves_to_bitboard(Rest, NewAcc, Bitboard).
 % ============================================
 % Precomputed move directions
 % ============================================
 
 init_precomputed_move :-
-    not(precomputed_move).
+    precompute_direction,
+    calculate_knights_bitboard,
+    calculate_kings_bitboard,
+    calculate_pawns_bitboard.
 
-precomputed_move :- 
+% which directions can be used to move on a square
+precompute_direction :-
     retractall(move_direction(_, _)),
     between(0, 63, Square),
     get_row_col(Square, Row, Col),
@@ -106,3 +115,4 @@ precomputed_move :-
     (Row =\= 0, Col =\= 7 -> asserta(move_direction(Square, -7)) ; true),
     (Row =\= 7, Col =\= 0 -> asserta(move_direction(Square, 7)) ; true),
     fail.
+precompute_direction.

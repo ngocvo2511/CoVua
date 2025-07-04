@@ -130,23 +130,58 @@ generate_attack_data(Board, BoardList, AttackData) :-
     calculate_attack_data(Board, BoardList, AttackData).
 
 calculate_attack_data(board(Position, Color, _), BoardList, attack_data(InCheck, InDoubleCheck, PinExist, CheckRay, PinRay, OpponentKnightAttacks, OpponentAttackMapNoPawns, OpponentAttackMap, OpponentPawnAttackMap, OpponentSlidingAttackMap)) :-
-    
-    gen_sliding_attack_map(board(Position, Color, _), BoardList, OpponentSlidingAttackMap).
-
-
-gen_sliding_attack_map(board(Position, Color, _), BoardList, SlidingAttackMap) :-
     invert(Color, EnemyColor),
-    get_half(Position, half_position(_, Rooks, _, Bishops, Queens, _, _, _), EnemyColor),
-    
-    % Generate attack map for orthogonal pieces (rooks and queens)
+    get_half(Position, half_position(Pawns, Rooks, Knights, Bishops, Queens, [EnemyKingPos], _, _), EnemyColor),
+    find_king(Position, Color, KingPos),
     append(Rooks, Queens, OrthogonalPieces),
-    write('Orthogonal Pieces: '), write(OrthogonalPieces), nl,
-    gen_sliding_attack_map_for_orthogonal(OrthogonalPieces, BoardList, Color, OrthogonalAttackMap),
-
-    write('Orthogonal Attack Map: '), write(OrthogonalAttackMap), nl
     append(Bishops, Queens, DiagonalPieces),
-    gen_sliding_attack_map_for_diagonal(DiagonalPieces, BoardList, Color, DiagonalAttackMap),
+    gen_sliding_attack_map(Color, BoardList, OpponentSlidingAttackMap, pieces(OrthogonalPieces, DiagonalPieces)),
+    PinCheck = data(InCheck1, InDoubleCheck1, PinExist, CheckRay1, PinRay),
+    gen_pin_check_map(Color, BoardList, PinCheck, KingPos),
+    KnightCheck = data(InCheck1, InDoubleCheck1, CheckRay1, false),
+    get_knight_attack_map(Knights, Color, BoardList, 0, OpponentKnightAttacks, KingPos, KnightCheck, data(InCheck2, InDoubleCheck2, CheckRay2, _)),
+    PawnCheck = data(InCheck2, InDoubleCheck2, CheckRay2, false),
+    get_pawn_attack_map(Pawns, Color, BoardList, 0, OpponentPawnAttackMap, KingPos, PawnCheck, data(InCheck, InDoubleCheck, CheckRay, _)),
+    attack_bitboard(EnemyKingPos, king, KingAttackMap),
+    OpponentAttackMapNoPawns is OpponentSlidingAttackMap \/ OpponentKnightAttacks \/ OpponentPawnAttackMap \/ KingAttackMap,
+    OpponentAttackMap is OpponentSlidingAttackMap \/ OpponentKnightAttacks \/ OpponentPawnAttackMap \/ KingAttackMap.
 
+get_knight_attack_map([KnightPos|RestKnights], Color, BoardList, OpponentKnightAttacks, NewOpponentKnightAttacks, KingPos, data(InCheck1, InDoubleCheck1, CheckRay1, IsKnightCheck1), NewKnightCheck) :-
+    attack_bitboard(KnightPos, knight, KnightAttackMap),
+    AccOpponentKnightAttacks is OpponentKnightAttacks \/ KnightAttackMap,
+    (   getbit(KnightAttackMap, KingPos) = 1, IsKnightCheck1 = false ->
+        IsKnightCheck2 = true,
+        InDoubleCheck2 = InCheck1,
+        InCheck2 = true,
+        CheckRay2 is CheckRay1 \/ (1 << KnightPos)
+    ;   IsKnightCheck2 = IsKnightCheck1,
+        InDoubleCheck2 = InDoubleCheck1,
+        InCheck2 = InCheck1,
+        CheckRay2 = CheckRay1
+    ), get_knight_attack_map(RestKnights, Color, BoardList, AccOpponentKnightAttacks, NewOpponentKnightAttacks, KingPos, data(InCheck2, InDoubleCheck2, CheckRay2, IsKnightCheck2), NewKnightCheck).
+get_knight_attack_map([], _, _, OpponentKnightAttacks, OpponentKnightAttacks, _, data(InCheck, InDoubleCheck, CheckRay, IsKnightCheck), data(InCheck, InDoubleCheck, CheckRay, IsKnightCheck)).
+
+get_pawn_attack_map([PawnPos|RestPawns], Color, BoardList, OpponentPawnAttacks, NewOpponentPawnAttacks, KingPos, data(InCheck1, InDoubleCheck1, CheckRay1, IsPawnCheck1), NewPawnCheck) :-
+    invert(Color, EnemyColor),
+    attack_bitboard(PawnPos, pawn, EnemyColor, PawnAttackMap),
+    AccOpponentPawnAttacks is OpponentPawnAttacks \/ PawnAttackMap,
+    (   getbit(PawnAttackMap, KingPos) = 1, IsPawnCheck1 = false ->
+        IsPawnCheck2 = true,
+        InDoubleCheck2 = InCheck1,
+        InCheck2 = true,
+        CheckRay2 is CheckRay1 \/ (1 << PawnPos)
+    ;   IsPawnCheck2 = IsPawnCheck1,
+        InDoubleCheck2 = InDoubleCheck1,
+        InCheck2 = InCheck1,
+        CheckRay2 = CheckRay1
+    ), get_pawn_attack_map(RestPawns, Color, BoardList, AccOpponentPawnAttacks, NewOpponentPawnAttacks, KingPos, data(InCheck2, InDoubleCheck2, CheckRay2, IsPawnCheck2), NewPawnCheck).
+get_pawn_attack_map([], _, _, OpponentPawnAttacks, OpponentPawnAttacks, _, data(InCheck, InDoubleCheck, CheckRay, IsPawnCheck), data(InCheck, InDoubleCheck, CheckRay, IsPawnCheck)).
+
+gen_sliding_attack_map(Color, BoardList, SlidingAttackMap, pieces(OrthogonalPieces, DiagonalPieces)) :-
+    gen_sliding_attack_map_for_orthogonal(OrthogonalPieces, BoardList, Color, OrthogonalAttackMap),
+    gen_sliding_attack_map_for_diagonal(DiagonalPieces, BoardList, Color, DiagonalAttackMap),
+    write(OrthogonalAttackMap), nl,
+    write(DiagonalAttackMap), nl,
     % Combine both attack maps
     SlidingAttackMap is OrthogonalAttackMap \/ DiagonalAttackMap.
 
@@ -163,31 +198,99 @@ gen_sliding_attack_map_for_diagonal(Pieces, BoardList, Color, SlidingAttackMap) 
     go_sliding(Pieces, newpiece, 9, BoardList, Color, SlidingAttackMap2, SlidingAttackMap3),
     go_sliding(Pieces, newpiece, -9,  BoardList, Color, SlidingAttackMap3, SlidingAttackMap).
 
-
-go_sliding([Piece|Pieces], newpiece, Direction, BoardList, Color, SlidingAttackMap, NewSlidingAttackMap) :- 
-    From is Piece + Direction,
-    go_sliding(Pieces, From, Direction, BoardList, Color, SlidingAttackMap, NewSlidingAttackMap)
-    , !.
-
 go_sliding([], _, _, _, _, SlidingAttackMap, SlidingAttackMap).
 
-go_sliding(PieceList, From, Direction, BoardList, Color, SlidingAttackMap, NewSlidingAttackMap) :-
+go_sliding([Piece|Pieces], newpiece, Direction, BoardList, Color, SlidingAttackMap, NewSlidingAttackMap) :- 
+    write('go_sliding: newpiece'), nl,
+    From is Piece + Direction,
+    go_sliding([Piece|Pieces], From, Direction, BoardList, Color, SlidingAttackMap, NewSlidingAttackMap)
+    , !.
+
+go_sliding([Piece|Pieces], From, Direction, BoardList, Color, SlidingAttackMap, NewSlidingAttackMap) :-
     From \= newpiece,
     opposite_direction(Direction, OppositeDirection),
-    (   valid_field(From), move_direction(From, OppositeDirection)
-    ->  To is From + Direction,
-        write(From), nl,
-        AccSlidingAttackMap is SlidingAttackMap \/ (1 << From),
-        (   nth0(From, BoardList, [Type, PieceColor])
-        ->  (   (Type = king, PieceColor = Color)
-            ->  go_sliding(PieceList, To, Direction, BoardList, Color, AccSlidingAttackMap, NewSlidingAttackMap)
-            ;   go_sliding(PieceList, newpiece, Direction, BoardList, Color, AccSlidingAttackMap, NewSlidingAttackMap)
-            )
-        ;   go_sliding(PieceList, To, Direction, BoardList, Color, AccSlidingAttackMap, NewSlidingAttackMap)
+    valid_field(From), 
+    move_direction(From, OppositeDirection),
+    To is From + Direction,     
+    write('go_sliding: From: '), write(From), nl,
+
+    AccSlidingAttackMap is SlidingAttackMap \/ (1 << From),
+    (   nth0(From, BoardList, [Type, PieceColor])
+    ->  (   (Type = king, PieceColor = Color)
+        ->  go_sliding([Piece|Pieces], To, Direction, BoardList, Color, AccSlidingAttackMap, NewSlidingAttackMap)
+        ; go_sliding(Pieces, newpiece, Direction, BoardList, Color, AccSlidingAttackMap, NewSlidingAttackMap)
         )
-    ;   go_sliding(PieceList, newpiece, Direction, BoardList, Color, SlidingAttackMap, NewSlidingAttackMap)
+    ;   go_sliding([Piece|Pieces], To, Direction, BoardList, Color, AccSlidingAttackMap, NewSlidingAttackMap)
     ), !.
-go_sliding([], newpiece, _, _, _, SlidingAttackMap, SlidingAttackMap).
 
-% ...existing code...
+go_sliding([Piece|Pieces], _, Direction, BoardList, Color, SlidingAttackMap, NewSlidingAttackMap) :- go_sliding(Pieces, newpiece, Direction, BoardList, Color, SlidingAttackMap, NewSlidingAttackMap), !.
 
+gen_pin_check_map(Color, BoardList, PinCheck, KingPos) :-
+    PinCheck = data(InCheck, InDoubleCheck, PinExist, CheckRay, PinRay),
+    gen_pin_check_map_for_all_direction(KingPos, BoardList, Color, PinCheck).
+    % gen_pin_check_map_for_diagonal(DiagonalPieces, KingPos, BoardList, Color, KingPos, PinCheck2),
+    % % Combine results
+    % (   InCheck1 = true ; InCheck2 = true -> InCheck = true ; InCheck = false).
+    
+
+gen_pin_check_map_for_all_direction(KingPos, BoardList, Color, PinCheck) :-
+    go_pin_check(begin, KingPos, 8, 0, BoardList, Color, data(false, false, false, 0, 0), PinCheck1),
+    go_pin_check(begin, KingPos, -8, 0, BoardList, Color, PinCheck1, PinCheck2),
+    go_pin_check(begin, KingPos, -1, 0, BoardList, Color, PinCheck2, PinCheck3),
+    go_pin_check(begin, KingPos, 1, 0, BoardList, Color, PinCheck3, PinCheck4),
+    go_pin_check(begin, KingPos, 9, 0, BoardList, Color, PinCheck4, PinCheck5),
+    go_pin_check(begin, KingPos, -9, 0, BoardList, Color, PinCheck5, PinCheck6),
+    go_pin_check(begin, KingPos, 7, 0, BoardList, Color, PinCheck6, PinCheck7),
+    go_pin_check(begin, KingPos, -7, 0, BoardList, Color, PinCheck7, PinCheck).
+
+go_pin_check(begin, Start, Direction, RayMask, BoardList, Color, PinCheck, NewPinCheck) :- 
+    From is Start + Direction,
+    go_pin_check(nofriendlypin, From, Direction, RayMask, BoardList, Color, PinCheck, NewPinCheck),
+    !.
+
+% if in double check, no need to check for pins or checks 
+go_pin_check(_, _, _, _, _, _, data(InCheck, true, PinExist, CheckRay, PinRay), data(InCheck, true, PinExist, CheckRay, PinRay)).
+
+go_pin_check(nofriendlypin, From, Direction, RayMask, BoardList, Color, PinCheck, NewPinCheck) :-
+    opposite_direction(Direction, OppositeDirection),
+    move_direction(From, OppositeDirection),
+    AccRayMask is RayMask \/ (1 << From),
+    PinCheck = data(InCheck1, InDoubleCheck1, PinExist1, CheckRay1, PinRay1),
+    To is From + Direction,
+    (   nth0(From, BoardList, [Type, PieceColor])
+    ->  (   PieceColor = Color
+        ->  go_pin_check(friendlypin, To, Direction, AccRayMask, BoardList, Color, PinCheck, NewPinCheck)
+        ;   is_attackable(Type, Direction)
+        ->  InDoubleCheck2 = InCheck1,
+            CheckRay2 is CheckRay1 \/ AccRayMask,
+            NewPinCheck = data(true, InDoubleCheck2, false, CheckRay2, PinRay1)
+        ;   NewPinCheck = PinCheck
+        )
+    ;   go_pin_check(nofriendlypin, To, Direction, AccRayMask, BoardList, Color, PinCheck, NewPinCheck)
+    ),!.
+
+go_pin_check(friendlypin, From, Direction, RayMask, BoardList, Color, PinCheck, NewPinCheck) :-
+	valid_field(From),
+    opposite_direction(Direction, OppositeDirection),
+    move_direction(From, OppositeDirection),
+    AccRayMask is RayMask \/ (1 << From),
+    PinCheck = data(InCheck1, InDoubleCheck1, PinExist1, CheckRay1, PinRay1),
+    To is From + Direction,
+    (   nth0(From, BoardList, [Type, PieceColor])
+    ->  (   PieceColor = Color
+        ->  NewPinCheck = PinCheck
+        ;   is_attackable(Type, Direction)
+        ->  PinRay2 is PinRay1 \/ AccRayMask,
+            NewPinCheck = data(InCheck1, InDoubleCheck1, true, CheckRay1, PinRay2)
+        ;   NewPinCheck = PinCheck
+        )
+    ;   go_pin_check(friendlypin, To, Direction, AccRayMask, BoardList, Color, PinCheck, NewPinCheck)
+    ),!.
+
+go_pin_check(_, _, _, _, _, _, PinCheck, PinCheck).
+
+is_attackable(Type, Direcction) :-
+    (   Type = rook, member(Direcction, [8, -8, -1, 1])
+    ;   Type = bishop, member(Direcction, [7, -7, 9, -9])
+    ;   Type = queen
+    ).
