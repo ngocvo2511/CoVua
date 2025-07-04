@@ -102,7 +102,7 @@ is_under_attack(Pos, Color, Position, BoardList) :-
 	).
 
 % check if king of given color is in check
-in_check(Position, Color, BoardList) :-
+in_check(Position, Color, BoardList, BoardList) :-
 	find_king(Position, Color, KingPos),
 	is_under_attack(KingPos, Color, Position, BoardList).
 
@@ -116,16 +116,16 @@ in_check(Position, Color, BoardList) :-
 
 generate_attack_data(Board, BoardList, AttackData) :- 
     AttackData = attack_data(
-        InCheck, 
-        InDoubleCheck, 
-        PinExist, 
-        CheckRay, 
-        PinRay, 
-        OpponentKnightAttacks, 
-        OpponentAttackMapNoPawns,
-        OpponentAttackMap, 
-        OpponentPawnAttackMap, 
-        OpponentSlidingAttackMap
+        _InCheck, 
+        _InDoubleCheck, 
+        _PinExist, 
+        _CheckRay, 
+        _PinRay, 
+        _OpponentKnightAttacks, 
+        _OpponentAttackMapNoPawns,
+        _OpponentAttackMap, 
+        _OpponentPawnAttackMap, 
+        _OpponentSlidingAttackMap
     ),
     calculate_attack_data(Board, BoardList, AttackData).
 
@@ -144,9 +144,7 @@ calculate_attack_data(board(Position, Color, _), BoardList, attack_data(InCheck,
     get_pawn_attack_map(Pawns, Color, BoardList, 0, OpponentPawnAttackMap, KingPos, PawnCheck, data(InCheck, InDoubleCheck, CheckRay, _)),
     attack_bitboard(EnemyKingPos, king, KingAttackMap),
     OpponentAttackMapNoPawns is OpponentSlidingAttackMap \/ OpponentKnightAttacks \/ KingAttackMap,
-    OpponentAttackMap is OpponentSlidingAttackMap \/ OpponentKnightAttacks \/ OpponentPawnAttackMap \/ KingAttackMap,
-    write(OpponentAttackMapNoPawns), nl,
-    write(OpponentAttackMap), nl.
+    OpponentAttackMap is OpponentSlidingAttackMap \/ OpponentKnightAttacks \/ OpponentPawnAttackMap \/ KingAttackMap.
 
 get_knight_attack_map([KnightPos|RestKnights], Color, BoardList, OpponentKnightAttacks, NewOpponentKnightAttacks, KingPos, data(InCheck1, InDoubleCheck1, CheckRay1, IsKnightCheck1), NewKnightCheck) :-
     attack_bitboard(KnightPos, knight, KnightAttackMap),
@@ -221,10 +219,10 @@ go_sliding([Piece|Pieces], From, Direction, BoardList, Color, SlidingAttackMap, 
     ;   go_sliding([Piece|Pieces], To, Direction, BoardList, Color, AccSlidingAttackMap, NewSlidingAttackMap)
     ), !.
 
-go_sliding([Piece|Pieces], _, Direction, BoardList, Color, SlidingAttackMap, NewSlidingAttackMap) :- go_sliding(Pieces, newpiece, Direction, BoardList, Color, SlidingAttackMap, NewSlidingAttackMap), !.
+go_sliding([_Piece|Pieces], _, Direction, BoardList, Color, SlidingAttackMap, NewSlidingAttackMap) :- go_sliding(Pieces, newpiece, Direction, BoardList, Color, SlidingAttackMap, NewSlidingAttackMap), !.
 
 gen_pin_check_map(Color, BoardList, PinCheck, KingPos) :-
-    PinCheck = data(InCheck, InDoubleCheck, PinExist, CheckRay, PinRay),
+    PinCheck = data(_InCheck, _InDoubleCheck, _PinExist, _CheckRay, _PinRay),
     gen_pin_check_map_for_all_direction(KingPos, BoardList, Color, PinCheck).
     % gen_pin_check_map_for_diagonal(DiagonalPieces, KingPos, BoardList, Color, KingPos, PinCheck2),
     % % Combine results
@@ -253,7 +251,7 @@ go_pin_check(nofriendlypin, From, Direction, RayMask, BoardList, Color, PinCheck
     opposite_direction(Direction, OppositeDirection),
     move_direction(From, OppositeDirection),
     AccRayMask is RayMask \/ (1 << From),
-    PinCheck = data(InCheck1, InDoubleCheck1, PinExist1, CheckRay1, PinRay1),
+    PinCheck = data(InCheck1, _InDoubleCheck1, _PinExist1, CheckRay1, PinRay1),
     To is From + Direction,
     (   nth0(From, BoardList, [Type, PieceColor])
     ->  (   PieceColor = Color
@@ -272,7 +270,7 @@ go_pin_check(friendlypin, From, Direction, RayMask, BoardList, Color, PinCheck, 
     opposite_direction(Direction, OppositeDirection),
     move_direction(From, OppositeDirection),
     AccRayMask is RayMask \/ (1 << From),
-    PinCheck = data(InCheck1, InDoubleCheck1, PinExist1, CheckRay1, PinRay1),
+    PinCheck = data(InCheck1, InDoubleCheck1, _PinExist1, CheckRay1, PinRay1),
     To is From + Direction,
     (   nth0(From, BoardList, [Type, PieceColor])
     ->  (   PieceColor = Color

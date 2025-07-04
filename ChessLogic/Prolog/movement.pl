@@ -2,105 +2,105 @@
 % Legal move
 % =================================
 % check if a move is legal (no getting checked, follow chess rule)
-is_legal_move(From, To, Color, Position, BoardList) :-
+is_legal_move(From, To, Color, Position, BoardList, AttackData) :-
 	% First check if the basic move is valid
 	nth0(From, BoardList, [Type, _]),
-	legal_move_for_piece(Type, From, To, Color, Position, BoardList),
+	legal_move_for_piece(Type, From, To, Color, Position, BoardList, AttackData),
 	% Then simulate the move and check if king is still safe
-	simulate_move(From, To, Color, Position, NewPosition, _MovedPiece, _CapturedPiece, _PromotedPiece, BoardList),
-	not(in_check(NewPosition, Color, BoardList)).
+	simulate_move(From, To, Color, Position, NewPosition, _MovedPiece, _CapturedPiece, _PromotedPiece, BoardList, AttackData),
+	not(in_check(NewPosition, Color, BoardList, AttackData)).
 
 % legal_move_for_piece: generate individual legal moves based on piece type
-legal_move_for_piece(pawn, From, To, Color, Position, BoardList) :-
-	pawn_move(Color, From, Position, To, BoardList).
+legal_move_for_piece(pawn, From, To, Color, Position, BoardList, AttackData) :-
+	pawn_move(Color, From, Position, To, BoardList, AttackData).
 
-legal_move_for_piece(rook, From, To, Color, Position, BoardList) :-
-	long_move(rook, From, Color, Position, To, BoardList).
+legal_move_for_piece(rook, From, To, Color, Position, BoardList, AttackData) :-
+	long_move(rook, From, Color, Position, To, BoardList, AttackData).
 
-legal_move_for_piece(knight, From, To, Color, Position, BoardList) :-
-	short_move(knight, From, Color, Position, To, BoardList).
+legal_move_for_piece(knight, From, To, Color, Position, BoardList, AttackData) :-
+	short_move(knight, From, Color, Position, To, BoardList, AttackData).
 
-legal_move_for_piece(bishop, From, To, Color, Position, BoardList) :-
-	long_move(bishop, From, Color, Position, To, BoardList).
+legal_move_for_piece(bishop, From, To, Color, Position, BoardList, AttackData) :-
+	long_move(bishop, From, Color, Position, To, BoardList, AttackData).
 
-legal_move_for_piece(queen, From, To, Color, Position, BoardList) :-
-	long_move(queen, From, Color, Position, To, BoardList).
+legal_move_for_piece(queen, From, To, Color, Position, BoardList, AttackData) :-
+	long_move(queen, From, Color, Position, To, BoardList, AttackData).
 
-legal_move_for_piece(king, From, To, Color, Position, BoardList) :-
-	short_move(king, From, Color, Position, To, BoardList).
+legal_move_for_piece(king, From, To, Color, Position, BoardList, AttackData) :-
+	short_move(king, From, Color, Position, To, BoardList, AttackData).
 
 % Add castling moves for king
-legal_move_for_piece(king, From, To, Color, Position, BoardList) :-
-	castling_move_check(Color, Position, From, To, BoardList).
+legal_move_for_piece(king, From, To, Color, Position, BoardList, AttackData) :-
+	castling_move_check(Color, Position, From, To, BoardList, AttackData).
 
-generate_move(Move, Color, Position, NewPosition, BoardList) :-
+generate_move(Move, Color, Position, NewPosition, BoardList, AttackData) :-
 	Move = move(From, To, MovedPiece, CapturedPiece, PromotedPiece),
 	nth0(From, BoardList, [Type, _]),
-	legal_move_for_piece(Type, From, To, Color, Position, BoardList),
-	simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotedPiece, BoardList),
-	not(in_check(NewPosition, Color, BoardList)).
+	legal_move_for_piece(Type, From, To, Color, Position, BoardList, AttackData),
+	simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotedPiece, BoardList, AttackData),
+	not(in_check(NewPosition, Color, BoardList, AttackData)).
 
 % create a new position after making a move
-simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotedPiece, BoardList) :-
+simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotedPiece, BoardList, AttackData) :-
 	nth0(From, BoardList, [MovedPiece, _]),
 	invert(Color, OpponentColor),
-	(is_promotion_move(From, To, Color, Position, BoardList), MovedPiece = pawn -> Promoting = true ; Promoting = false),
+	(is_promotion_move(From, To, Color, Position, BoardList, AttackData), MovedPiece = pawn -> Promoting = true ; Promoting = false),
 	(	nth0(To, BoardList, [CapturedPiece, OpponentColor]) ->
-		capture_piece(Position, OpponentColor, To, TempPosition, BoardList)
+		capture_piece(Position, OpponentColor, To, TempPosition, BoardList, AttackData)
 	;   TempPosition = Position
 	),
 	% Check if this is a castling move
-	(   (MovedPiece = king, is_castling_move(Color, From, To, BoardList)) ->
-	    castle_piece(TempPosition, Color, From, To, NewPosition, BoardList)
+	(   (MovedPiece = king, is_castling_move(Color, From, To, BoardList, AttackData)) ->
+	    castle_piece(TempPosition, Color, From, To, NewPosition, BoardList, AttackData)
 	;   % Check if this is an en passant move
-	    (MovedPiece = pawn, is_enpassant_move(From, To, Color, TempPosition, BoardList)) ->
+	    (MovedPiece = pawn, is_enpassant_move(From, To, Color, TempPosition, BoardList, AttackData)) ->
 	    % Handle en passant: capture the pawn and move our pawn
 	    (   Color = white ->
 	        CapturedPawnPos is To - 8  % Black pawn is one rank below
 	    ;   CapturedPawnPos is To + 8  % White pawn is one rank above
 	    ),
 		CapturedPiece = pawn,
-	    capture_piece(TempPosition, OpponentColor, CapturedPawnPos, Temp2Position, BoardList),
-	    move_piece(Temp2Position, Color, From, To, NewPosition, BoardList)
+	    capture_piece(TempPosition, OpponentColor, CapturedPawnPos, Temp2Position, BoardList, AttackData),
+	    move_piece(Temp2Position, Color, From, To, NewPosition, BoardList, AttackData)
 	;   % Check if this is a pawn promotion
 		Promoting = true,
 		((PromotedPiece == null) -> throw(error(promotion_required, context(place_piece, 'Pawn promotion requires piece choice'))) ; true),
 		promotion(PromotedPiece),
 	    % Handle pawn promotion
-	    move_piece(TempPosition, Color, From, To, Temp2Position, BoardList),
-	    promote_pawn(Temp2Position, Color, To, PromotedPiece, NewPosition, BoardList)
+	    move_piece(TempPosition, Color, From, To, Temp2Position, BoardList, AttackData),
+	    promote_pawn(Temp2Position, Color, To, PromotedPiece, NewPosition, BoardList, AttackData)
 	;   % Check if there's an opponent piece to capture
 		Promoting = false,
-		move_piece(TempPosition, Color, From, To, NewPosition, BoardList)
+		move_piece(TempPosition, Color, From, To, NewPosition, BoardList, AttackData)
 	),
 	(var(CapturedPiece) -> CapturedPiece = none ; true),
 	(var(PromotedPiece) -> PromotedPiece = none ; true).
 
 % get_all_legal_moves: get all legal moves for a color
-get_all_legal_moves(Position, Color, LegalMoves, BoardList) :-
-	get_all_pseudo_legal_moves(Position, Color, PseudoMoves, BoardList),
-	include(is_move_legal(Position, Color, BoardList), PseudoMoves, LegalMoves).
+get_all_legal_moves(Position, Color, LegalMoves, BoardList, AttackData) :-
+	get_all_pseudo_legal_moves(Position, Color, PseudoMoves, BoardList, AttackData),
+	include(is_move_legal(Position, Color, BoardList, AttackData), PseudoMoves, LegalMoves).
 
 % Helper predicate to check if a move is legal (doesn't leave king in check)
-is_move_legal(Position, Color, BoardList, move(From, To, MovedPiece, CapturedPiece, PromotedPiece)) :-
-	simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotedPiece, BoardList),
-	not(in_check(NewPosition, Color, BoardList)).
+is_move_legal(Position, Color, BoardList, AttackData, move(From, To, MovedPiece, CapturedPiece, PromotedPiece)) :-
+	simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotedPiece, BoardList, AttackData),
+	not(in_check(NewPosition, Color, BoardList, AttackData)).
 % faster version that does not check for king safety
-get_all_pseudo_legal_moves(Position, Color, LegalMoves, BoardList) :-
+get_all_pseudo_legal_moves(Position, Color, LegalMoves, BoardList, AttackData) :-
 	invert(Color, OpponentColor),
 	findall(move(From, To, MovedPiece, CapturedPiece, PromotedPiece), 
 	        (	nth0(From, BoardList, [MovedPiece, Color]),
-	         	legal_move_for_piece(MovedPiece, From, To, Color, Position, BoardList),
+	         	legal_move_for_piece(MovedPiece, From, To, Color, Position, BoardList, AttackData),
 	         	invert(Color, OpponentColor),
 	         	% Determine captured piece
 	        	(   nth0(To, BoardList, [CapturedPiece, OpponentColor]) ->
 	            	true
-	        	;   is_enpassant_move(From, To, Color, Position, BoardList) ->
+	        	;   is_enpassant_move(From, To, Color, Position, BoardList, AttackData) ->
 	            	CapturedPiece = pawn  % En passant captures the pawn
 				;	CapturedPiece = none
 	         	),
 	         % Determine promotion piece
-	        (   is_promotion_move(From, To, Color, Position, BoardList) ->
+	        (   is_promotion_move(From, To, Color, Position, BoardList, AttackData) ->
 	            (   PromotedPiece = queen
 	            ;   PromotedPiece = knight
 	            ;   PromotedPiece = rook
@@ -112,14 +112,14 @@ get_all_pseudo_legal_moves(Position, Color, LegalMoves, BoardList) :-
 	        LegalMoves).
 
 % check if the given color is in checkmate
-is_checkmate(Position, Color, BoardList) :-
-	in_check(Position, Color, BoardList),
-	get_all_legal_moves(Position, Color, [], BoardList).  % No legal moves available
+is_checkmate(Position, Color, BoardList, AttackData) :-
+	in_check(Position, Color, BoardList, AttackData),
+	get_all_legal_moves(Position, Color, [], BoardList, AttackData).  % No legal moves available
 
 % is_stalemate: check if the given color is in stalemate
-is_stalemate(Position, Color, BoardList) :-
-	not(in_check(Position, Color, BoardList)),
-	get_all_legal_moves(Position, Color, [], BoardList).  % No legal moves but not in check
+is_stalemate(Position, Color, BoardList, AttackData) :-
+	not(in_check(Position, Color, BoardList, AttackData)),
+	get_all_legal_moves(Position, Color, [], BoardList, AttackData).  % No legal moves but not in check
 
 % =================================
 % Piece movement on board
@@ -165,28 +165,28 @@ crosses_edge(From,To,Direction) :-
 	).
 
 % one_step: from Field to Next through one step
-one_step(Field,Direction,Next,Color,_Position,BoardList):-
+one_step(Field,Direction,Next,Color,_Position,BoardList,AttackData):-
 	Next is Field + Direction,
 	valid_field(Next),
 	not(crosses_edge(Field,Next,Direction)),
 	not(nth0(Next, BoardList, [_,Color])).
 
 % multiple_steps: from Field to Next through one or multiple steps
-multiple_steps(Field,Direction,Next,Color,Position,BoardList):-
-	one_step(Field,Direction,Next,Color,Position,BoardList).
-multiple_steps(Field,Direction,Next,Color,Position,BoardList):-
-	one_step(Field,Direction,FieldNew,Color,Position,BoardList),
+multiple_steps(Field,Direction,Next,Color,Position,BoardList,AttackData):-
+	one_step(Field,Direction,Next,Color,Position,BoardList,AttackData).
+multiple_steps(Field,Direction,Next,Color,Position,BoardList,AttackData):-
+	one_step(Field,Direction,FieldNew,Color,Position,BoardList,AttackData),
 	invert(Color,Oppo),
 	not(nth0(FieldNew, BoardList, [_, Oppo])),
-	multiple_steps(FieldNew,Direction,Next,Color,Position,BoardList).
+	multiple_steps(FieldNew,Direction,Next,Color,Position,BoardList,AttackData).
 
 % Pawn movement rules =
-pawn_move(white, From, _Position, To, BoardList):-
+pawn_move(white, From, _Position, To, BoardList, AttackData):-
 	To is From + 7,  % capture diagonal left
 	valid_field(To),
 	not(crosses_edge(From,To,7)),
 	nth0(To, BoardList, [_, black]).
-pawn_move(white, From, Position, To, _BoardList):-
+pawn_move(white, From, Position, To, _BoardList, AttackData):-
 	To is From + 7,  % enpassant left
 	valid_field(To),
 	not(crosses_edge(From,To,7)),
@@ -194,17 +194,17 @@ pawn_move(white, From, Position, To, _BoardList):-
 	Check is From - 1,
 	member(Check,EnpassantList).
 	
-pawn_move(white, From, _Position, To, BoardList):-
+pawn_move(white, From, _Position, To, BoardList, AttackData):-
 	To is From + 8,  % move forward
 	valid_field(To),
 	nth0(To, BoardList, empty).
 	
-pawn_move(white, From, _Position, To, BoardList):-
+pawn_move(white, From, _Position, To, BoardList, AttackData):-
 	To is From + 9,  % capture diagonal right
 	valid_field(To),
 	not(crosses_edge(From,To,9)),
 	nth0(To, BoardList, [_, black]).
-pawn_move(white, From, Position, To, _BoardList):-
+pawn_move(white, From, Position, To, _BoardList, AttackData):-
 	To is From + 9,  % enpassant right
 	valid_field(To),
 	not(crosses_edge(From,To,9)),
@@ -212,7 +212,7 @@ pawn_move(white, From, Position, To, _BoardList):-
 	Check is From + 1,
 	member(Check,EnpassantList).
 	
-pawn_move(white, From, _Position, To, BoardList):-
+pawn_move(white, From, _Position, To, BoardList, AttackData):-
 	To is From + 16, % double move from starting position
 	valid_field(To),
 	nth0(To, BoardList, empty),
@@ -220,12 +220,12 @@ pawn_move(white, From, _Position, To, BoardList):-
 	nth0(OneSquareForward, BoardList, empty),
 	between(8, 15, From). % starting row for white pawns
 
-pawn_move(black, From, _Position, To, BoardList):-
+pawn_move(black, From, _Position, To, BoardList, AttackData):-
 	To is From - 7,  % capture diagonal right
 	valid_field(To),
 	not(crosses_edge(From,To,-7)),
 	nth0(To, BoardList, [_, white]).
-pawn_move(black, From, Position, To, _BoardList):-
+pawn_move(black, From, Position, To, _BoardList, AttackData):-
 	To is From - 7,  % enpassant right
 	valid_field(To),
 	not(crosses_edge(From,To,-7)),
@@ -233,17 +233,17 @@ pawn_move(black, From, Position, To, _BoardList):-
 	Check is From + 1,
 	member(Check,EnpassantList).
 	
-pawn_move(black, From, _Position, To, BoardList):-
+pawn_move(black, From, _Position, To, BoardList, AttackData):-
 	To is From - 8,  % move forward
 	valid_field(To),
 	nth0(To, BoardList, empty).
 
-pawn_move(black, From, _Position, To, BoardList):-
+pawn_move(black, From, _Position, To, BoardList, AttackData):-
 	To is From - 9,  % capture diagonal left
 	valid_field(To),
 	not(crosses_edge(From,To,-9)),
 	nth0(To, BoardList, [_, white]).
-pawn_move(black, From, Position, To, _BoardList):-
+pawn_move(black, From, Position, To, _BoardList, AttackData):-
 	To is From - 9,  % enpassant left
 	valid_field(To),
 	not(crosses_edge(From,To,-9)),
@@ -251,7 +251,7 @@ pawn_move(black, From, Position, To, _BoardList):-
 	Check is From - 1,
 	member(Check,EnpassantList).
 	
-pawn_move(black, From, _Position, To, BoardList):-
+pawn_move(black, From, _Position, To, BoardList, AttackData):-
 	To is From - 16, % double move from starting position
 	valid_field(To),
 	not(nth0(To, BoardList, empty)),
@@ -263,64 +263,64 @@ pawn_move(black, From, _Position, To, BoardList):-
 % Castling 
 % =================================
 
-castling_move_check(Color, Position, From, To, BoardList) :-
+castling_move_check(Color, Position, From, To, BoardList, AttackData) :-
 	get_half(Position, half_position(_,_,_,_,_,_,Castle,_), Color),
 	member(Side, Castle),
-	castling_move(Color, Side, Position, From, To, BoardList).
+	castling_move(Color, Side, Position, From, To, BoardList, AttackData).
 
 % Kingside castling (short castling)
-castling_move(white, kingside, Position, From, To, BoardList) :-
+castling_move(white, kingside, Position, From, To, BoardList, AttackData) :-
 	From = 4,  % White king starting position
 	To = 6,    % King moves to g1 (position 6)
 	nth0(5, BoardList, empty),
 	nth0(6, BoardList, empty),
 	% king and squares it passes through are not under attack
-	not(is_under_attack(4, white, Position, BoardList)),  % King not in check
-	not(is_under_attack(5, white, Position, BoardList)),  % f1 not under attack
-	not(is_under_attack(6, white, Position, BoardList)), !.  % g1 not under attack
+	not(is_under_attack(4, white, Position, BoardList, AttackData)),  % King not in check
+	not(is_under_attack(5, white, Position, BoardList, AttackData)),  % f1 not under attack
+	not(is_under_attack(6, white, Position, BoardList, AttackData)), !.  % g1 not under attack
 
-castling_move(black, kingside, Position, From, To, BoardList) :-
+castling_move(black, kingside, Position, From, To, BoardList, AttackData) :-
 	From = 60,  % Black king starting position
 	To = 62,    % King moves to g8 (position 62)
 	nth0(61, BoardList, empty),
 	nth0(62, BoardList, empty),
 	% king and squares it passes through are not under attack
-	not(is_under_attack(60, black, Position, BoardList)),  % King not in check
-	not(is_under_attack(61, black, Position, BoardList)),  % f8 not under attack
-	not(is_under_attack(62, black, Position, BoardList)), !.  % g8 not under attack
+	not(is_under_attack(60, black, Position, BoardList, AttackData)),  % King not in check
+	not(is_under_attack(61, black, Position, BoardList, AttackData)),  % f8 not under attack
+	not(is_under_attack(62, black, Position, BoardList, AttackData)), !.  % g8 not under attack
 
 % Queenside castling (long castling)
-castling_move(white, queenside, Position, From, To, BoardList) :-
+castling_move(white, queenside, Position, From, To, BoardList, AttackData) :-
 	From = 4,  % White king starting position
 	To = 2,    % King moves to c1 (position 2)
 	nth0(1, BoardList, empty),
 	nth0(2, BoardList, empty),
 	nth0(3, BoardList, empty),
 	% Additional check: king and squares it passes through are not under attack
-	not(is_under_attack(4, white, Position, BoardList)),  % King not in check
-	not(is_under_attack(3, white, Position, BoardList)),  % d1 not under attack
-	not(is_under_attack(2, white, Position, BoardList)), !.  % c1 not under attack
+	not(is_under_attack(4, white, Position, BoardList, AttackData)),  % King not in check
+	not(is_under_attack(3, white, Position, BoardList, AttackData)),  % d1 not under attack
+	not(is_under_attack(2, white, Position, BoardList, AttackData)), !.  % c1 not under attack
 
-castling_move(black, queenside, Position, From, To, BoardList) :-
+castling_move(black, queenside, Position, From, To, BoardList, AttackData) :-
 	From = 60,  % Black king starting position
 	To = 58,    % King moves to c8 (position 58)
 	nth0(57, BoardList, empty),
 	nth0(58, BoardList, empty),
 	nth0(59, BoardList, empty),
 	% Additional check: king and squares it passes through are not under attack
-	not(is_under_attack(60, black, Position, BoardList)),  % King not in check
-	not(is_under_attack(59, black, Position, BoardList)),  % d8 not under attack
-	not(is_under_attack(58, black, Position, BoardList)), !.  % c8 not under attack
+	not(is_under_attack(60, black, Position, BoardList, AttackData)),  % King not in check
+	not(is_under_attack(59, black, Position, BoardList, AttackData)),  % d8 not under attack
+	not(is_under_attack(58, black, Position, BoardList, AttackData)), !.  % c8 not under attack
 
 % long_move: move for long distance (rook, bishop, queen)
-long_move(Type, From, Color, Position, To, BoardList):-
+long_move(Type, From, Color, Position, To, BoardList, AttackData):-
 	piece_direction(Type,Direction),
-	multiple_steps(From,Direction,To,Color,Position,BoardList).
+	multiple_steps(From,Direction,To,Color,Position,BoardList,AttackData).
 
 % short_move: move for one step (king, knight)
-short_move(Type, From, Color, Position, To, BoardList):-
+short_move(Type, From, Color, Position, To, BoardList, AttackData):-
 	piece_direction(Type,Direction),
-	one_step(From,Direction,To,Color,Position,BoardList).
+	one_step(From,Direction,To,Color,Position,BoardList,AttackData).
 
 % =================================
 % Pawn promotion
@@ -333,12 +333,12 @@ is_promotion_rank(Pos, black) :-
 	between(0, 7, Pos).    % 1st rank for black
 
 % check if a pawn move results in promotion
-is_promotion_move(From, To, Color, _Position, BoardList) :-
+is_promotion_move(From, To, Color, _Position, BoardList, AttackData) :-
 	nth0(From, BoardList, [pawn, Color]),
 	is_promotion_rank(To, Color).
 
 % promote_pawn: remove pawn and add promoted piece
-promote_pawn(Position, Color, PawnPos, PromotedPiece, NewPosition, BoardList) :-
+promote_pawn(Position, Color, PawnPos, PromotedPiece, NewPosition, BoardList, AttackData) :-
 	% Remove the pawn
 	get_half(Position, Half, Color),
 	extract(Half, pawn, PawnList),
@@ -350,7 +350,7 @@ promote_pawn(Position, Color, PawnPos, PromotedPiece, NewPosition, BoardList) :-
 	combine(TempHalf, PromotedPiece, [PawnPos|PieceList], NewHalf),
 	
 	% Update the position
-	update_half(Position, NewHalf, Color, NewPosition, BoardList).
+	update_half(Position, NewHalf, Color, NewPosition, BoardList, AttackData).
 
 promotion(queen).
 promotion(knight).
@@ -361,7 +361,7 @@ promotion(bishop).
 % Pawn enpassant
 % =================================
 % En passant move - white pawn
-is_enpassant_move(From, To, white, Position, _BoardList) :-
+is_enpassant_move(From, To, white, Position, _BoardList, AttackData) :-
 	between(32, 39, From),    % White pawn on 5th rank
 	between(40, 47, To),      % Moving to 6th rank
 	get_half(Position, half_position(_,_,_,_,_,_,_,EnpassantList), white),
@@ -369,7 +369,7 @@ is_enpassant_move(From, To, white, Position, _BoardList) :-
 	abs(To - OpponentPawnPos) =:= 8.         % Target square is 8 squares away from opponent pawn
 
 % En passant move - black pawn
-is_enpassant_move(From, To, black, Position, _BoardList) :-
+is_enpassant_move(From, To, black, Position, _BoardList, AttackData) :-
 	between(24, 31, From),    % Black pawn on 4th rank
 	between(16, 23, To),      % Moving to 3rd rank
 	get_half(Position, half_position(_,_,_,_,_,_,_,EnpassantList), black),

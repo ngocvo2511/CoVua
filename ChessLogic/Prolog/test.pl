@@ -76,12 +76,20 @@ test_position :-
 
 test_time :-
 	initial_pos(Position),
-	get_all_legal_moves(Position, white, _MoveList, _BoardList).
+	position_to_board_list(Position, BoardList),
+	Board = board(Position, white, 0),
+	generate_attack_data(Board, BoardList, AttackData),
+	get_all_legal_moves(Position, white, _MoveList, BoardList, AttackData).
 
 test_incheck :-
-	board(Pos, _Color, _Counter),
-	(in_check(Pos, white, _) -> write('Yes') ; write('No')), nl,
-	(in_check(Pos, black, _) -> write('Yes') ; write('No')), nl.
+	board(Pos, Color, Counter),
+	position_to_board_list(Pos, BoardList),
+	WhiteBoard = board(Pos, white, Counter),
+	BlackBoard = board(Pos, black, Counter),
+	generate_attack_data(WhiteBoard, BoardList, WhiteAttackData),
+	generate_attack_data(BlackBoard, BoardList, BlackAttackData),
+	(in_check(Pos, white, BoardList, WhiteAttackData) -> write('Yes') ; write('No')), nl,
+	(in_check(Pos, black, BoardList, BlackAttackData) -> write('Yes') ; write('No')), nl.
 
 start_perft(Position, Color, Depth) :- 
 	asserta(perft_stack(0)),
@@ -91,13 +99,15 @@ start_perft(Position, Color, Depth) :-
 
 perft(Position, Color, Depth) :-
 	position_to_board_list(Position, BoardList),
-	get_all_legal_moves(Position, Color, MoveList, BoardList),
+	Board = board(Position, Color, 0),
+	generate_attack_data(Board, BoardList, AttackData),
+	get_all_legal_moves(Position, Color, MoveList, BoardList, AttackData),
 	(   Depth > 0 ->
 		NewDepth is Depth - 1,
 		invert(Color, NextColor),
 		forall(member(Move, MoveList), (
 			Move = move(From, To, MovedPiece, CapturedPiece, PromotionPiece),
-			simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotionPiece, BoardList),
+			simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotionPiece, BoardList, AttackData),
 			perft(NewPosition, NextColor, NewDepth)
 		))
 	;   retract(perft_stack(Count)),

@@ -39,11 +39,13 @@ reset:-
 		
 check_game_status(Position, Color, Counter, Status) :-
 	position_to_board_list(Position, BoardList),
-    (   is_checkmate(Position, Color, BoardList) ->
+	Board = board(Position, Color, Counter),
+	generate_attack_data(Board, BoardList, AttackData),
+    (   is_checkmate(Position, Color, BoardList, AttackData) ->
         Status = checkmate
-    ;   is_stalemate(Position, Color, BoardList) ->
+    ;   is_stalemate(Position, Color, BoardList, AttackData) ->
         Status = stalemate
-    ;   in_check(Position, Color, BoardList) ->
+    ;   in_check(Position, Color, BoardList, AttackData) ->
         Status = check
     ;	is_threefold_repetition(Position, Color) ->
         Status = draw

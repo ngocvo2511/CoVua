@@ -57,14 +57,14 @@ remove(X,[A|Old],[A|New]):-
 	remove(X,Old,New).
 
 % update_half: update half position in full position
-update_half(position(_,Y),Half,white,position(Half,Y),_BoardList).
-update_half(position(X,_),Half,black,position(X,Half),_BoardList).
+update_half(position(_,Y),Half,white,position(Half,Y),_BoardList,_AttackData).
+update_half(position(X,_),Half,black,position(X,Half),_BoardList,_AttackData).
 
 combine_half(H1,H2,white,position(H1,H2)).
 combine_half(H1,H2,black,position(H2,H1)).
 
 % move_piece: move a piece from one position to another within same color
-move_piece(Position, Color, From, To, NewPosition, BoardList) :-
+move_piece(Position, Color, From, To, NewPosition, BoardList, AttackData) :-
 	invert(Color, OpponentColor),
     get_half(Position, Half, Color),
     get_half(Position, OpponentHalf, OpponentColor),
@@ -90,11 +90,11 @@ move_piece(Position, Color, From, To, NewPosition, BoardList) :-
 	(	(Type = pawn, abs(To-From) =:= 16) -> 
 		combine(OpponentHalf, enpassant, [To], OpponentNewHalf),
 		combine_half(Temp3Half, OpponentNewHalf, Color, NewPosition)
-	;	update_half(Position, Temp3Half, Color, NewPosition, BoardList)
+	;	update_half(Position, Temp3Half, Color, NewPosition, BoardList, AttackData)
 	).
 
 % actually moving the piece for castling moves
-castle_piece(Position, Color, KingFrom, KingTo, NewPosition, BoardList) :-
+castle_piece(Position, Color, KingFrom, KingTo, NewPosition, BoardList, AttackData) :-
 	
 	% Determine rook positions based on castling type
 	(   % Kingside castling
@@ -110,18 +110,18 @@ castle_piece(Position, Color, KingFrom, KingTo, NewPosition, BoardList) :-
 	),
 	
 	% Move king first
-	move_piece(Position, Color, KingFrom, KingTo, TempPosition, BoardList),
+	move_piece(Position, Color, KingFrom, KingTo, TempPosition, BoardList, AttackData),
 	% Then move rook
-	move_piece(TempPosition, Color, RookFrom, RookTo, NewPosition, BoardList).
+	move_piece(TempPosition, Color, RookFrom, RookTo, NewPosition, BoardList, AttackData).
 
 % quick check if king castling
-is_castling_move(white, 4, 2, _BoardList).
-is_castling_move(white, 4, 6, _BoardList).
-is_castling_move(black, 60, 58, _BoardList).
-is_castling_move(black, 60, 62, _BoardList).
+is_castling_move(white, 4, 2, _BoardList, _AttackData).
+is_castling_move(white, 4, 6, _BoardList, _AttackData).
+is_castling_move(black, 60, 58, _BoardList, _AttackData).
+is_castling_move(black, 60, 62, _BoardList, _AttackData).
 
 % remove opponent piece from position (color is opponent)
-capture_piece(Position, Color, CapturePos, NewPosition, BoardList) :-
+capture_piece(Position, Color, CapturePos, NewPosition, BoardList, AttackData) :-
     get_half(Position, Half, Color),
     nth0(CapturePos, BoardList, [Type, _]),
     extract(Half, Type, PieceList),
@@ -138,7 +138,7 @@ capture_piece(Position, Color, CapturePos, NewPosition, BoardList) :-
             combine(Temp1Half, castle, TempCastleList, Temp2Half)
     ;   Temp2Half = Temp1Half
     ),
-    update_half(Position, Temp2Half, Color, NewPosition, BoardList).
+    update_half(Position, Temp2Half, Color, NewPosition, BoardList, AttackData).
 
 % is_fifty_move: check if fifty move rule applies (100 half-moves)
 is_fifty_move(Counter) :-
@@ -152,16 +152,16 @@ increment_fifty_move_counter(OldCounter, NewCounter) :-
     NewCounter is OldCounter + 1.
 
 % check_pawn_move: check if the moved piece is a pawn
-check_pawn_move(From, _Position, Color, BoardList) :-
+check_pawn_move(From, _Position, Color, BoardList, _AttackData) :-
     nth0(From, BoardList, [pawn, Color]).
 
 % check_capture: check if a piece was captured in the move
-check_capture(To, _Position, Color, BoardList) :-
+check_capture(To, _Position, Color, BoardList, _AttackData) :-
     invert(Color, OpponentColor),
     nth0(To, BoardList, [_Type, OpponentColor]).
 
 % update_fifty_move_counter: update counter based on move type
-update_fifty_move_counter(From, To, Position, Color, OldCounter, NewCounter, BoardList) :-
-    (check_pawn_move(From, Position, Color, BoardList) ; check_capture(To, Position, Color, BoardList)) ->
+update_fifty_move_counter(From, To, Position, Color, OldCounter, NewCounter, BoardList, AttackData) :-
+    (check_pawn_move(From, Position, Color, BoardList, AttackData) ; check_capture(To, Position, Color, BoardList, AttackData)) ->
         reset_fifty_move_counter(NewCounter)
     ;   increment_fifty_move_counter(OldCounter, NewCounter).
