@@ -78,7 +78,7 @@ simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece,
 	    move_piece(Temp2Position, Color, From, To, NewPosition)
 	;   % Check if this is a pawn promotion
 		Promoting = true,
-		((PromotedPiece == null) -> throw(error(promotion_required, context(place_piece, 'Pawn promotion requires piece choice'))) ; true),
+		((PromotedPiece == none) -> throw(error(promotion_required, context(place_piece, 'Pawn promotion requires piece choice'))) ; true),
 		promotion(PromotedPiece),
 	    % Handle pawn promotion
 	    move_piece(TempPosition, Color, From, To, Temp2Position),

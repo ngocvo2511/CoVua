@@ -128,14 +128,14 @@ namespace ChessUI
                     {
                         if (result)
                         {
-                            await SaveService.Save(currentGameState, filePath, timeRed, timeBlack);
+                            SaveService.Save(currentGameState, filePath, timeRed, timeBlack);
                             LoadFileToList();
                         }
                     });
                 }
                 else
                 {
-                    await SaveService.Save(currentGameState, filePath, timeRed, timeBlack);
+                    SaveService.Save(currentGameState, filePath, timeRed, timeBlack);
                     LoadFileToList();
                 }
             }

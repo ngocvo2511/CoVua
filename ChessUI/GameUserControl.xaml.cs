@@ -51,22 +51,22 @@ namespace ChessUI
                 SwitchTurn();
             }
         }
-        public static async Task<GameUserControl> Create(Player color, int timeLimit, bool isAI, int difficult = 1)
+        public static GameUserControl Create(Player color, int timeLimit, bool isAI, int difficult = 1)
         {
             var control = new GameUserControl(color, timeLimit, isAI, difficult);
             string rootPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\.."));
             string prologPath = System.IO.Path.Combine(rootPath, "ChessLogic", "Prolog", "chess.pl");
-            await PrologEngine.InitializeAsync(prologPath, isAI, color);
-            control.gameState.Board = Board.FromPrologPosition(await PrologEngine.GetCurrentPositionAsync());
+            PrologEngine.Initialize(prologPath, isAI, color);
+            control.gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
             control.DrawBoard(control.gameState.Board);
             if (control.gameState is GameStateAI && color == Player.Black)
             {
-                var result = await PrologEngine.AiMoveAsync();
+                var result = PrologEngine.AiMove();
                 if (result.HasValue)
                 {
                     var (status, from, to) = result.Value;
                     control.gameState.MakeMove(new NormalMove(Position.IntToPosition(from), Position.IntToPosition(to)));
-                    control.gameState.Board = Board.FromPrologPosition(await PrologEngine.GetCurrentPositionAsync());
+                    control.gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
                     control.isRedTurn = !control.isRedTurn;
                     if (control.redTimer != null) control.SwitchTurn();
                     control.WarningTextBlock.Text = status == "CHECK" ? "Chiếu tướng!" : null;
@@ -89,13 +89,13 @@ namespace ChessUI
             InitializeComponent();
             InitializeBoard();
         }
-        public static async Task<GameUserControl> Create(GameStateForLoad gameStateForLoad)
+        public static GameUserControl Create(GameStateForLoad gameStateForLoad)
         {
             var control = new GameUserControl(gameStateForLoad);
             string rootPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\.."));
             string prologPath = System.IO.Path.Combine(rootPath, "ChessLogic", "Prolog", "chess.pl");
-            await PrologEngine.InitializeGameLoadAsync(prologPath, gameStateForLoad);
-            Board board = Board.FromPrologPosition(await PrologEngine.GetCurrentPositionAsync());
+            PrologEngine.InitializeGameLoad(prologPath, gameStateForLoad);
+            Board board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
             gameStateForLoad.Moved = PrologEngine.ParseHistory(gameStateForLoad.historyBoard);
             if (gameStateForLoad.GameType == "GameStateAI") control.gameState = new GameStateAI(gameStateForLoad, board);
             else control.gameState = new GameState2P(gameStateForLoad, board);
@@ -266,7 +266,7 @@ namespace ChessUI
             UndoButton.IsEnabled = true;
             SaveButton.IsEnabled = true;
         }
-        private async void HandleMove(Move move, PrologEngine.MakeMoveResult result)
+        private async void HandleMove(Move move, string status)
         {
             isRedTurn = !isRedTurn;
             if (redTimer != null) SwitchTurn();
@@ -274,13 +274,13 @@ namespace ChessUI
             UnableClick();
             if (gameState.Moved.Any()) HidePrevMove(gameState.Moved.First().Item1);
             gameState.MakeMove(move);
-            gameState.Board = Board.FromPrologPosition(await PrologEngine.GetCurrentPositionAsync());
+            gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
             DrawBoard(gameState.Board);
             ShowPrevMove(move);
             DrawCapturedGrid(gameState.CapturedPiece);
 
             // Kiểm tra trạng thái ván cờ sau khi đi
-            string gameStatus = result.Status.ToUpper();
+            string gameStatus = status.ToUpper();
             WarningTextBlock.Text = gameStatus == "CHECK" || gameStatus == "CHECKMATE" ? "Chiếu tướng!" : null;
             TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
 
@@ -317,12 +317,12 @@ namespace ChessUI
             {
                 await Task.Delay(500); // Delay to simulate thinking time
                 Move prevMove = gameState.Moved.First().Item1;
-                var result1 = await PrologEngine.AiMoveAsync();
+                var result1 = PrologEngine.AiMove();
                 if (result1.HasValue)
                 {
-                    var (status, from, to) = result1.Value;
+                    var (status1, from, to) = result1.Value;
                     gameState.MakeMove(new NormalMove(Position.IntToPosition(from), Position.IntToPosition(to)));
-                    gameState.Board = Board.FromPrologPosition(await PrologEngine.GetCurrentPositionAsync());
+                    gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
                     isRedTurn = !isRedTurn;
                     if (redTimer != null) SwitchTurn();
                     DrawCapturedGrid(gameState.CapturedPiece);
@@ -331,22 +331,22 @@ namespace ChessUI
                     ShowPrevMove(gameState.Moved.First().Item1);
                     Sound.PlayMoveSound();
 
-                    WarningTextBlock.Text = status == "CHECK" || status == "CHECKMATE" ? "Chiếu tướng!" : null;
+                    WarningTextBlock.Text = status1 == "CHECK" || status1 == "CHECKMATE" ? "Chiếu tướng!" : null;
                     TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
 
-                    if (status == "CHECKMATE")
+                    if (status1 == "CHECKMATE")
                     {
                         gameState.Result = Result.Win(gameState.CurrentPlayer.Opponent(), EndReason.Checkmate);
                     }
-                    else if (status == "STALEMATE")
+                    else if (status1 == "STALEMATE")
                     {
                         gameState.Result = Result.Draw(EndReason.Stalemate);
                     }
-                    else if (status == "THREEFOLDREPETITION")
+                    else if (status1 == "THREEFOLDREPETITION")
                     {
                         gameState.Result = Result.Draw(EndReason.ThreefoldRepetition);
                     }
-                    else if (status == "FIFTYMOVERULE")
+                    else if (status1 == "FIFTYMOVERULE")
                     {
                         gameState.Result = Result.Draw(EndReason.FiftyMoveRule);
                     }
@@ -401,7 +401,7 @@ namespace ChessUI
             CellGrid.IsHitTestVisible = false;
             DoButton.Visibility = Visibility.Visible;
         }
-        private async void UndoButton_Click(object sender, RoutedEventArgs e)
+        private void UndoButton_Click(object sender, RoutedEventArgs e)
         {
             Sound.PlayButtonClickSound();
             if (gameState.Moved.Count != 0) HidePrevMove(gameState.Moved.First().Item1);
@@ -428,19 +428,19 @@ namespace ChessUI
             }
             else
             {
-                await PrologEngine.UndoAsync();
+                PrologEngine.Undo();
                 if (gameState is GameStateAI gs)
                 {
-                    await PrologEngine.UndoAsync();
+                    PrologEngine.Undo();
                 }
                 gameState.UndoMove();
-                gameState.Board = Board.FromPrologPosition(await PrologEngine.GetCurrentPositionAsync());
+                gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
                 DrawBoard(gameState.Board);
                 if (gameState.Moved.Count != 0)
                 {
                     ShowPrevMove(gameState.Moved.First().Item1);
                 }
-                string status = PrologEngine.GetGameStatusAsync().Result;
+                string status = PrologEngine.GetGameStatus();
                 WarningTextBlock.Text = status == "CHECK" ? "Chiếu tướng!" : null;
                 TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
 
@@ -579,13 +579,13 @@ namespace ChessUI
             return new Position(row, col);
         }
 
-        private async void OnFromPositionSelected(Position pos)
+        private void OnFromPositionSelected(Position pos)
         {
             // Chuyển đổi tọa độ bàn cờ sang số 0-63
             int fromPos = (7 - pos.Row) * 8 + pos.Column;
 
             // Lấy các nước đi hợp lệ từ Prolog (async)
-            List<Move> legalMoves = await PrologEngine.GetLegalMovesAsync(fromPos);
+            List<Move> legalMoves = PrologEngine.GetLegalMoves(fromPos);
 
             if (legalMoves.Any())
             {
@@ -595,7 +595,7 @@ namespace ChessUI
             }
         }
 
-        private async void OnToPositionSelected(Position pos)
+        private void OnToPositionSelected(Position pos)
         {
             selectedPos = null;
             HideHighlights();
@@ -607,13 +607,12 @@ namespace ChessUI
                 int fromPos = (7 - move.FromPos.Row) * 8 + move.FromPos.Column;
                 int toPos = (7 - move.ToPos.Row) * 8 + move.ToPos.Column;
 
-                // Thực hiện nước đi trong Prolog (async)
-                var result = await PrologEngine.MakeMoveAsync(fromPos, toPos);
-                if (result.Success)
+                // Thực hiện nước đi trong Prolog
+                if (PrologEngine.MakeMove(fromPos, toPos, out var status, out var needsPromotion))
                 {
-                    HandleMove(move, result);
+                    HandleMove(move, status);
                 }
-                else if (result.NeedsPromotion)
+                else if (needsPromotion)
                 {
                     // Prolog đã xác định đây là nước đi phong cấp, gọi UI phong cấp
                     HandlePromotion(move.FromPos, move.ToPos);
@@ -629,7 +628,7 @@ namespace ChessUI
             PromotionMenu promMenu = new PromotionMenu(gameState.CurrentPlayer);
             MenuContainer.Content = promMenu;
 
-            promMenu.PieceSelected += async type =>
+            promMenu.PieceSelected += type =>
             {
                 MenuContainer.Content = null;
 
@@ -657,15 +656,15 @@ namespace ChessUI
                 int fromPos = (7 - from.Row) * 8 + from.Column;
                 int toPos = (7 - to.Row) * 8 + to.Column;
 
-                var result = await PrologEngine.MakeMoveWithPromotionAsync(fromPos, toPos, prologType);
-                if (result.Success)
+                if (PrologEngine.MakeMoveWithPromotion(fromPos, toPos, prologType, out var status))
                 {
+                    // Cập nhật lại bàn cờ và giao diện
                     Move promMove = new PawnPromotion(from, to, type);
-                    HandleMove(promMove, result);
+                    HandleMove(promMove, status);
 
-                    WarningTextBlock.Text = result.Status == "CHECK" ? "Chiếu tướng!" : null;
+                    WarningTextBlock.Text = status == "CHECK" ? "Chiếu tướng!" : null;
 
-                    if (result.Status == "CHECKMATE" || result.Status == "STALEMATE")
+                    if (status == "CHECKMATE" || status == "STALEMATE")
                     {
                         UnableClick();
                         moveList = new Stack<Tuple<Move, Piece>>(gameState.Moved.ToArray());

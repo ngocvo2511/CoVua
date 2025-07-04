@@ -22,36 +22,43 @@ namespace ChessLogic
                 // Khởi tạo Prolog engine
                 PlEngine.Initialize(new string[] { "-q", "-f", "none" });
                 _isInitialized = true;
-            }
 
-            // Load file Prolog
-            if (!PlQuery.PlCall($"consult('{prologFile.Replace("\\", "/")}')"))
-            {
-                throw new Exception("Không thể load file Prolog.");
-            }
-
-            // Khởi tạo bàn cờ
-            if (!PlQuery.PlCall("init."))
-            {
-                throw new Exception("Không thể khởi tạo bàn cờ.");
-            }
-        }
-        public static Task InitializeGameLoadAsync(string prologFile, GameStateForLoad gameStateForLoad)
-        {
-            return PrologThread.Instance.Enqueue(() => {
-                if (!_isInitialized)
-                {
-                    PlEngine.Initialize(new string[] { "-q", "-f", "none" });
-                    _isInitialized = true;
-                }
+                // Load file Prolog
                 if (!PlQuery.PlCall($"consult('{prologFile.Replace("\\", "/")}')"))
                 {
                     throw new Exception("Không thể load file Prolog.");
                 }
-                setHistoryMove(gameStateForLoad.historyBoard);
-                if (gameStateForLoad.depth != 0) SetDepth(gameStateForLoad.depth);
-                return true;
-            });
+            }
+
+
+
+            // Khởi tạo bàn cờ
+            if (!PlQuery.PlCall("user:init."))
+            {
+                throw new Exception("Không thể khởi tạo bàn cờ.");
+            }
+        }
+        public static void InitializeGameLoad(string prologFile, GameStateForLoad gameStateForLoad)
+        {
+            if (!_isInitialized)
+            {
+                // Khởi tạo Prolog engine
+                PlEngine.Initialize(new string[] { "-q", "-f", "none" });
+                _isInitialized = true;
+
+
+                if (!PlQuery.PlCall($"consult('{prologFile.Replace("\\", "/")}')"))
+                {
+                    throw new Exception("Không thể load file Prolog.");
+                }
+            }
+
+            if (!PlQuery.PlCall("user:init."))
+            {
+                throw new Exception("Không thể khởi tạo bàn cờ.");
+            }
+            setHistoryMove(gameStateForLoad.historyBoard);
+            //if (gameStateForLoad.depth != 0) SetDepth(gameStateForLoad.depth);
         }
 
         public static List<Move> GetLegalMoves(int fromPos)
@@ -171,13 +178,13 @@ namespace ChessLogic
 
         public static bool Undo()
         {
-            return PlQuery.PlCall("user:undo.");
+            return PlQuery.PlCall("user:undo");
         }
 
         public static bool IsGameOver()
         {
             // Kiểm tra xem ván cờ đã kết thúc chưa
-            using (var q = new PlQuery("board(Position, Color), (is_checkmate(Color, Position) ; is_stalemate(Color, Position))"))
+            using (var q = new PlQuery("user:board(Position, Color), (is_checkmate(Color, Position) ; user:is_stalemate(Color, Position))"))
             {
                 return q.NextSolution();
             }
@@ -186,7 +193,7 @@ namespace ChessLogic
         public static string GetGameStatus()
         {
             // Kiểm tra trạng thái hiện tại của ván cờ
-            using (var q = new PlQuery("board(Position,Color,Counter), check_game_status(Position, Color, Counter, Status)"))
+            using (var q = new PlQuery("user:board(Position,Color,Counter), user:check_game_status(Position, Color, Counter, Status)"))
             {
                 if (q.NextSolution())
                 {
@@ -201,8 +208,8 @@ namespace ChessLogic
         {
             if (_isInitialized == false) return;
             // Reset trạng thái bàn cờ
-            PlQuery.PlCall("reset");
-            PlQuery.PlCall("set_position(begin)");
+            PlQuery.PlCall("user:reset");
+            PlQuery.PlCall("user:set_position(begin)");
         }
 
         public static void Cleanup()
@@ -417,63 +424,5 @@ namespace ChessLogic
                 default: return null;
             }
         }
-
-        // ASYNC WRAPPERS FOR PROLOG THREAD
-        public static Task<List<Move>> GetLegalMovesAsync(int fromPos)
-            => PrologThread.Instance.Enqueue(() => GetLegalMoves(fromPos));
-
-        public class MakeMoveResult { public bool Success; public string Status; public bool NeedsPromotion; }
-        public static Task<MakeMoveResult> MakeMoveAsync(int fromPos, int toPos)
-            => PrologThread.Instance.Enqueue(() => {
-                var result = new MakeMoveResult();
-                result.Success = MakeMove(fromPos, toPos, out result.Status, out result.NeedsPromotion);
-                return result;
-            });
-
-        public static Task<MakeMoveResult> MakeMoveWithPromotionAsync(int fromPos, int toPos, string promotionPiece)
-            => PrologThread.Instance.Enqueue(() => {
-                var result = new MakeMoveResult();
-                result.Success = MakeMoveWithPromotion(fromPos, toPos, promotionPiece, out result.Status);
-                return result;
-            });
-
-        public static Task<(string status, int fromPos, int toPos)?> AiMoveAsync()
-            => PrologThread.Instance.Enqueue(() => AiMove());
-
-        public static Task<bool> UndoAsync()
-            => PrologThread.Instance.Enqueue(() => Undo());
-
-        public static Task<bool> IsGameOverAsync()
-            => PrologThread.Instance.Enqueue(() => IsGameOver());
-
-        public static Task<string> GetGameStatusAsync()
-            => PrologThread.Instance.Enqueue(() => GetGameStatus());
-
-        public static Task ResetAsync()
-            => PrologThread.Instance.Enqueue(() => { Reset(); return true; });
-
-        public static Task CleanupAsync()
-            => PrologThread.Instance.Enqueue(() => { Cleanup(); return true; });
-
-        public static Task<Dictionary<Player, Dictionary<PieceType, List<int>>>> GetCurrentPositionAsync()
-            => PrologThread.Instance.Enqueue(() => GetCurrentPosition());
-
-        public static Task<Player> GetCurrentPlayerAsync()
-            => PrologThread.Instance.Enqueue(() => GetCurrentPlayer());
-
-        public static Task<string> GetRawHistoryAsync()
-            => PrologThread.Instance.Enqueue(() => GetRawHistory());
-
-        public static Task SetHistoryMoveAsync(string rawHistory)
-            => PrologThread.Instance.Enqueue(() => { setHistoryMove(rawHistory); return true; });
-
-        public static Task<int?> GetDepthAsync()
-            => PrologThread.Instance.Enqueue(() => GetDepth());
-
-        public static Task SetDepthAsync(int depth)
-            => PrologThread.Instance.Enqueue(() => { SetDepth(depth); return true; });
-
-        public static Task InitializeAsync(string prologFile, bool isAI, Player color)
-            => PrologThread.Instance.Enqueue(() => { Initialize(prologFile, isAI, color); return true; });
     }
 }

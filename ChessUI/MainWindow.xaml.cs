@@ -228,21 +228,21 @@ namespace ChessUI
             mainWindowGrid.Children.Add(confirmMenu);
         }
 
-        private async void ConfirmMenu_YesButtonClicked(object sender, RoutedEventArgs e)
+        private void ConfirmMenu_YesButtonClicked(object sender, RoutedEventArgs e)
         {
-            await PrologEngine.ResetAsync();
+            PrologEngine.Reset();
             Sound.PlayButtonClickSound();
-            CreateMainMenu();            
+            CreateMainMenu();
         }
         #endregion
 
         #region ViewGameAI
-        private async void CreateViewGameAI(int difficulty)
+        private void CreateViewGameAI(int difficulty)
         {
             onGame = true;
             if (gameUserControl != null) gameUserControl.ResetTimer();
             color = settingsModel.HumanFirst ? Player.White : Player.Black;
-            gameUserControl = await GameUserControl.Create(color, settingsModel.IsTimeLimit ? settingsModel.TimeLimit * 60 : 0, true, difficulty);
+            gameUserControl = GameUserControl.Create(color, settingsModel.IsTimeLimit ? settingsModel.TimeLimit * 60 : 0, true, difficulty);
             gameUserControl.PauseButtonClicked += PauseButtonClicked;
             gameUserControl.SaveButtonClicked += SaveButtonClicked;
             gameUserControl.GameOver += OnGameOver;
@@ -254,12 +254,12 @@ namespace ChessUI
         #endregion
 
         #region ViewGame2P
-        private async void CreateViewGame2P()
+        private void CreateViewGame2P()
         {
             onGame = true;
             if (gameUserControl != null) gameUserControl.ResetTimer();
             color = settingsModel.HumanFirst ? Player.White : Player.Black;
-            gameUserControl = await GameUserControl.Create(color, settingsModel.IsTimeLimit ? settingsModel.TimeLimit * 60 : 0, false);
+            gameUserControl = GameUserControl.Create(color, settingsModel.IsTimeLimit ? settingsModel.TimeLimit * 60 : 0, false);
             gameUserControl.PauseButtonClicked += PauseButtonClicked;
             gameUserControl.SaveButtonClicked += SaveButtonClicked;
             gameUserControl.GameOver += OnGameOver;
@@ -271,11 +271,11 @@ namespace ChessUI
         #endregion
 
         #region ViewGameLoad
-        private async void CreateViewGameLoad(GameStateForLoad gameStateForLoad)
+        private void CreateViewGameLoad(GameStateForLoad gameStateForLoad)
         {
             onGame = true;
             if (gameUserControl != null) gameUserControl.ResetTimer();
-            gameUserControl = await GameUserControl.Create(gameStateForLoad);
+            gameUserControl = GameUserControl.Create(gameStateForLoad);
             gameUserControl.PauseButtonClicked += PauseButtonClicked;
             gameUserControl.SaveButtonClicked += SaveButtonClicked;
             gameUserControl.GameOver += OnGameOver;
@@ -352,9 +352,9 @@ namespace ChessUI
             CloseAMenu();
         }
 
-        private async void NewButtonClicked(object sender, RoutedEventArgs e)
+        private void NewButtonClicked(object sender, RoutedEventArgs e)
         {
-            await PrologEngine.ResetAsync();
+            PrologEngine.Reset();
             Sound.PlayButtonClickSound();
             CreateSelectGameModeMenu();
         }
@@ -385,9 +385,9 @@ namespace ChessUI
             }
         }
 
-        private async void GameOverMenu_HomeButtonClicked(object sender, RoutedEventArgs e)
+        private void GameOverMenu_HomeButtonClicked(object sender, RoutedEventArgs e)
         {
-            await PrologEngine.ResetAsync();
+            PrologEngine.Reset();
             Sound.PlayButtonClickSound();
             CreateMainMenu();
         }
@@ -399,7 +399,7 @@ namespace ChessUI
         }
         #endregion
 
-        private async void MainWindow_Closing(object sender, CancelEventArgs e)
+        private void MainWindow_Closing(object sender, CancelEventArgs e)
         {
 
         }
@@ -410,9 +410,9 @@ namespace ChessUI
             CreateConfirmMenu(true);
         }
 
-        private async void CloseApp(object sender, RoutedEventArgs e)
+        private void CloseApp(object sender, RoutedEventArgs e)
         {
-            await PrologEngine.ResetAsync();
+            PrologEngine.Reset();
             Application.Current.Shutdown();
         }
     }

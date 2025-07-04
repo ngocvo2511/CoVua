@@ -106,7 +106,6 @@
     <Compile Include="Player.cs" />
     <Compile Include="Position.cs" />
     <Compile Include="PrologEngine.cs" />
-    <Compile Include="PrologThread.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Result.cs" />
     <Compile Include="SaveService.cs" />
