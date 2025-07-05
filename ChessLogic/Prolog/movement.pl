@@ -78,7 +78,6 @@ legal_move_for_piece(bishop, From, To, Color, Position, BoardList, AttackData) :
     ),
 	(not(is_pinned(From, PinExist, PinRay)); is_moving_along_ray(Position, Color, From, To)),
 	(InCheck = false; square_is_in_check_ray(To, InCheck, CheckRay)).
-.
 
 legal_move_for_piece(queen, From, To, Color, Position, BoardList, AttackData) :-
 	long_move(queen, From, Color, Position, To, BoardList, AttackData),
@@ -111,7 +110,7 @@ legal_move_for_piece(king, From, To, Color, Position, BoardList, AttackData) :-
         _OpponentPawnAttackMap, 
         _OpponentSlidingAttackMap
     ),
-	not(square_is_in_check_ray(To, InCheck, CheckRay)),
+	(not(square_is_in_check_ray(To, InCheck, CheckRay)) ; nth0(To, BoardList, [_, _])),
 	not(square_is_attacked(To, OpponentAttackMap)).
 
 % Add castling moves for king
@@ -388,9 +387,9 @@ pawn_move(black, From, Position, To, _BoardList, AttackData):-
 pawn_move(black, From, _Position, To, BoardList, AttackData):-
 	To is From - 16, % double move from starting position
 	valid_field(To),
-	not(nth0(To, BoardList, empty)),
+	nth0(To, BoardList, empty),
 	OneSquareForward is From - 8,
-	not(nth0(OneSquareForward, BoardList, empty)),
+	nth0(OneSquareForward, BoardList, empty),
 	between(48, 55, From). % starting row for black pawns
 
 % =================================

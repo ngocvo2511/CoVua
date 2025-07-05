@@ -248,6 +248,7 @@ go_pin_check(begin, Start, Direction, RayMask, BoardList, Color, PinCheck, NewPi
 go_pin_check(_, _, _, _, _, _, data(InCheck, true, PinExist, CheckRay, PinRay), data(InCheck, true, PinExist, CheckRay, PinRay)).
 
 go_pin_check(nofriendlypin, From, Direction, RayMask, BoardList, Color, PinCheck, NewPinCheck) :-
+    valid_field(From),
     opposite_direction(Direction, OppositeDirection),
     move_direction(From, OppositeDirection),
     AccRayMask is RayMask \/ (1 << From),

@@ -28,7 +28,7 @@ bot_move(From, To, Status) :-
     losing_value(white,Alpha),
 	losing_value(black,Beta),
     asserta(count(0)),
-    minimax(Position, Color, Counter, Move, Depth, _Value, Alpha, Beta),
+    minimax(Position, Color, Counter, Move, Depth, Value, Alpha, Beta),
     retract(count(Count)),
     write(Count),nl,
     %write('Depth: '), write(Depth), write(' Count: '), write(Count), nl,
@@ -43,7 +43,7 @@ simulate_new_position_from_move_list([Move|_], Move, Color, Position, NewPositio
     simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotionPiece, BoardList, AttackData).
 simulate_new_position_from_move_list([_|Rest], Move, Color, Position, NewPosition, BoardList, AttackData) :-
     simulate_new_position_from_move_list(Rest, Move, Color, Position, NewPosition, BoardList, AttackData).
-simulate_new_position_from_move_list([], _, _, Position, _, _, _).
+%simulate_new_position_from_move_list([], _, _, Position, _, _, _).
 
 get_best(Position, Color, Counter, Depth, Alpha, Beta) :-
     invert(Color, Op),
@@ -63,10 +63,10 @@ get_best(Position, Color, Counter, Depth, Alpha, Beta) :-
         _OpponentPawnAttackMap, 
         _OpponentSlidingAttackMap
     ),   
-
     get_all_pseudo_legal_moves(Position, Color, MoveList, BoardList, AttackData),
     quicksort(MoveList, SortedMoveList,AttackData),
     simulate_new_position_from_move_list(SortedMoveList, Move, Color, Position, NewPosition, BoardList, AttackData),
+    Move = move(From, To, MovedPiece, CapturedPiece, PromotionPiece),
     NewBoard = board(NewPosition, Op, Counter),
     update_alpha_beta(Color, Alpha, NewAlpha, Beta, NewBeta),
     (   SortedMoveList = [] ->
@@ -74,9 +74,9 @@ get_best(Position, Color, Counter, Depth, Alpha, Beta) :-
             Value is 0
         ;   losing_value(Color, Value)
         )
-    ;   (   %(NewDepth \= 0 ; (NewDepth = 0, Move = move(_,_,_,none,_))) ->
+    ;   (   (NewDepth \= 0 ; (NewDepth = 0, Move = move(_,_,_,none,_))) ->
             minimax(NewPosition, Op, Counter, _Move, NewDepth, Value, NewAlpha, NewBeta)
-        % ;   minimax_quiescence(NewPosition, Op, Counter, Value, NewAlpha, NewBeta)
+        ;   minimax_quiescence(NewPosition, Op, Counter, 6, Value, NewAlpha, NewBeta)
         )
     ),
     compare_move(Move, Value, Color),
@@ -118,13 +118,20 @@ minimax(Position, Color, Counter, Move, Depth, Value, Alpha, Beta) :-
         pop(Move, Value)
     ), !.
 
-minimax_quiescence(Position, Color, Counter, Value, Alpha, Beta) :-
+minimax_quiescence(Position, _Color, _Counter, 0, Value, _Alpha, _Beta) :-
+    Position = position(WhiteHalf, BlackHalf),
+    score_half(WhiteHalf, white, ValueWhite),
+    score_half(BlackHalf, black, ValueBlack),
+    Value is ValueWhite - ValueBlack, !.
+
+minimax_quiescence(Position, Color, Counter, Depth, Value, Alpha, Beta) :-
     losing_value(Color, Worst),
     push(move(64, 64, none, none, none), Worst),
-    not(get_best_quiescence(Position, Color, Counter, Alpha, Beta)),
+    not(get_best_quiescence(Position, Color, Counter, Depth, Alpha, Beta)),
     pop(Move, Value), !.
 
-get_best_quiescence(Position, Color, Counter, Alpha, Beta) :-
+get_best_quiescence(Position, Color, Counter, Depth, Alpha, Beta) :-
+    update_depth(Depth, NewDepth),
     Position = position(WhiteHalf, BlackHalf),
     score_half(WhiteHalf, white, ValueWhite),
     score_half(BlackHalf, black, ValueBlack),
@@ -157,7 +164,7 @@ get_best_quiescence(Position, Color, Counter, Alpha, Beta) :-
             Value is 0
         ;   losing_value(Color, Value)
         )
-    ;   minimax_quiescence(NewPosition, Op, Counter, Value, NewAlpha, NewBeta)
+    ;   minimax_quiescence(NewPosition, Op, Counter, NewDepth, Value, NewAlpha, NewBeta)
     ),
     compare_move(Move, Value, Color),
     prune(Value, Color, Alpha, Beta), !, fail.
