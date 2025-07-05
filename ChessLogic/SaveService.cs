@@ -113,9 +113,11 @@ namespace ChessLogic
             string filePath = Path.Combine(SaveDirectory, fileName);
             File.WriteAllText(filePath, json);
         }
-        public static void Load()
+        public static HistoryRecord Load(string filePath)
         {
-
+            string json = File.ReadAllText(filePath);
+            HistoryRecord historyRecord = JsonSerializer.Deserialize<HistoryRecord>(json);
+            return historyRecord;
         }
     }
 }

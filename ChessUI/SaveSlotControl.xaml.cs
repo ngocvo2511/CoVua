@@ -1,5 +1,6 @@
 ﻿using ChessLogic;
 using ChessLogic.GameStates.GameState;
+using ChessUI.Menus;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -111,8 +112,7 @@ namespace ChessUI
         {
             add { AddHandler(SelectedLoadSlotEvent, value); }
             remove { RemoveHandler(SelectedLoadSlotEvent, value); }
-        }
-
+        }        
         private async void SaveSlotList_MouseUp(object sender, MouseButtonEventArgs e)
         {
             int index = SaveSlotList.SelectedIndex;

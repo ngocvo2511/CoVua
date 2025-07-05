@@ -6,7 +6,7 @@ namespace ChessLogic
     public class Pawn : Piece
     {
         public override PieceType Type => PieceType.Pawn;
-        public override Player Color { get; }
+        public override Player Color { get; set; }
 
         private readonly Direction forward;
 

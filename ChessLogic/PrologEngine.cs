@@ -395,21 +395,20 @@ namespace ChessLogic
             var stack = new Stack<Tuple<Move, Tuple<Piece, string>>>();
 
             var clean = historyString.Trim('[', ']');
-            var moveRegex = new Regex(@"move\((\d+),(\d+),(\w+),(\w+),\w+\)");
+            var moveRegex = new Regex(@"move\((\d+),(\d+),(\w+),(\w+),(\w+)\)");
 
             foreach (Match match in moveRegex.Matches(clean))
             {
                 int from = int.Parse(match.Groups[1].Value);
                 if (from == 64) continue;
-                int to = int.Parse(match.Groups[2].Value);
-                string promotedPiece = match.Groups[5].Value;
+                int to = int.Parse(match.Groups[2].Value);                
                 string capturedPieceStr = match.Groups[4].Value;
-
+                string promotedPiece = match.Groups[5].Value;
+                Console.WriteLine("Promoted: "+promotedPiece + " Captured Piece: "+ capturedPieceStr);
                 Move move = new NormalMove(Position.IntToPosition(from),Position.IntToPosition(to));
                 var captured = ParsePiece(capturedPieceStr);
-                var promoted = promotedPiece;
 
-                stack.Push(Tuple.Create(move, Tuple.Create(captured,promoted)));
+                stack.Push(Tuple.Create(move, Tuple.Create(captured,promotedPiece)));
             }
             return stack;
         }

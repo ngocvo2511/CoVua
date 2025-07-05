@@ -13,6 +13,7 @@ namespace ChessLogic
         public string Winner {  get; set; }
         public string HistoryString {  get; set; }
         public int Depth {  get; set; }
+        public HistoryRecord() { }
         public HistoryRecord(string gameMode, Result result, string historyString, int depth)
         {
             this.GameMode = gameMode;

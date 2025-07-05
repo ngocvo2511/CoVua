@@ -1,0 +1,7 @@
+{
+  "GameMode": "2P",
+  "Reason": "Checkmate",
+  "Winner": "White",
+  "HistoryString": "[move(64,64,none,none,none),move(9,25,pawn,none,none),move(57,42,knight,none,none),move(25,33,pawn,none,none),move(42,27,knight,none,none),move(1,18,knight,none,none),move(50,42,pawn,none,none),move(33,42,pawn,pawn,none),move(59,32,queen,none,none),move(42,49,pawn,pawn,none),move(56,57,rook,none,none),move(0,1,rook,none,none),move(48,40,pawn,none,none),move(18,35,knight,none,none),move(57,56,rook,none,none),move(1,33,rook,none,none),move(32,11,queen,pawn,none),move(3,11,queen,queen,none),move(56,48,rook,none,none),move(49,58,pawn,bishop,queen)]",
+  "Depth": 0
+}

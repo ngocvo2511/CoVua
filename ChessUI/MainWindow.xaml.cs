@@ -187,9 +187,17 @@ namespace ChessUI
             HistoryMenu historyMenu = new HistoryMenu();
 
             historyMenu.CloseButtonClicked += CloseButtonClicked;
+            historyMenu.HistorySelected += HistoryMenu_HistorySelected;
 
             //historyMenu.LoadHistory();
             mainWindowGrid.Children.Add(historyMenu);
+        }
+
+        private void HistoryMenu_HistorySelected(object sender, HistorySelectedEventArgs e)
+        {
+            Sound.PlayButtonClickSound();
+            HistoryRecord historyRecord = SaveHistory.Load(e.Record.FilePath);
+            CreateViewGameReview(historyRecord);
         }
         #endregion
 
@@ -276,6 +284,22 @@ namespace ChessUI
             onGame = true;
             if (gameUserControl != null) gameUserControl.ResetTimer();
             gameUserControl = GameUserControl.Create(gameStateForLoad);
+            gameUserControl.PauseButtonClicked += PauseButtonClicked;
+            gameUserControl.SaveButtonClicked += SaveButtonClicked;
+            gameUserControl.GameOver += OnGameOver;
+            gameUserControl.CloseAppButtonClicked += CloseAppButtonClicked;
+
+            mainWindowGrid.Children.Clear();
+            mainWindowGrid.Children.Add(gameUserControl);
+        }
+        #endregion
+
+        #region ViewGameReview
+        private void CreateViewGameReview(HistoryRecord historyRecord)
+        {
+            onGame = true;
+            if (gameUserControl != null) gameUserControl.ResetTimer();
+            gameUserControl = GameUserControl.Create(historyRecord);
             gameUserControl.PauseButtonClicked += PauseButtonClicked;
             gameUserControl.SaveButtonClicked += SaveButtonClicked;
             gameUserControl.GameOver += OnGameOver;
