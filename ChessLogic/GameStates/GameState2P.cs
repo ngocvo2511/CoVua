@@ -18,7 +18,7 @@ namespace ChessLogic.GameStates.GameState
             //Board[undo.Item1.ToPos] = undo.Item2;
             if (undo.Item2.Item1 != null)
             {
-                if (CurrentPlayer == Player.Black) CapturedBlackPiece.RemoveAt(CapturedBlackPiece.Count - 1);
+                if (undo.Item2.Item1.Color == Player.Black) CapturedBlackPiece.RemoveAt(CapturedBlackPiece.Count - 1);
                 else CapturedWhitePiece.RemoveAt(CapturedWhitePiece.Count - 1);
             }
             CurrentPlayer = CurrentPlayer.Opponent();

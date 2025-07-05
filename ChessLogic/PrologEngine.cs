@@ -396,7 +396,16 @@ namespace ChessLogic
 
             var clean = historyString.Trim('[', ']');
             var moveRegex = new Regex(@"move\((\d+),(\d+),(\w+),(\w+),(\w+)\)");
-
+            Board board = Board.Initial();
+            Player startPlayer = Player.None;            
+            foreach (Match match in moveRegex.Matches(clean))
+            {
+                int from = int.Parse(match.Groups[1].Value);
+                if (from == 64) continue;
+                startPlayer = board[Position.IntToPosition(from)].Color.Opponent();
+                break;
+            }
+            
             foreach (Match match in moveRegex.Matches(clean))
             {
                 int from = int.Parse(match.Groups[1].Value);
@@ -406,22 +415,22 @@ namespace ChessLogic
                 string promotedPiece = match.Groups[5].Value;
                 Console.WriteLine("Promoted: "+promotedPiece + " Captured Piece: "+ capturedPieceStr);
                 Move move = new NormalMove(Position.IntToPosition(from),Position.IntToPosition(to));
-                var captured = ParsePiece(capturedPieceStr);
-
+                var captured = ParsePiece(capturedPieceStr,startPlayer);
+                startPlayer = startPlayer.Opponent();
                 stack.Push(Tuple.Create(move, Tuple.Create(captured,promotedPiece)));
             }
             return stack;
         }
-        private static Piece ParsePiece(string pieceStr)
+        private static Piece ParsePiece(string pieceStr,Player color)
         {
             switch (pieceStr)
             {
-                case "king": return new King(Player.Black);
-                case "pawn": return new Pawn(Player.Black);
-                case "rook": return new Rook(Player.Black);
-                case "bishop": return new Bishop(Player.Black);
-                case "queen": return new Queen(Player.Black);
-                case "knight": return new Knight(Player.Black);
+                case "king": return new King(color);
+                case "pawn": return new Pawn(color);
+                case "rook": return new Rook(color);
+                case "bishop": return new Bishop(color);
+                case "queen": return new Queen(color);
+                case "knight": return new Knight(color);
                 default: return null;
             }
         }

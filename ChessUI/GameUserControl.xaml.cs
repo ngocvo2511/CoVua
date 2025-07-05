@@ -458,6 +458,17 @@ namespace ChessUI
                     ShowPrevMove(gameState.Moved.First().Item1);
                 }
                 gameState.CapturedPiece = move.Item2.Item1;
+                if (move.Item2.Item1 != null)
+                {
+                    if (move.Item2.Item1.Color == Player.Black)
+                    {
+                        gameState.CapturedBlackPiece.RemoveAt(gameState.CapturedBlackPiece.Count - 1);
+                    }
+                    else
+                    {
+                        gameState.CapturedWhitePiece.RemoveAt(gameState.CapturedWhitePiece.Count - 1);
+                    }
+                }
                 moveList.Push(move);
                 gameState.CurrentPlayer = gameState.CurrentPlayer.Opponent();
                 UndoCapturedGrid(gameState.CapturedPiece);
@@ -523,9 +534,13 @@ namespace ChessUI
                 {
                     WarningTextBlock.Text = (PromotedStatus == "CHECK" || PromotedStatus == "CHECKMATE" || PromotedStatus == "STALEMATE") ? "Chiếu tướng!" : null;
                 }
-            }    
-
-            gameState.Moved.Push(move);
+            }
+            if (move.Item2.Item1 != null)
+            {
+                if (move.Item2.Item1.Color == Player.Black) gameState.CapturedBlackPiece.Add(move.Item2.Item1);
+                else gameState.CapturedWhitePiece.Add(move.Item2.Item1);
+            }
+            gameState.Moved.Push(move);         
             gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
             DrawBoard(gameState.Board);
             ShowPrevMove(move.Item1);
@@ -533,7 +548,7 @@ namespace ChessUI
             {
                 ShowPrevMove(gameState.Moved.First().Item1);
             }
-            DrawCapturedGrid(gameState.Moved.Peek().Item2.Item1);
+            DrawCapturedGrid(move.Item2.Item1);
             gameState.CurrentPlayer = gameState.CurrentPlayer.Opponent();
             if (moveList.Count == 0) PlayButton.IsEnabled = false;
             TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
@@ -813,23 +828,20 @@ namespace ChessUI
         {
             if (piece == null) return;
             Image image = new Image();
-            if (gameState.CurrentPlayer == Player.Black)
+            image.Source = Images.GetImage(piece);
+            if (piece.Color == Player.White)
             {
-                piece.Color = Player.White;
-                image.Source = Images.GetImage(piece);
                 BlackCapturedGrid.Children.Add(image);
             }
             else
             {
-                piece.Color = Player.Black;
-                image.Source = Images.GetImage(piece);
                 WhiteCapturedGrid.Children.Add(image);
             }
         }
         private void UndoCapturedGrid(Piece piece)
         {
             if (piece == null) return;
-            if (gameState.CurrentPlayer == Player.Black)
+            if (piece.Color == Player.White)
             {
                 int count = BlackCapturedGrid.Children.Count;
                 if (count > 0)
