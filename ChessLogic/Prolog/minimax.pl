@@ -100,9 +100,7 @@ minimax(Position, Color, Counter, move(64, 64, none, none, none), 0, Value, Alph
     NewCount is Count + 1,
     asserta(count(NewCount)),
     Position = position(WhiteHalf, BlackHalf),
-    score_half(WhiteHalf, white, ValueWhite),
-    score_half(BlackHalf, black, ValueBlack),
-    Value is ValueWhite - ValueBlack, !.
+    score(WhiteHalf, BlackHalf, Value), !.
 
 minimax(Position, Color, Counter, Move, Depth, Value, Alpha, Beta) :-
     count(Count),
@@ -120,9 +118,7 @@ minimax(Position, Color, Counter, Move, Depth, Value, Alpha, Beta) :-
 
 minimax_quiescence(Position, _Color, _Counter, 0, Value, _Alpha, _Beta) :-
     Position = position(WhiteHalf, BlackHalf),
-    score_half(WhiteHalf, white, ValueWhite),
-    score_half(BlackHalf, black, ValueBlack),
-    Value is ValueWhite - ValueBlack, !.
+    score(WhiteHalf, BlackHalf, Value), !.
 
 minimax_quiescence(Position, Color, Counter, Depth, Value, Alpha, Beta) :-
     losing_value(Color, Worst),
@@ -133,9 +129,7 @@ minimax_quiescence(Position, Color, Counter, Depth, Value, Alpha, Beta) :-
 get_best_quiescence(Position, Color, Counter, Depth, Alpha, Beta) :-
     update_depth(Depth, NewDepth),
     Position = position(WhiteHalf, BlackHalf),
-    score_half(WhiteHalf, white, ValueWhite),
-    score_half(BlackHalf, black, ValueBlack),
-    Eval is ValueWhite - ValueBlack,
+    score(WhiteHalf, BlackHalf, Eval),
     compare_move(move(64, 64, none, none, none), Eval, Color),
     (prune(Eval, Color, Alpha, Beta) -> !, fail ; true),
     invert(Color, Op),

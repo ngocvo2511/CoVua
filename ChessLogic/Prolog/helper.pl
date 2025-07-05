@@ -4,7 +4,14 @@ init :-
 	retractall(history(_)),
 	retractall(depth(_)),
 	retractall(stack(_,_,_)),
-	init_precomputed_move,
+	retractall(attack_bitboard(_, _, _)),
+	retractall(attack_bitboard(_, _, _, _)),
+	retractall(move_direction(_, _)),
+	retractall(king_distance(_, _, _)),
+	retractall(orthogonal_distance(_, _, _)),
+	retractall(centre_manhattan_distance(_, _)),
+	precompute_move,
+	calculate_distances,
 	set_position(begin),
 	% Initialize default depth if not set
 	asserta(depth(3)).
@@ -35,7 +42,13 @@ skip_turn:-
 reset:-	
 	retractall(human(_)),
 	retractall(board(_,_,_)),
-	retractall(history(_)).
+	retractall(history(_)),
+	retractall(attack_bitboard(_, _, _)),
+	retractall(attack_bitboard(_, _, _, _)),
+	retractall(move_direction(_, _)),
+	retractall(king_distance(_, _, _)),
+	retractall(orthogonal_distance(_, _, _)),
+	retractall(centre_manhattan_distance(_, _)).
 		
 check_game_status(Position, Color, Counter, Status) :-
 	position_to_board_list(Position, BoardList),

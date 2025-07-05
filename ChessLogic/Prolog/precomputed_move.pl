@@ -5,6 +5,11 @@
 % Dynamic predicate to store precomputed attack maps
 :- dynamic attack_bitboard/3.
 :- dynamic attack_bitboard/4.
+:- dynamic move_direction/2.
+% Dynamic predicates to store precomputed distances
+:- dynamic king_distance/3.
+:- dynamic orthogonal_distance/3.
+:- dynamic centre_manhattan_distance/2.
 
 % can be used to check if a square can be arrived
 opposite_direction(1, -1).
@@ -95,11 +100,13 @@ moves_to_bitboard([Square|Rest], Acc, Bitboard) :-
 % Precomputed move directions
 % ============================================
 
-init_precomputed_move :-
+precompute_move :-
+
     precompute_direction,
     calculate_knights_bitboard,
     calculate_kings_bitboard,
-    calculate_pawns_bitboard.
+    calculate_pawns_bitboard,
+    calculate_distances.
 
 % which directions can be used to move on a square
 precompute_direction :-
@@ -116,3 +123,53 @@ precompute_direction :-
     (Row =\= 7, Col =\= 0 -> asserta(move_direction(Square, 7)) ; true),
     fail.
 precompute_direction.
+
+% ============================================
+% Precomputed distance
+% ============================================
+
+% Calculate all distance tables
+calculate_distances :-
+    calculate_centre_manhattan_distances,
+    calculate_king_distances,
+    calculate_orthogonal_distances.
+
+% Calculate centre Manhattan distance for all squares
+calculate_centre_manhattan_distances :-
+    retractall(centre_manhattan_distance(_, _)),
+    between(0, 63, Square),
+    get_row_col(Square, Row, Col),
+    FileDstFromCentre is max(3 - Col, Col - 4),
+    RankDstFromCentre is max(3 - Row, Row - 4),
+    CentreManhattanDist is FileDstFromCentre + RankDstFromCentre,
+    asserta(centre_manhattan_distance(Square, CentreManhattanDist)),
+    fail.
+calculate_centre_manhattan_distances.
+
+% Calculate king distance between all square pairs
+calculate_king_distances :-
+    retractall(king_distance(_, _, _)),
+    between(0, 63, SquareA),
+    between(0, 63, SquareB),
+    get_row_col(SquareA, RowA, ColA),
+    get_row_col(SquareB, RowB, ColB),
+    RankDistance is abs(RowA - RowB),
+    FileDistance is abs(ColA - ColB),
+    KingDist is max(FileDistance, RankDistance),
+    asserta(king_distance(SquareA, SquareB, KingDist)),
+    fail.
+calculate_king_distances.
+
+% Calculate orthogonal distance between all square pairs
+calculate_orthogonal_distances :-
+    retractall(orthogonal_distance(_, _, _)),
+    between(0, 63, SquareA),
+    between(0, 63, SquareB),
+    get_row_col(SquareA, RowA, ColA),
+    get_row_col(SquareB, RowB, ColB),
+    RankDistance is abs(RowA - RowB),
+    FileDistance is abs(ColA - ColB),
+    OrthogonalDist is FileDistance + RankDistance,
+    asserta(orthogonal_distance(SquareA, SquareB, OrthogonalDist)),
+    fail.
+calculate_orthogonal_distances.
