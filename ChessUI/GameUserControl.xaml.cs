@@ -433,11 +433,11 @@ namespace ChessUI
             redClock.Text = null;
             blackClock.Text = null;
             WarningTextBlock.Text = null;
+            moveCache.Clear();
             ResetTimer();
             DrawBoard(gameState.Board);
             AbleClick();
             SaveButton.IsEnabled = false;
-            CellGrid.IsHitTestVisible = false;
             DoButton.Visibility = Visibility.Visible;
             PlayButton.Visibility = Visibility.Visible;
         }
@@ -558,11 +558,11 @@ namespace ChessUI
             Sound.PlayButtonClickSound();
             if (isReview == true)
             {
+                isReview = false;
                 DoButton.Visibility = Visibility.Collapsed;
                 PlayButton.Visibility = Visibility.Collapsed;
-                SaveButton.IsEnabled = true;
-                isReview = false;
-                AbleClick();
+                SaveButton.IsEnabled = true;            
+                CellGrid.IsEnabled = true;
                 if(gameState is GameStateAI AI && gameState.CurrentPlayer == Player.Black)
                 {
                     UnableClick();
