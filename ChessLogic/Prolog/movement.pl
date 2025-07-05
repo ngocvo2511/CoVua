@@ -78,6 +78,7 @@ legal_move_for_piece(bishop, From, To, Color, Position, BoardList, AttackData) :
     ),
 	(not(is_pinned(From, PinExist, PinRay)); is_moving_along_ray(Position, Color, From, To)),
 	(InCheck = false; square_is_in_check_ray(To, InCheck, CheckRay)).
+.
 
 legal_move_for_piece(queen, From, To, Color, Position, BoardList, AttackData) :-
 	long_move(queen, From, Color, Position, To, BoardList, AttackData),
@@ -106,12 +107,12 @@ legal_move_for_piece(king, From, To, Color, Position, BoardList, AttackData) :-
         PinRay, 
         _OpponentKnightAttacks, 
         _OpponentAttackMapNoPawns,
-        _OpponentAttackMap, 
+        OpponentAttackMap, 
         _OpponentPawnAttackMap, 
         _OpponentSlidingAttackMap
     ),
-	(not(is_pinned(From, PinExist, PinRay)); is_moving_along_ray(Position, Color, From, To)),
-	(InCheck = false; square_is_in_check_ray(To, InCheck, CheckRay)).
+	not(square_is_in_check_ray(To, InCheck, CheckRay)),
+	not(square_is_attacked(To, OpponentAttackMap)).
 
 % Add castling moves for king
 legal_move_for_piece(king, From, To, Color, Position, BoardList, AttackData) :-
@@ -202,6 +203,42 @@ get_all_pseudo_legal_moves(Position, Color, LegalMoves, BoardList, AttackData) :
 	            ;   PromotedPiece = knight
 	            ;   PromotedPiece = rook
 	            ;   PromotedPiece = bishop
+	            )
+	        ;   PromotedPiece = none
+	        )
+	        ),
+	        LegalMoves).
+
+get_all_noisy_pseudo_legal_moves(Position, Color, LegalMoves, BoardList, AttackData) :-
+	invert(Color, OpponentColor),
+	AttackData = attack_data(
+        InCheck, 
+        InDoubleCheck, 
+        _PinExist, 
+        _CheckRay, 
+        _PinRay, 
+        _OpponentKnightAttacks, 
+        _OpponentAttackMapNoPawns,
+        _OpponentAttackMap, 
+        _OpponentPawnAttackMap, 
+        _OpponentSlidingAttackMap
+    ),
+	(InDoubleCheck = true -> MovedPiece = king ; true),
+	findall(move(From, To, MovedPiece, CapturedPiece, PromotedPiece), 
+	        (	nth0(From, BoardList, [MovedPiece, Color]),
+	         	legal_move_for_piece(MovedPiece, From, To, Color, Position, BoardList, AttackData),
+	         	invert(Color, OpponentColor),
+	         	% Determine captured piece
+	        	(   nth0(To, BoardList, [CapturedPiece, OpponentColor]) ->
+	            	true
+	        	;   is_enpassant_move(From, To, Color, Position, BoardList, AttackData) ->
+	            	CapturedPiece = pawn  % En passant captures the pawn
+				;	false % No capture then not a noisy move
+	         	),
+	         % Determine promotion piece
+	        (   is_promotion_move(From, To, Color, Position, BoardList, AttackData) ->
+	            (   PromotedPiece = queen
+	            ;   PromotedPiece = knight
 	            )
 	        ;   PromotedPiece = none
 	        )
@@ -527,7 +564,7 @@ is_enpassant_move(From, To, black, Position, _BoardList, AttackData) :-
 
 is_pinned(Square, PinExist, PinRay) :-
 	PinExist = true,
-	getbit(PinRay, Square) = 1.
+	getbit(PinRay, Square) =:= 1.
 
 is_moving_along_ray(Position, Color, From, To) :-
 	get_half(Position, Half, Color),
@@ -539,8 +576,8 @@ is_moving_along_ray(Position, Color, From, To) :-
 
 square_is_in_check_ray(Square, InCheck, CheckRay) :-
 	InCheck = true,
-	getbit(CheckRay, Square) = 1.
+	getbit(CheckRay, Square) =:= 1.
 
 square_is_attacked(Square, OpponentAttackMap) :-
-	getbit(OpponentAttackMap, Square) = 1.
+	getbit(OpponentAttackMap, Square) =:= 1.
 
