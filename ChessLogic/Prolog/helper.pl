@@ -71,11 +71,11 @@ check_game_status(Position, Color, Counter, Key, Status) :-
     ;   in_check(Position, Color, BoardList, AttackData) ->
         Status = check
     ;	is_threefold_repetition(Position, Color) ->
-        Status = draw
+        Status = threefoldrepetition
     ;	is_fifty_move(Counter) ->
-        Status = draw
+        Status = fiftymoverule
 	;	is_insufficient_material(Position) ->
-		Status = insufficient
+		Status = insufficientmaterial
     ;	Status = safe
     ).
 
