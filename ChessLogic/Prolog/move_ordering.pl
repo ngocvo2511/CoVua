@@ -43,8 +43,8 @@ compare_move_for_sorting(MoveX, MoveY, AttackData) :-
     piece_value(PromotedPieceX, PromotedPieceValueX),
     piece_value(PromotedPieceY, PromotedPieceValueY),
 
-    (getbit(OpponentPawnAttackMap, ToX) =:= 1 -> PenaltyValueX = 350 ; PenaltyValueX = 0),
-    (getbit(OpponentPawnAttackMap, ToY) =:= 1 -> PenaltyValueY = 350 ; PenaltyValueY = 0),
+    (((OpponentPawnAttackMap >> ToX) /\ 1) =:= 1 -> PenaltyValueX = 350 ; PenaltyValueX = 0),
+    (((OpponentPawnAttackMap >> ToY) /\ 1) =:= 1 -> PenaltyValueY = 350 ; PenaltyValueY = 0),
 
     ValueX is CaptureValueX + PromotedPieceValueX - PenaltyValueX,
     ValueY is CaptureValueY + PromotedPieceValueY - PenaltyValueY,

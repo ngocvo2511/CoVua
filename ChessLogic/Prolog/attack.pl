@@ -149,7 +149,7 @@ calculate_attack_data(board(Position, Color, _, _), BoardList, attack_data(InChe
 get_knight_attack_map([KnightPos|RestKnights], Color, BoardList, OpponentKnightAttacks, NewOpponentKnightAttacks, KingPos, data(InCheck1, InDoubleCheck1, CheckRay1, IsKnightCheck1), NewKnightCheck) :-
     attack_bitboard(KnightPos, knight, KnightAttackMap),
     AccOpponentKnightAttacks is OpponentKnightAttacks \/ KnightAttackMap,
-    (   getbit(KnightAttackMap, KingPos) =:= 1, IsKnightCheck1 = false ->
+    (   ((KnightAttackMap >> KingPos) /\ 1) =:= 1, IsKnightCheck1 = false ->
         IsKnightCheck2 = true,
         InDoubleCheck2 = InCheck1,
         InCheck2 = true,
@@ -165,7 +165,7 @@ get_pawn_attack_map([PawnPos|RestPawns], Color, BoardList, OpponentPawnAttacks, 
     invert(Color, EnemyColor),
     attack_bitboard(PawnPos, pawn, EnemyColor, PawnAttackMap),
     AccOpponentPawnAttacks is OpponentPawnAttacks \/ PawnAttackMap,
-    (   getbit(PawnAttackMap, KingPos) =:= 1, IsPawnCheck1 = false ->
+    (   ((PawnAttackMap >> KingPos) /\ 1) =:= 1, IsPawnCheck1 = false ->
         IsPawnCheck2 = true,
         InDoubleCheck2 = InCheck1,
         InCheck2 = true,

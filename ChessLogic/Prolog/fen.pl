@@ -4,7 +4,9 @@ convert_fen_to_position(FEN, Position, Color, Counter) :-
     nonvar(FEN), var(Position),
     !,
     % Forward direction: FEN -> Position/Color/Counter
-    split_string(FEN, " ", "", [BoardStr, ActiveColorStr, CastlingStr, EnPassantStr, HalfmoveStr | _]),
+    % Convert string to atom if needed for compatibility
+    (is_list(FEN) -> atom_codes(FENAtom, FEN) ; FENAtom = FEN),
+    atomic_list_concat([BoardStr, ActiveColorStr, CastlingStr, EnPassantStr, HalfmoveStr | _], ' ', FENAtom),
     fen_board(BoardStr, Pieces),
     extract_half_position(white, Pieces, WPawn, WRook, WKnight, WBishop, WQueen, WKing),
     extract_half_position(black, Pieces, BPawn, BRook, BKnight, BBishop, BQueen, BKing),
@@ -43,7 +45,7 @@ position_to_fen_string(position(H1, H2), Color, Counter, FEN) :-
     create_enpassant_string(WhiteEnPassant, BlackEnPassant, Color, EnPassantStr),
     
     % Convert counter to string
-    atom_string(Counter, CounterStr),
+    atom_number(CounterStr, Counter),
     
     % Combine into FEN string
     atomic_list_concat([BoardStr, ActiveColorStr, CastlingStr, EnPassantStr, CounterStr, "1"], " ", FEN).

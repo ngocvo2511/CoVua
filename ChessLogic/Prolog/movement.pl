@@ -568,7 +568,7 @@ is_enpassant_move(From, To, black, Position, _BoardList, _AttackData) :-
 
 is_pinned(Square, PinExist, PinRay) :-
 	PinExist = true,
-	getbit(PinRay, Square) =:= 1.
+	((PinRay >> Square) /\ 1) =:= 1.
 
 is_moving_along_ray(Position, Color, From, To) :-
 	get_half(Position, Half, Color),
@@ -580,10 +580,10 @@ is_moving_along_ray(Position, Color, From, To) :-
 
 square_is_in_check_ray(Square, InCheck, CheckRay) :-
 	InCheck = true,
-	getbit(CheckRay, Square) =:= 1.
+	((CheckRay >> Square) /\ 1) =:= 1.
 
 square_is_attacked(Square, OpponentAttackMap) :-
-	getbit(OpponentAttackMap, Square) =:= 1.
+	((OpponentAttackMap >> Square) /\ 1) =:= 1.
 
 % =================================
 % Zobrist Key Updates
