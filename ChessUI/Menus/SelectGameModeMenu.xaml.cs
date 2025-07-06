@@ -65,23 +65,5 @@ namespace ChessUI.Menus
         {
             RaiseEvent(new RoutedEventArgs(TwoPlayerButtonClickedEvent));
         }
-
-
-        public static readonly RoutedEvent PlayOnlineButtonClickedEvent = EventManager.RegisterRoutedEvent(
-            "PlayOnlineButtonClicked",
-            RoutingStrategy.Bubble,
-            typeof(RoutedEventHandler),
-            typeof(SelectGameModeMenu)
-        );
-
-        public event RoutedEventHandler PlayOnlineButtonClicked
-        {
-            add { AddHandler(PlayOnlineButtonClickedEvent, value); }
-            remove { RemoveHandler(PlayOnlineButtonClickedEvent, value); }
-        }
-        private void PlayOnlineButton_Click(object sender, RoutedEventArgs e)
-        {
-            RaiseEvent(new RoutedEventArgs(PlayOnlineButtonClickedEvent));
-        }
     }
 }

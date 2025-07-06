@@ -338,7 +338,7 @@ namespace ChessUI
             if (gameState.Result != null)
             {
                 UnableClick();
-                await Task.Delay(500);
+                await Task.Delay(100);
                 moveList = new Stack<Tuple<Move, Tuple<Piece, string>>>(gameState.Moved.ToArray());
                 HideHighlights();
                 CellGrid.IsEnabled = false;

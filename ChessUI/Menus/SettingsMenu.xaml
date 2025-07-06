@@ -55,7 +55,7 @@
                     </StackPanel>
                     <CheckBox x:Name="isTimeLimit" IsChecked="True"
                               FontFamily="/Assets/Fonts/#Noto Serif"
-                              Content="Giới hạn thời gian"
+                              Content="Giới hạn thời gian (2 người chơi)"
                               Padding="10"
                               Margin="50,30,50,0"
                               VerticalContentAlignment="Center"

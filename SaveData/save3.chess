@@ -2,9 +2,9 @@
   "GameType": "GameState2P",
   "depth": 0,
   "CurrentPlayer": "Black",
-  "timeRemainingWhite": 599,
-  "timeRemainingBlack": 600,
-  "historyBoard": "[move(64,64,none,none,none),move(10,26,pawn,none,none),move(51,35,pawn,none,none),move(9,25,pawn,none,none)]",
+  "timeRemainingWhite": 596,
+  "timeRemainingBlack": 590,
+  "historyBoard": "[move(64,64,none,none,none),move(9,25,pawn,none,none),move(51,35,pawn,none,none),move(12,28,pawn,none,none)]",
   "CapturedWhitePiece": [],
   "CapturedBlackPiece": []
 }
