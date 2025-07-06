@@ -15,7 +15,7 @@ namespace ChessLogic
     public class PrologEngine
     {
         private static bool _isInitialized = false;
-        public static void Initialize(string prologFile)
+        public static void Initialize(string prologFile, int depth)
         {
             if (!_isInitialized)
             {
@@ -34,6 +34,7 @@ namespace ChessLogic
             {
                 throw new Exception("Không thể khởi tạo bàn cờ.");
             }
+            if (depth != 0) SetDepth(depth);
         }
         public static void InitializeGameLoad(string prologFile, GameStateForLoad gameStateForLoad)
         {
@@ -55,7 +56,7 @@ namespace ChessLogic
                 throw new Exception("Không thể khởi tạo bàn cờ.");
             }
             setHistoryMove(gameStateForLoad.historyBoard);
-            //if (gameStateForLoad.depth != 0) SetDepth(gameStateForLoad.depth);
+            if (gameStateForLoad.depth != 0) SetDepth(gameStateForLoad.depth);
         }
 
         public static List<Move> GetLegalMoves(int fromPos)

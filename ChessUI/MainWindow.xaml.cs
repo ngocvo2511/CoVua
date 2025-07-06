@@ -131,17 +131,17 @@ namespace ChessUI
         private void GameDifficultyMenu_PlayEasyBotButtonClicked(object sender, RoutedEventArgs e)
         {
             Sound.PlayButtonClickSound();
-            CreateViewGameAI(2);
+            CreateViewGameAI(1);
         }
         private void GameDifficultyMenu_PlayNormalBotButtonClicked(object sender, RoutedEventArgs e)
         {
             Sound.PlayButtonClickSound();
-            CreateViewGameAI(3);
+            CreateViewGameAI(2);
         }
         private void GameDifficultyMenu_PlayHardBotButtonClicked(object sender, RoutedEventArgs e)
         {
             Sound.PlayButtonClickSound();
-            CreateViewGameAI(4);
+            CreateViewGameAI(3);
         }
         #endregion
 

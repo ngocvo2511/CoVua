@@ -50,12 +50,12 @@ namespace ChessUI
                 SwitchTurn();
             }
         }
-        public static GameUserControl Create(Player color, int timeLimit, bool isAI, bool isAIFirst, int difficult = 1)
+        public static GameUserControl Create(Player color, int timeLimit, bool isAI, bool isAIFirst, int difficult = 0)
         {
             var control = new GameUserControl(timeLimit, isAI, isAIFirst, difficult);
             string rootPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\.."));
             string prologPath = System.IO.Path.Combine(rootPath, "ChessLogic", "Prolog", "chess.pl");
-            PrologEngine.Initialize(prologPath);
+            PrologEngine.Initialize(prologPath,difficult);
             control.gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
             control.DrawBoard(control.gameState.Board);
             if (control.gameState is GameStateAI && isAIFirst)
@@ -130,7 +130,7 @@ namespace ChessUI
             var control = new GameUserControl(historyRecord);
             string rootPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\.."));
             string prologPath = System.IO.Path.Combine(rootPath, "ChessLogic", "Prolog", "chess.pl");
-            PrologEngine.Initialize(prologPath);
+            PrologEngine.Initialize(prologPath, historyRecord.Depth);
             Board board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
             control.moveList = new Stack<Tuple<Move, Tuple<Piece, string>>>(PrologEngine.ParseHistory(historyRecord.HistoryString));
             Piece piece = board[control.moveList.Peek().Item1.FromPos];
@@ -266,13 +266,13 @@ namespace ChessUI
         {
             switch (difficult)
             {
-                case 2:
+                case 1:
                     blackInfo.Text = "Máy (Độ khó: Dễ)";
                     break;
-                case 3:
+                case 2:
                     blackInfo.Text = "Máy (Độ khó: Thường)";
                     break;
-                case 4:
+                case 3:
                     blackInfo.Text = "Máy (Độ khó: Khó)";
                     break;
                 default:
