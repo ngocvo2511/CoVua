@@ -191,7 +191,7 @@ namespace ChessLogic
         public static string GetGameStatus()
         {
             // Kiểm tra trạng thái hiện tại của ván cờ
-            using (var q = new PlQuery("user:board(Position,Color,Counter), user:check_game_status(Position, Color, Counter, Status)"))
+            using (var q = new PlQuery("user:board(Position,Color,Counter,Key), user:check_game_status(Position, Color, Counter, Key, Status)"))
             {
                 if (q.NextSolution())
                 {
@@ -325,7 +325,7 @@ namespace ChessLogic
 
         public static Player GetCurrentPlayer()
         {
-            using (var q = new PlQuery("board(_, Color, _)"))
+            using (var q = new PlQuery("board(_, Color, _, _)"))
             {
                 if (q.NextSolution())
                 {
