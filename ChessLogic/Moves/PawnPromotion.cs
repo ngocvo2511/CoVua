@@ -16,32 +16,5 @@ namespace ChessLogic
             ToPos = to;
             this.newType = newType;
         }
-
-        private Piece CreatePromotionPiece(Player color)
-        {
-            switch (newType)
-            {
-                case PieceType.Knight:
-                    return new Knight(color);
-                case PieceType.Bishop:
-                    return new Bishop(color);
-                case PieceType.Rook:
-                    return new Rook(color);
-                default:
-                    return new Queen(color);
-            }
-        }
-
-        public override bool Execute(Board board)
-        {
-            Piece pawn = board[FromPos];
-            board[FromPos] = null;
-
-            Piece promotionPiece = CreatePromotionPiece(pawn.Color);
-            promotionPiece.HasMoved = true;
-            board[ToPos] = promotionPiece;
-
-            return true;
-        }
     }
 }

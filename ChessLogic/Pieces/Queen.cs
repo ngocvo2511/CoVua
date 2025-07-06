@@ -8,19 +8,9 @@ namespace ChessLogic
         public override PieceType Type => PieceType.Queen;
         public override Player Color { get; set; }
 
-        
-
         public Queen(Player color)
         {
             Color = color;
         }
-
-        public override Piece Copy()
-        {
-            Queen copy = new Queen(Color);
-            copy.HasMoved = HasMoved;
-            return copy;
-        }
-
     }
 }

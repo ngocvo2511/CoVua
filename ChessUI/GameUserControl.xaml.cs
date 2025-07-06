@@ -37,14 +37,13 @@ namespace ChessUI
         private Stack<Tuple<Move, Tuple<Piece, string>>> moveList;
         private bool isReview = false;
 
-        public GameUserControl(Player color, int timeLimit, bool isAI, int difficult = 1)
+        public GameUserControl(int timeLimit, bool isAI, int difficult = 1)
         {
             InitializeComponent();
             InitializeBoard();
-            if (isAI == true) gameState = new GameStateAI(color, Board.Initial(), difficult, timeLimit);
+            if (isAI == true) gameState = new GameStateAI(Player.White, Board.Initial(), difficult, timeLimit);
             else gameState = new GameState2P(Player.White, Board.Initial(), timeLimit);
             ShowGameInformation(difficult);
-            if (color == Player.Black && isAI == true) isRedTurn = false;
             if (timeLimit != 0)
             {
                 InitializeTimer();
@@ -53,14 +52,15 @@ namespace ChessUI
         }
         public static GameUserControl Create(Player color, int timeLimit, bool isAI, int difficult = 1)
         {
-            var control = new GameUserControl(color, timeLimit, isAI, difficult);
+            var control = new GameUserControl(timeLimit, isAI, difficult);
             string rootPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\.."));
             string prologPath = System.IO.Path.Combine(rootPath, "ChessLogic", "Prolog", "chess.pl");
-            PrologEngine.Initialize(prologPath, isAI, color);
+            PrologEngine.Initialize(prologPath);
             control.gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
             control.DrawBoard(control.gameState.Board);
             if (control.gameState is GameStateAI && color == Player.Black)
             {
+                
                 var result = PrologEngine.AiMove();
                 if (result.HasValue)
                 {
@@ -121,7 +121,7 @@ namespace ChessUI
             var control = new GameUserControl(historyRecord);
             string rootPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\.."));
             string prologPath = System.IO.Path.Combine(rootPath, "ChessLogic", "Prolog", "chess.pl");
-            PrologEngine.Initialize(prologPath, true,Player.White);
+            PrologEngine.Initialize(prologPath);
             Board board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
             control.moveList = new Stack<Tuple<Move, Tuple<Piece, string>>>(PrologEngine.ParseHistory(historyRecord.HistoryString));
             Piece piece = board[control.moveList.Peek().Item1.FromPos];
@@ -143,8 +143,8 @@ namespace ChessUI
         }
         private void InitializeTimer()
         {
-            int minutes = gameState.timeRemainingRed / 60;
-            int seconds = gameState.timeRemainingRed % 60;
+            int minutes = gameState.timeRemainingWhite / 60;
+            int seconds = gameState.timeRemainingWhite % 60;
             redClock.Text = $"{minutes:D2}:{seconds:D2}";
             blackClock.Text = $"{minutes:D2}:{seconds:D2}";
 
@@ -157,11 +157,11 @@ namespace ChessUI
         }
         private void RedTimer_Tick(object sender, EventArgs e)
         {
-            gameState.timeRemainingRed--;
-            int minutes = gameState.timeRemainingRed / 60;
-            int seconds = gameState.timeRemainingRed % 60;
+            gameState.timeRemainingWhite--;
+            int minutes = gameState.timeRemainingWhite / 60;
+            int seconds = gameState.timeRemainingWhite % 60;
             redClock.Text = $"{minutes:D2}:{seconds:D2}";
-            if (gameState.timeRemainingRed <= 0)
+            if (gameState.timeRemainingWhite <= 0)
             {
                 StopTimer();
                 HideHighlights();
@@ -173,7 +173,7 @@ namespace ChessUI
                 RaiseGameOverEvent(gameState);
                 return;
             }   
-            if (gameState.timeRemainingRed < 60)
+            if (gameState.timeRemainingWhite < 60)
             {
                 redClock.Foreground = redBrush;
             }
@@ -271,21 +271,7 @@ namespace ChessUI
             TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
         }
 
-        private async void StartAIMoveWithDelay()
-        {
-            UnableClick();
-            await Task.Delay(500);
-            if (gameState is GameStateAI AI)
-            {
-                await Task.Run(() => AI.AiMove(cts.Token), cts.Token);
-                DrawBoard(gameState.Board);
-                ShowPrevMove(gameState.Moved.First().Item1);
-                Sound.PlayMoveSound();
-            }
-            AbleClick();
-            isRedTurn = !isRedTurn;
-            if (redTimer != null) SwitchTurn();
-        }
+
         private void UnableClick()
         {
             CellGrid.IsHitTestVisible = false;
@@ -405,15 +391,6 @@ namespace ChessUI
             }
 
             AbleClick();
-            //if (gameState.IsGameOver())
-            //{
-            //    UnableClick();
-            //    moveList = new Stack<Tuple<Move, Piece>>(gameState.Moved.ToArray());
-            //    HideHighlights();
-            //    CellGrid.IsEnabled = false;
-            //    if (redTimer != null) StopTimer();
-            //    RaiseGameOverEvent(gameState);
-            //}
         }
         public void Review()
         {

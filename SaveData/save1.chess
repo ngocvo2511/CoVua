@@ -4,9 +4,7 @@
   "CurrentPlayer": "White",
   "timeRemainingWhite": 0,
   "timeRemainingBlack": 0,
-  "historyBoard": "[move(64,64,none,none,none),move(10,26,pawn,none,none),move(62,45,knight,none,none),move(14,30,pawn,none,none),move(45,30,knight,pawn,none),move(13,21,pawn,none,none),move(30,36,knight,none,none)]",
-  "CapturedWhitePiece": [
-    "wP"
-  ],
+  "historyBoard": "[move(64,64,none,none,none),move(10,26,pawn,none,none),move(62,45,knight,none,none)]",
+  "CapturedWhitePiece": [],
   "CapturedBlackPiece": []
 }

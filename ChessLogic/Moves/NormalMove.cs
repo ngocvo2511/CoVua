@@ -11,15 +11,5 @@
             ToPos = toPos;
         }
 
-        public override bool Execute(Board board)
-        {
-            return true;
-            //Piece piece = board[FromPos];
-            //bool capture = !board.IsEmpty(ToPos);
-            //board[ToPos] = piece;
-            //board[FromPos] = null;
-            //piece.HasMoved = true;
-            //return capture || piece.Type == PieceType.Pawn;
-        }
     }
 }

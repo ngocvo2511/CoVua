@@ -19,7 +19,6 @@
                 default:
                     return Player.None;
             }
-
         }
     }
 }

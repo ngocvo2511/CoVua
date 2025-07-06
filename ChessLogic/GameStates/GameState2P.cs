@@ -11,11 +11,7 @@ namespace ChessLogic.GameStates.GameState
         public override void UndoMove()
         {
             if (!Moved.Any()) return;
-            UndoStateString();
             var undo = Moved.Pop();
-            //Move undoMove = new NormalMove(undo.Item1.ToPos, undo.Item1.FromPos);
-            //undoMove.Execute(Board);
-            //Board[undo.Item1.ToPos] = undo.Item2;
             if (undo.Item2.Item1 != null)
             {
                 if (undo.Item2.Item1.Color == Player.Black) CapturedBlackPiece.RemoveAt(CapturedBlackPiece.Count - 1);
@@ -23,7 +19,6 @@ namespace ChessLogic.GameStates.GameState
             }
             CurrentPlayer = CurrentPlayer.Opponent();
             CapturedPiece = undo.Item2.Item1;
-            //noCapture.Pop();
         }
     }
 }

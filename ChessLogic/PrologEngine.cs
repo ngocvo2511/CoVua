@@ -15,7 +15,7 @@ namespace ChessLogic
     public class PrologEngine
     {
         private static bool _isInitialized = false;
-        public static void Initialize(string prologFile, bool isAI, Player color)
+        public static void Initialize(string prologFile)
         {
             if (!_isInitialized)
             {
@@ -29,9 +29,6 @@ namespace ChessLogic
                     throw new Exception("Không thể load file Prolog.");
                 }
             }
-
-
-
             // Khởi tạo bàn cờ
             if (!PlQuery.PlCall("user:init."))
             {

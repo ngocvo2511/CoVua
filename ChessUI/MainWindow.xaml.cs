@@ -75,11 +75,7 @@ namespace ChessUI
             Sound.PlayButtonClickSound();
             CreateInstructionMenu();
         }
-        //private void MainMenu_HistoryButtonClicked(object sender, RoutedEventArgs e)
-        //{
-        //    Sound.PlayButtonClickSound();
-        //    CreateHistoryMenu();
-        //}
+
 
         private void MainMenu_LoadButton_Clicked(object sender, RoutedEventArgs e)
         {

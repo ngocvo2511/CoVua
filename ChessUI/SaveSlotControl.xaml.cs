@@ -109,7 +109,7 @@ namespace ChessUI
             string filePath = System.IO.Path.Combine(SaveDirectory, "save" + (index+1) + ".chess");
             if (isSave == true)
             {
-                int timeRed = currentGameState.timeRemainingRed;
+                int timeRed = currentGameState.timeRemainingWhite;
                 int timeBlack = currentGameState.timeRemainingBlack;
                 if (File.Exists(filePath))
                 {

@@ -12,12 +12,5 @@ namespace ChessLogic
         {
             Color = color;
         }
-
-        public override Piece Copy()
-        {
-            Knight copy = new Knight(Color);
-            copy.HasMoved = HasMoved;
-            return copy;
-        }
     }
 }

@@ -5,13 +5,11 @@ namespace ChessLogic
 {
     public abstract class Piece
     {
-        public Player bottomPlayer;
         public abstract PieceType Type { get; }
         public abstract Player Color { get; set; }
         public bool HasMoved { get; set; } = false;
-        public abstract Piece Copy();
         
-        public override string ToString() // chua
+        public override string ToString()
         {
             switch (Type)
             {
