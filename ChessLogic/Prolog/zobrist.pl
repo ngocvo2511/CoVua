@@ -6,6 +6,15 @@
 :- dynamic zobrist_en_passant/2. % zobrist_en_passant(File, Value)
 :- dynamic zobrist_side_to_move/1. % zobrist_side_to_move(Value)
 
+% Helper predicate to read all characters from a stream
+read_chars(Stream, Chars) :-
+    get_char(Stream, Char),
+    (   Char = end_of_file ->
+        Chars = []
+    ;   Chars = [Char|RestChars],
+        read_chars(Stream, RestChars)
+    ).
+
 % Read random numbers from RandomNumbers.txt file
 read_random_numbers :-
     % Clear any existing random numbers
@@ -13,8 +22,10 @@ read_random_numbers :-
     
     % Read the file
     open('RandomNumbers.txt', read, Stream),
-    read_string(Stream, _, NumberString),
+    read_chars(Stream, Chars),
     close(Stream),
+    atom_chars(Atom, Chars),
+    atom_string(Atom, NumberString),
     
     % Split by commas and convert to numbers
     split_string(NumberString, ',', '', NumberStrings),
