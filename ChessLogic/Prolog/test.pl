@@ -55,8 +55,8 @@ endgame_pos(position(half_position([],[],[],[],[],[43],[],[]),
 sebas_pos(position(half_position([8,9,10,35,28,13,14,15],[0,7],[18,36],[11,12],[21],[4],[queenside,kingside],[]),
          half_position([48,25,50,51,44,53,46,23],[56,63],[41,45],[40,54],[52],[60],[queenside,kingside],[]))).
 
-test_pos(position(half_position([8, 9, 10, 13, 14, 15], [0, 7], [18, 21], [26, 20], [3], [4], [queenside, kingside], []), 
-    half_position([40, 51, 53, 54, 55], [58, 63], [25, 45], [49, 61], [52], [59], [], []))).
+test_pos(position(half_position([], [], [], [], [59], [56], [], []), 
+    half_position([], [], [], [7], [], [8], [], []))).
 
 pin_pos(position(half_position([],[],[],[],[],[58],[],[]),
 		half_position([48,49],[],[57],[48,54,0],[3,6],[56],[],[]))).
@@ -71,7 +71,7 @@ test_position :-
 	retract(depth(_)),
 	asserta(depth(4)),
 	Color = white,
-	endgame_pos(Position),
+	test_pos(Position),
 	set_position(Position, Color).
 
 test_time :-

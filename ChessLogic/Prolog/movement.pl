@@ -8,10 +8,10 @@
 is_legal_move(From, To, Color, Position, BoardList, AttackData) :-
 	% First check if the basic move is valid
 	nth0(From, BoardList, [Type, _]),
-	legal_move_for_piece(Type, From, To, Color, Position, BoardList, AttackData),
+	legal_move_for_piece(Type, From, To, Color, Position, BoardList, AttackData).
 	% Then simulate the move and check if king is still safe
-	simulate_move(From, To, Color, Position, NewPosition, _MovedPiece, _CapturedPiece, _PromotedPiece, BoardList, AttackData, 0, _NewKey),
-	not(in_check(NewPosition, Color, BoardList, AttackData)).
+	% simulate_move(From, To, Color, Position, NewPosition, _MovedPiece, _CapturedPiece, _PromotedPiece, BoardList, AttackData, 0, _NewKey),
+	% not(in_check(NewPosition, Color, BoardList, AttackData)).
 
 % legal_move_for_piece: generate individual legal moves based on piece type
 legal_move_for_piece(pawn, From, To, Color, Position, BoardList, AttackData) :-	
@@ -97,7 +97,7 @@ legal_move_for_piece(queen, From, To, Color, Position, BoardList, AttackData) :-
         _OpponentSlidingAttackMap
     ),
 	(not(is_pinned(From, PinExist, PinRay)); is_moving_along_ray(Position, Color, From, To)),
-	(InCheck = false; square_is_in_check_ray(To, InCheck, CheckRay)).
+	(InCheck = false; square_is_in_check_ray(To, InCheck, CheckRay)),
 
 legal_move_for_piece(king, From, To, Color, Position, BoardList, AttackData) :-
 	short_move(king, From, Color, Position, To, BoardList, AttackData),
