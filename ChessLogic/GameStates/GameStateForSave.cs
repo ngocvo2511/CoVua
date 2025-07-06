@@ -10,6 +10,7 @@ namespace ChessLogic.GameStates
     {
         public string GameType { get; set; }
         public int depth { get; set; }
+        public bool isAIFirst { get; set; }
         public string CurrentPlayer { get; set; }
         public int timeRemainingWhite { get; set; }
         public int timeRemainingBlack { get; set; }

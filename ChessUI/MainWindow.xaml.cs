@@ -131,17 +131,17 @@ namespace ChessUI
         private void GameDifficultyMenu_PlayEasyBotButtonClicked(object sender, RoutedEventArgs e)
         {
             Sound.PlayButtonClickSound();
-            CreateViewGameAI(2);
+            CreateViewGameAI(1);
         }
         private void GameDifficultyMenu_PlayNormalBotButtonClicked(object sender, RoutedEventArgs e)
         {
             Sound.PlayButtonClickSound();
-            CreateViewGameAI(3);
+            CreateViewGameAI(2);
         }
         private void GameDifficultyMenu_PlayHardBotButtonClicked(object sender, RoutedEventArgs e)
         {
             Sound.PlayButtonClickSound();
-            CreateViewGameAI(4);
+            CreateViewGameAI(3);
         }
         #endregion
 
@@ -246,8 +246,8 @@ namespace ChessUI
         {
             onGame = true;
             if (gameUserControl != null) gameUserControl.ResetTimer();
-            color = settingsModel.HumanFirst ? Player.White : Player.Black;
-            gameUserControl = GameUserControl.Create(color, 0, true, difficulty);
+            bool isAIFirst = !settingsModel.HumanFirst;
+            gameUserControl = GameUserControl.Create(color, 0, true, isAIFirst, difficulty);
             gameUserControl.PauseButtonClicked += PauseButtonClicked;
             gameUserControl.SaveButtonClicked += SaveButtonClicked;
             gameUserControl.GameOver += OnGameOver;
@@ -263,8 +263,8 @@ namespace ChessUI
         {
             onGame = true;
             if (gameUserControl != null) gameUserControl.ResetTimer();
-            color = settingsModel.HumanFirst ? Player.White : Player.Black;
-            gameUserControl = GameUserControl.Create(color, settingsModel.IsTimeLimit ? settingsModel.TimeLimit * 60 : 0, false);
+            bool isAIFirst = !settingsModel.HumanFirst;
+            gameUserControl = GameUserControl.Create(color, settingsModel.IsTimeLimit ? settingsModel.TimeLimit * 60 : 0, false, isAIFirst);
             gameUserControl.PauseButtonClicked += PauseButtonClicked;
             gameUserControl.SaveButtonClicked += SaveButtonClicked;
             gameUserControl.GameOver += OnGameOver;

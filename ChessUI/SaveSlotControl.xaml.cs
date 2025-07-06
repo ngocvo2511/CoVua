@@ -104,6 +104,7 @@ namespace ChessUI
         }        
         private async void SaveSlotList_MouseUp(object sender, MouseButtonEventArgs e)
         {
+            Sound.PlayButtonClickSound();
             int index = SaveSlotList.SelectedIndex;
             if (index < 0 || index >= 10) return;
             string filePath = System.IO.Path.Combine(SaveDirectory, "save" + (index+1) + ".chess");
