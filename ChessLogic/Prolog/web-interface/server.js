@@ -198,7 +198,7 @@ app.post('/place', async (req, res) => {
         }
     } catch (error) {
         console.error('Place error:', error);
-        res.status(500).json({ success: false, error: error.message }a);
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -244,7 +244,7 @@ app.post('/bot', async (req, res) => {
 // Game status
 app.get('/status', async (req, res) => {
     try {
-        const result = await queryProlog('board(Position, Color, Counter), check_game_status(Position, Color, Counter)');
+        const result = await queryProlog('board(Position, Color, Counter, Key), check_game_status(Position, Color, Counter, Key, Status)');
         res.json({ success: true, status: result });
     } catch (error) {
         console.error('Status error:', error);

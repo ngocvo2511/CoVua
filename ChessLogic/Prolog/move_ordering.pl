@@ -28,9 +28,9 @@ compare_move_for_sorting(MoveX, MoveY, AttackData) :-
         OpponentPawnAttackMap, 
         _OpponentSlidingAttackMap
     ),
-    MoveX = move(FromX, ToX, MovedPieceX, CapturedPieceX, PromotedPieceX),
-    MoveY = move(FromY, ToY, MovedPieceY, CapturedPieceY, PromotedPieceY) ->
-    
+    MoveX = move(_FromX, ToX, MovedPieceX, CapturedPieceX, PromotedPieceX),
+    MoveY = move(_FromY, ToY, MovedPieceY, CapturedPieceY, PromotedPieceY) ->
+
     piece_value(CapturedPieceX, CapturedPieceValueX),
     piece_value(CapturedPieceY, CapturedPieceValueY),
 

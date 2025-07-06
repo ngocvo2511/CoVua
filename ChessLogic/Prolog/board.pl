@@ -2,6 +2,46 @@
 % Board utilities
 % =================================
 
+
+position_to_board_list(position(H1, H2), BoardList) :-
+    % Create empty board list with 64 elements (all empty)
+    length(BoardList, 64),
+    
+    H1 = half_position(PawnWhite, RookWhite, KnightWhite, BishopWhite,
+                       QueenWhite, KingWhite, _CastlingWhite, _EnPassantWhite),
+    H2 = half_position(PawnBlack, RookBlack, KnightBlack, BishopBlack,
+                       QueenBlack, KingBlack, _CastlingBlack, _EnPassantBlack),
+
+    % Add all white pieces
+    add_pieces_to_list(PawnWhite, [pawn,white], BoardList),
+    add_pieces_to_list(RookWhite, [rook,white], BoardList),
+    add_pieces_to_list(KnightWhite, [knight,white], BoardList),
+    add_pieces_to_list(BishopWhite, [bishop,white], BoardList),
+    add_pieces_to_list(QueenWhite, [queen,white], BoardList),
+    add_pieces_to_list(KingWhite, [king,white], BoardList),
+
+    % Add all black pieces
+    add_pieces_to_list(PawnBlack, [pawn,black], BoardList),
+    add_pieces_to_list(RookBlack, [rook,black], BoardList),
+    add_pieces_to_list(KnightBlack, [knight,black], BoardList),
+    add_pieces_to_list(BishopBlack, [bishop,black], BoardList),
+    add_pieces_to_list(QueenBlack, [queen,black], BoardList),
+    add_pieces_to_list(KingBlack, [king,black], BoardList),
+
+	fill_unbound_with_empty(BoardList), !.
+
+add_pieces_to_list([], _, _BoardList).
+add_pieces_to_list([Pos|Rest], Piece, BoardList) :-
+    nth0(Pos, BoardList, Piece),
+    add_pieces_to_list(Rest, Piece, BoardList).
+
+fill_unbound_with_empty([]).
+fill_unbound_with_empty([H|T]) :-
+    ( H = empty ; true ),  % will bind H = empty if unbound, do nothing if already instantiated
+    fill_unbound_with_empty(T).
+
+
+
 % X is valid position for 0-63 board
 valid_field(X) :-
 	between(0, 63, X).
@@ -165,3 +205,23 @@ update_fifty_move_counter(From, To, Position, Color, OldCounter, NewCounter, Boa
     (check_pawn_move(From, Position, Color, BoardList, AttackData) ; check_capture(To, Position, Color, BoardList, AttackData)) ->
         reset_fifty_move_counter(NewCounter)
     ;   increment_fifty_move_counter(OldCounter, NewCounter).
+
+is_insufficient_material(position(H1, H2)) :-
+    H1 = half_position(PawnWhite, RookWhite, KnightWhite, BishopWhite, QueenWhite, KingWhite, _CastleWhite, _EnPassantWhite),
+    H2 = half_position(PawnBlack, RookBlack, KnightBlack, BishopBlack, QueenBlack, KingBlack, _CastleBlack, _EnPassantBlack),
+    (
+        PawnWhite = [], RookWhite = [], KnightWhite = [], BishopWhite = [], QueenWhite = [], KingWhite = [_],
+        PawnBlack = [], RookBlack = [], KnightBlack = [], BishopBlack = [], QueenBlack = [], KingBlack = [_]
+    ;
+        PawnWhite = [], RookWhite = [], KnightWhite = [], BishopWhite = [_], QueenWhite = [], KingWhite = [_],
+        PawnBlack = [], RookBlack = [], KnightBlack = [], BishopBlack = [_], QueenBlack = [], KingBlack = [_]
+    ;
+        PawnWhite = [], RookWhite = [], KnightWhite = [_], BishopWhite = [], QueenWhite = [], KingWhite = [_],
+        PawnBlack = [], RookBlack = [], KnightBlack = [_], BishopBlack = [], QueenBlack = [], KingBlack = [_]
+    ;
+        PawnWhite = [], RookWhite = [], KnightWhite = [], BishopWhite = [], QueenWhite = [], KingWhite = [_],
+        PawnBlack = [], RookBlack = [], KnightBlack = [_,_], BishopBlack = [], QueenBlack = [], KingBlack = [_]
+    ;
+        PawnWhite = [], RookWhite = [], KnightWhite = [_,_], BishopWhite = [], QueenWhite = [], KingWhite = [_],
+        PawnBlack = [], RookBlack = [], KnightBlack = [], BishopBlack = [], QueenBlack = [], KingBlack = [_]
+    ).

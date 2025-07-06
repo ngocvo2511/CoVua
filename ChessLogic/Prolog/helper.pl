@@ -1,5 +1,5 @@
 init :-
-	retractall(board(_,_,_)),
+	retractall(board(_,_,_,_)),
 	retractall(state(_)),
 	retractall(history(_)),
 	retractall(depth(_)),
@@ -10,6 +10,8 @@ init :-
 	retractall(king_distance(_, _, _)),
 	retractall(orthogonal_distance(_, _, _)),
 	retractall(centre_manhattan_distance(_, _)),
+	clear_table,
+	initialize_zobrist_tables,
 	precompute_move,
 	calculate_distances,
 	set_position(begin),
@@ -22,26 +24,34 @@ initial_pos(position(H1,H2)):-
 	PawnBlack = [48,49,50,51,52,53,54,55],
 	H2 = half_position(PawnBlack,[56,63],[57,62],[58,61],[59],[60],[queenside,kingside],[]).
 
+set_depth(Depth) :-
+	retract(depth(_)),
+	asserta(depth(Depth)), !.
+
 set_position(begin) :-
-	retractall(board(_,_,_)),
+	retractall(board(_,_,_,_)),
 	initial_pos(Position),
-	asserta(board(Position, white, 0)),
-	init_history(Position, white),!.
+	position_to_board_list(Position, BoardList),
+	zobrist_hash_from_board_list(BoardList, Position, white, Key),
+	asserta(board(Position, white, 0, Key)),
+	init_history(Position, white, Key),!.
 
 set_position(Position, Color) :- 
-	retractall(board(_,_,_)),
-	asserta(board(Position,Color,0)),
-	init_history(Position,Color),!.
+	retractall(board(_,_,_,_)),
+	position_to_board_list(Position, BoardList),
+	zobrist_hash_from_board_list(BoardList, Position, Color, Key),
+	asserta(board(Position,Color,0,Key)),
+	init_history(Position,Color,Key),!.
 
 skip_turn:- 
-	board(Position, Color, Counter),
+	board(Position, Color, Counter, Key),
 	invert(Color, NextColor),
-	retract(board(Position, Color, Counter)),
-	asserta(board(Position, NextColor, Counter)), !.
+	retract(board(Position, Color, Counter, Key)),
+	asserta(board(Position, NextColor, Counter, Key)), !.
 
 reset:-	
 	retractall(human(_)),
-	retractall(board(_,_,_)),
+	retractall(board(_,_,_,_)),
 	retractall(history(_)),
 	retractall(attack_bitboard(_, _, _)),
 	retractall(attack_bitboard(_, _, _, _)),
@@ -50,9 +60,9 @@ reset:-
 	retractall(orthogonal_distance(_, _, _)),
 	retractall(centre_manhattan_distance(_, _)).
 		
-check_game_status(Position, Color, Counter, Status) :-
+check_game_status(Position, Color, Counter, Key, Status) :-
 	position_to_board_list(Position, BoardList),
-	Board = board(Position, Color, Counter),
+	Board = board(Position, Color, Counter, Key),
 	generate_attack_data(Board, BoardList, AttackData),
     (   is_checkmate(Position, Color, BoardList, AttackData) ->
         Status = checkmate
@@ -64,12 +74,14 @@ check_game_status(Position, Color, Counter, Status) :-
         Status = draw
     ;	is_fifty_move(Counter) ->
         Status = draw
+	;	is_insufficient_material(Position) ->
+		Status = insufficient
     ;	Status = safe
     ).
 
 % Get the current board postion
 get_current_board(Position, Color, Counter) :-
-	board(TempPosition, Color, Counter),
+	board(TempPosition, Color, Counter, _),
 	% Extract all the information from the position predicate in board to return only in list, no extra funtor
 	TempPosition = position(H1, H2),
 	% Convert the half positions to lists

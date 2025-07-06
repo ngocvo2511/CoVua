@@ -66,19 +66,19 @@ is_attacked_by_king(Pos, _Color, Kings) :-
     valid_field(KingPos),
     not(crosses_edge(Pos, KingPos, Direction)).
 
-multiple_steps_to_enemy(Field,Direction,Next,Color,Position,BoardList, AttackData):-
+multiple_steps_to_enemy(Field,Direction,Next,Color,Position,BoardList):-
 	invert(Color,FriendColor),
-	one_step(Field,Direction,Next,FriendColor,Position,BoardList, AttackData),
+	one_step(Field,Direction,Next,FriendColor,Position,BoardList),
 	nth0(Next, BoardList, [_, Color]),
 	!.
-multiple_steps_to_enemy(Field,Direction,Next,Color,Position,BoardList, AttackData):-
+multiple_steps_to_enemy(Field,Direction,Next,Color,Position,BoardList):-
 	invert(Color,FriendColor),
-	one_step(Field,Direction,FieldNew,FriendColor,Position,BoardList, AttackData),
-	multiple_steps_to_enemy(FieldNew,Direction,Next,Color,Position,BoardList, AttackData),!.
+	one_step(Field,Direction,FieldNew,FriendColor,Position,BoardList),
+	multiple_steps_to_enemy(FieldNew,Direction,Next,Color,Position,BoardList).
 
 inverse_long_move(Type, From, Color, Position, Direction, To, BoardList) :-
 	piece_direction(Type, Direction),
-	multiple_steps_to_enemy(From, Direction, To, Color, Position, BoardList, AttackData).
+	multiple_steps_to_enemy(From, Direction, To, Color, Position, BoardList).
 
 is_attacked_on_line(Pos, Color, Position, Rooks, Bishops, Queens, BoardList) :- 
     inverse_long_move(queen, Pos, Color, Position, Direction, To, BoardList),
@@ -92,7 +92,7 @@ is_attacked_on_line(Pos, Color, Position, Rooks, Bishops, Queens, BoardList) :-
 
 
 % main predicate to check if a position is under attack
-is_under_attack(Pos, Color, Position, BoardList, AttackData) :-
+is_under_attack(Pos, Color, Position, BoardList, _AttackData) :-
 	invert(Color, EnemyColor),
 	get_half(Position, half_position(Pawns, Rooks, Knights, Bishops, Queens, Kings, _, _), EnemyColor),
 	(   is_attacked_by_pawn(Pos, EnemyColor, Pawns)
@@ -129,7 +129,7 @@ generate_attack_data(Board, BoardList, AttackData) :-
     ),
     calculate_attack_data(Board, BoardList, AttackData).
 
-calculate_attack_data(board(Position, Color, _), BoardList, attack_data(InCheck, InDoubleCheck, PinExist, CheckRay, PinRay, OpponentKnightAttacks, OpponentAttackMapNoPawns, OpponentAttackMap, OpponentPawnAttackMap, OpponentSlidingAttackMap)) :-
+calculate_attack_data(board(Position, Color, _, _), BoardList, attack_data(InCheck, InDoubleCheck, PinExist, CheckRay, PinRay, OpponentKnightAttacks, OpponentAttackMapNoPawns, OpponentAttackMap, OpponentPawnAttackMap, OpponentSlidingAttackMap)) :-
     invert(Color, EnemyColor),
     get_half(Position, half_position(Pawns, Rooks, Knights, Bishops, Queens, [EnemyKingPos], _, _), EnemyColor),
     find_king(Position, Color, KingPos),
@@ -206,7 +206,7 @@ go_sliding([Piece|Pieces], newpiece, Direction, BoardList, Color, SlidingAttackM
 go_sliding([Piece|Pieces], From, Direction, BoardList, Color, SlidingAttackMap, NewSlidingAttackMap) :-
     From \= newpiece,
     opposite_direction(Direction, OppositeDirection),
-    valid_field(From), 
+    valid_field(From),
     move_direction(From, OppositeDirection),
     To is From + Direction,     
 

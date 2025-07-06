@@ -92,7 +92,7 @@ position_value(king, Pos, EndgamePhaseWeight, Value) :-
     Value is (1-EndgamePhaseWeight)*EarlyValue + EndgamePhaseWeight*LateValue.
 
 % Helper predicate to calculate position values with EndgamePhaseWeight (for pawn and king)
-position_row_value(Color, pawn, [], EndgamePhaseWeight, 0).
+position_row_value(_Color, pawn, [], _EndgamePhaseWeight, 0).
 position_row_value(Color, pawn, [PiecePos|RestPos], EndgamePhaseWeight, Value) :-
     (   
         Color = black ->
@@ -105,7 +105,7 @@ position_row_value(Color, pawn, [PiecePos|RestPos], EndgamePhaseWeight, Value) :
     position_value(pawn, Pos, EndgamePhaseWeight, CurValue),
     Value is CurValue + RestValue.
 
-position_row_value(Color, king, [], EndgamePhaseWeight, 0).
+position_row_value(_Color, king, [], _EndgamePhaseWeight, 0).
 position_row_value(Color, king, [PiecePos|RestPos], EndgamePhaseWeight, Value) :-
     (   
         Color = black ->
