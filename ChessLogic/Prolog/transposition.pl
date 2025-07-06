@@ -107,6 +107,11 @@ print_entry(ZobristKey) :-
 print_entry(ZobristKey) :-
     format('No entry found for key ~w~n', [ZobristKey]).
 
+%  White can use lower_bound if >= beta (cutoff)
+%  White can use upper_bound if <= alpha (no improvement)
+%  Black can use upper_bound if >= beta (cutoff for black means too high)
+%  Black can use lower_bound if <= alpha (no improvement for black means too low)
+
 % Helper predicates for determining evaluation types in traditional minimax
 % determine_eval_type(+Color, +FinalValue, +OriginalAlpha, +OriginalBeta, +Alpha, +Beta, -EvalType)
 determine_eval_type(Color, FinalValue, OriginalAlpha, OriginalBeta, Alpha, Beta, EvalType) :-
@@ -136,22 +141,3 @@ is_alpha_beta_cutoff(black, Value, Alpha, _Beta, alpha_cutoff) :-
     Value =< Alpha, !.
 is_alpha_beta_cutoff(_, _, _, _, no_cutoff).
 
-% =================================
-% TRANSPOSITION TABLE FOR COLOR-AWARE MINIMAX
-% =================================
-% This implementation is adapted for traditional minimax (not negamax).
-% Key differences from negamax-based transposition tables:
-%
-% 1. Color-aware evaluation types:
-%    - White (maximizing): alpha_cutoff -> lower_bound, beta_cutoff -> upper_bound
-%    - Black (minimizing): alpha_cutoff -> upper_bound, beta_cutoff -> lower_bound
-%
-% 2. Lookup logic considers player color:
-%    - White can use lower_bound if >= beta (cutoff)
-%    - White can use upper_bound if <= alpha (no improvement)
-%    - Black can use upper_bound if >= beta (cutoff for black means too high)
-%    - Black can use lower_bound if <= alpha (no improvement for black means too low)
-%
-% 3. Storage requires color context to determine correct node type
-%
-% =================================
