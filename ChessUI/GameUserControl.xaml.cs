@@ -135,7 +135,7 @@ namespace ChessUI
             control.DrawBoard(control.gameState.Board);
             control.isReview = true;
             control.SaveButton.IsEnabled = false;
-            control.CellGrid.IsHitTestVisible = false;
+            control.CellGrid.IsEnabled = false;
             control.DoButton.Visibility = Visibility.Visible;
             control.PlayButton.Visibility = Visibility.Visible;
             if (control.moveList.Count == 0) control.PlayButton.IsEnabled = false;
