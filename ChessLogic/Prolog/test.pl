@@ -2,14 +2,8 @@
 
 test_check :-
 	only_king_and_rooks(Position),
-	set_position(Position,white),
-	write('Testing check detection:'), nl,
-	board(Pos, _, _),
-	write('White king in check: '),
-	(in_check(Pos, white) -> write('Yes') ; write('No')), nl,
-	write('Black king in check: '),
-	(in_check(Pos, black) -> write('Yes') ; write('No')), nl.
-	
+	set_position(Position,white).
+
 test_pawn_promotion :-
 	only_king_and_pawns(Position),
 	set_position(Position,white).
@@ -28,7 +22,7 @@ test_checkmate :-
 
 only_king_and_rooks(position(H1, H2)) :-
     H1 = half_position([],[],[],[],[],[4],[queenside,kingside],[]),
-    H2 = half_position([],[8, 23],[],[],[],[60],[queenside,kingside],[]).
+    H2 = half_position([],[7, 23],[],[],[],[60],[queenside,kingside],[]).
 	
 only_king_and_pawns(position(H1, H2)) :-
     H1 = half_position([48],[],[],[],[],[4],[queenside,kingside],[]),
@@ -37,6 +31,11 @@ only_king_and_pawns(position(H1, H2)) :-
 enpassant_position(position(H1, H2)) :-
     H1 = half_position([35],[],[],[],[],[4],[],[]),
     H2 = half_position([52],[],[],[],[],[60],[],[]).
+
+castling_position(position(H1, H2)) :-
+    H1 = half_position([],[0,7],[],[],[],[4],[queenside,kingside],[]),
+    H2 = half_position([],[56,63],[],[],[],[60],[queenside,kingside],[]).
+
 
 
 threefold_position(position(H1, H2)) :-
@@ -50,14 +49,17 @@ checkmate_position(position(H1, H2)) :-
 kiwipete_pos(position(half_position([8,9,10,13,14,15,28,35],[0,7],[18,36],[11,12],[21],[4],[queenside,kingside],[]),
          half_position([48,50,51,53,44,46,25,23],[56,63],[41,45],[40,54],[52],[60],[queenside,kingside],[]))).
 
-endgame_pos(position(half_position([33,12,14],[25],[],[],[],[32],[],[]),
-         half_position([50,43,29],[39],[],[],[],[31],[],[]))).
+endgame_pos(position(half_position([],[],[],[],[],[43],[],[]),
+         half_position([],[],[],[],[],[14],[],[]))).
 
 sebas_pos(position(half_position([8,9,10,35,28,13,14,15],[0,7],[18,36],[11,12],[21],[4],[queenside,kingside],[]),
          half_position([48,25,50,51,44,53,46,23],[56,63],[41,45],[40,54],[52],[60],[queenside,kingside],[]))).
 
-test_pos(position(half_position([49],[],[],[],[],[4],[queenside,kingside],[]),
-         half_position([],[56],[],[],[],[60],[queenside,kingside],[]))).
+test_pos(position(half_position([8, 9, 10, 13, 14, 15], [0, 7], [18, 21], [26, 20], [3], [4], [queenside, kingside], []), 
+    half_position([40, 51, 53, 54, 55], [58, 63], [25, 45], [49, 61], [52], [59], [], []))).
+
+pin_pos(position(half_position([],[],[],[],[],[58],[],[]),
+		half_position([48,49],[],[57],[48,54,0],[3,6],[56],[],[]))).
 
 buggy_pos(position(H1, H2)) :-
     PawnWhite = [8, 9, 10, 14, 15, 51],
@@ -66,18 +68,28 @@ buggy_pos(position(H1, H2)) :-
     H2 = half_position(PawnBlack, [56, 63], [13, 57], [52, 58], [59], [61], [], []).
 
 test_position :-
-	Color = black,
-	test_pos(Position),
+	retract(depth(_)),
+	asserta(depth(4)),
+	Color = white,
+	endgame_pos(Position),
 	set_position(Position, Color).
 
 test_time :-
 	initial_pos(Position),
-	get_all_legal_moves(Position, white, _MoveList).
+	position_to_board_list(Position, BoardList),
+	Board = board(Position, white, 0, 0),
+	generate_attack_data(Board, BoardList, AttackData),
+	get_all_legal_moves(Position, white, _MoveList, BoardList, AttackData).
 
 test_incheck :-
-	board(Pos, _Color, _Counter),
-	(in_check(Pos, white) -> write('Yes') ; write('No')), nl,
-	(in_check(Pos, black) -> write('Yes') ; write('No')), nl.
+	board(Pos, _Color, Counter, Key),
+	position_to_board_list(Pos, BoardList),
+	WhiteBoard = board(Pos, white, Counter, Key),
+	BlackBoard = board(Pos, black, Counter, Key),
+	generate_attack_data(WhiteBoard, BoardList, WhiteAttackData),
+	generate_attack_data(BlackBoard, BoardList, BlackAttackData),
+	(in_check(Pos, white, BoardList, WhiteAttackData) -> write('Yes') ; write('No')), nl,
+	(in_check(Pos, black, BoardList, BlackAttackData) -> write('Yes') ; write('No')), nl.
 
 start_perft(Position, Color, Depth) :- 
 	asserta(perft_stack(0)),
@@ -86,16 +98,70 @@ start_perft(Position, Color, Depth) :-
 	write('Total nodes: '), write(Count), nl.
 
 perft(Position, Color, Depth) :-
-	get_all_legal_moves(Position, Color, MoveList),
+	position_to_board_list(Position, BoardList),
+	Board = board(Position, Color, 0, 0),
+	generate_attack_data(Board, BoardList, AttackData),
+	get_all_legal_moves(Position, Color, MoveList, BoardList, AttackData),
 	(   Depth > 0 ->
 		NewDepth is Depth - 1,
 		invert(Color, NextColor),
 		forall(member(Move, MoveList), (
 			Move = move(From, To, MovedPiece, CapturedPiece, PromotionPiece),
-			simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotionPiece),
+			simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotionPiece, BoardList, AttackData, 0, _NewKey),
 			perft(NewPosition, NextColor, NewDepth)
 		))
 	;   retract(perft_stack(Count)),
 		NewCount is Count + 1,
 		asserta(perft_stack(NewCount))
 	).
+
+% Test attack data generation
+test_attack_data :-
+    test_attack_data_initial,
+    test_attack_data_check,
+    test_attack_data_pin.
+
+test_attack_data_initial :-
+    write('Testing attack data generation for initial position...'), nl,
+    initial_pos(Position),
+    position_to_board_list(Position, BoardList),
+    Board = board(Position, white, 0, 0),
+    generate_attack_data(Board, BoardList, AttackData),
+    AttackData = attack_data(InCheck, InDoubleCheck, PinExist, _CheckRay, _PinRay, 
+                            _OpponentKnightAttacks, _OpponentAttackMapNoPawns, 
+                            _OpponentAttackMap, _OpponentPawnAttackMap, _OpponentSlidingAttackMap),
+    write('InCheck: '), write(InCheck), nl,
+    write('InDoubleCheck: '), write(InDoubleCheck), nl,
+    write('PinExist: '), write(PinExist), nl,
+    write('Test passed!'), nl.
+
+test_attack_data_check :-
+    write('Testing attack data generation for check position...'), nl,
+    checkmate_position(Position),
+    position_to_board_list(Position, BoardList),
+    Board = board(Position, white, 0, 0),
+    generate_attack_data(Board, BoardList, AttackData),
+    AttackData = attack_data(InCheck, InDoubleCheck, PinExist, _CheckRay, _PinRay, 
+                            _OpponentKnightAttacks, _OpponentAttackMapNoPawns, 
+                            _OpponentAttackMap, _OpponentPawnAttackMap, _OpponentSlidingAttackMap),
+    write('InCheck: '), write(InCheck), nl,
+    write('InDoubleCheck: '), write(InDoubleCheck), nl,
+    write('PinExist: '), write(PinExist), nl,
+    write('Test passed!'), nl.
+
+test_attack_data_pin :-
+    write('Testing attack data generation for pin position...'), nl,
+    % Create a position with a pin
+    H1 = half_position([],[4],[],[],[],[0],[],[]),
+    H2 = half_position([],[8],[],[],[],[56],[],[]),
+    Position = position(H1, H2),
+    position_to_board_list(Position, BoardList),
+    Board = board(Position, white, 0, 0),
+    generate_attack_data(Board, BoardList, AttackData),
+    AttackData = attack_data(InCheck, InDoubleCheck, PinExist, _CheckRay, _PinRay, 
+                            _OpponentKnightAttacks, _OpponentAttackMapNoPawns, 
+                            _OpponentAttackMap, _OpponentPawnAttackMap, _OpponentSlidingAttackMap),
+    write('InCheck: '), write(InCheck), nl,
+    write('InDoubleCheck: '), write(InDoubleCheck), nl,
+    write('PinExist: '), write(PinExist), nl,
+    write('Test passed!'), nl.

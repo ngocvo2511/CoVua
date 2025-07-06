@@ -1,7 +1,8 @@
 % Initialize default depth if not set
 init_minimax :-
     (depth(_) -> true ; asserta(depth(3))),
-    (stack(_, _, _) -> true ; asserta(stack(_, _, 0))).
+    retractall(stack(_, _, _, _)), % Clear any existing stack
+    asserta(stack(_, _, _, 0)).
 
 update_depth(Depth, NewDepth) :-
     NewDepth is Depth-1, !.	
@@ -21,50 +22,68 @@ update_alpha_beta(Color,Alpha,NewAlpha,Beta,NewBeta) :-
 
 bot_move(From, To, Status) :-
     init_minimax,
-    board(Position, Color, Counter),
+    board(Position, Color, Counter, Key),
+    Board = board(Position, Color, Counter, Key),
     depth(Depth),
     losing_value(white,Alpha),
 	losing_value(black,Beta),
     asserta(count(0)),
-    minimax(Position, Color, Counter, Move, Depth, _Value, Alpha, Beta),
+    minimax(Position, Color, Counter, Move, Depth, Value, Alpha, Beta),
     retract(count(Count)),
+    %write(Count),nl,
     %write('Depth: '), write(Depth), write(' Count: '), write(Count), nl,
     Move = move(From, To, _MovedPiece, _CapturedPiece, PromotionPiece),
     place_piece(From, To, Status, PromotionPiece),
     % Get the new game state after the move
-    board(NewPosition, NewColor, NewCounter),
-    check_game_status(NewPosition, NewColor, NewCounter, Status).
+    board(NewPosition, NewColor, NewCounter, NewKey),
+    check_game_status(NewPosition, NewColor, NewCounter, NewKey, Status).
 
-simulate_new_position_from_move_list([Move|_], Move, Color, Position, NewPosition) :-
+simulate_new_position_from_move_list([Move|_], Move, Color, Position, NewPosition, BoardList, AttackData) :-
     Move = move(From, To, MovedPiece, CapturedPiece, PromotionPiece),
-    simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotionPiece).
-simulate_new_position_from_move_list([_|Rest], Move, Color, Position, NewPosition) :-
-    simulate_new_position_from_move_list(Rest, Move, Color, Position, NewPosition).
-% simulate_new_position_from_move_list([], _, _, Position, Position, _).
+    simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotionPiece, BoardList, AttackData, 0, _NewKey).
+simulate_new_position_from_move_list([_|Rest], Move, Color, Position, NewPosition, BoardList, AttackData) :-
+    simulate_new_position_from_move_list(Rest, Move, Color, Position, NewPosition, BoardList, AttackData).
+%simulate_new_position_from_move_list([], _, _, Position, _, _, _).
 
-get_best(Position, Color, Counter, Depth, Alpha, Beta) :-
+get_best(Position, Color, Counter, Depth, Alpha, Beta, BoardList, AttackData) :-
     invert(Color, Op),
     update_depth(Depth, NewDepth),
-    %write('Depth: '), write(Depth), write(' Moves: '), write(MoveList), nl,
-    %generate_move(Move, Color, Position, NewPosition),
-    get_all_pseudo_legal_moves(Position, Color, MoveList),
-    quicksort(MoveList, SortedMoveList),
-    simulate_new_position_from_move_list(SortedMoveList, Move, Color, Position, NewPosition),
+    AttackData = attack_data(
+        InCheck, 
+        _InDoubleCheck, 
+        _PinExist, 
+        _CheckRay, 
+        _PinRay, 
+        _OpponentKnightAttacks, 
+        _OpponentAttackMapNoPawns,
+        _OpponentAttackMap, 
+        _OpponentPawnAttackMap, 
+        _OpponentSlidingAttackMap
+    ),   
+    get_all_pseudo_legal_moves(Position, Color, MoveList, BoardList, AttackData),
+    quicksort(MoveList, SortedMoveList,AttackData),
+    simulate_new_position_from_move_list(SortedMoveList, Move, Color, Position, NewPosition, BoardList, AttackData),
+    Move = move(From, To, MovedPiece, CapturedPiece, PromotionPiece),
     update_alpha_beta(Color, Alpha, NewAlpha, Beta, NewBeta),
-    (   in_check(NewPosition, Color) ->
-        (   SortedMoveList = [] ->
+    (   SortedMoveList = [] ->
+        (   InCheck = false ->
             Value is 0
         ;   losing_value(Color, Value)
         )
-    ;   minimax(NewPosition, Op, Counter, _Move, NewDepth, Value, NewAlpha, NewBeta)
+    ;   (   (NewDepth \= 0 ; (NewDepth = 0, Move = move(_,_,_,none,_))) ->
+            minimax(NewPosition, Op, Counter, _Move, NewDepth, Value, NewAlpha, NewBeta)
+        ;   minimax_quiescence(NewPosition, Op, Counter, 4, Value, NewAlpha, NewBeta)
+        )
     ),
+    (prune(Value, Color, Alpha, Beta) -> compare_move(Move, Value, Color), replace(lower_bound), !, fail ; true),
     compare_move(Move, Value, Color),
-    prune(Value, Color, Alpha, Beta), !, fail.
+    fail.
 
 compare_move(Move, Value, Color) :-
     get(OldMove, OldValue),
     (   ((Color = white, OldValue < Value) ; (Color = black, OldValue > Value) ; OldMove = move(64, 64, none, none, none)) ->
-        replace(Move, Value)
+        replace(Move, Value),
+        replace(exact)
     ;   true
     ), !.
 
@@ -72,56 +91,120 @@ prune(Value, Color, Alpha, Beta) :-
     (Color = white, Value >= Beta);
     (Color = black, Value =< Alpha).
 
-minimax(Position, _Color, _Counter, move(64, 64, none, none, none), 0, Value, _Alpha, _Beta) :-
-    % for counting nodes at final depth for testing
+minimax(Position, Color, Counter, move(64, 64, none, none, none), 0, Value, Alpha, Beta) :-
     count(Count),
     retract(count(Count)),
     NewCount is Count + 1,
     asserta(count(NewCount)),
     Position = position(WhiteHalf, BlackHalf),
-    score_half(WhiteHalf, white, ValueWhite),
-    score_half(BlackHalf, black, ValueBlack),
-    Value is ValueWhite - ValueBlack, !.
-        
-
+    % for counting nodes at final depth for testing
+    position_to_board_list(Position, BoardList),
+    zobrist_hash_from_board_list(BoardList, Position, Color, Key),
+    lookup_evaluation(Key, 0, Color, Alpha, Beta, ResultValue, _ResultMove),
+    (   ResultValue \= none ->
+        % If we found a stored evaluation, use it
+        Value = ResultValue
+    ;   score(WhiteHalf, BlackHalf, Value)
+    ), !.
 
 minimax(Position, Color, Counter, Move, Depth, Value, Alpha, Beta) :-
-    % count(Count),
-    % retract(count(Count)),
-    % NewCount is Count + 1,
-    % asserta(count(NewCount)),
-    (   (is_threefold_repetition(Position, Color) ; is_fifty_move(Counter)) ->
-        Value is 0
-    ;
-        losing_value(Color, Worst),
-        push(move(64, 64, none, none, none), Worst),
-        not(get_best(Position, Color, Counter, Depth, Alpha, Beta)),
-        pop(Move, Value)
-    ), 
-!.
+    count(Count),
+    retract(count(Count)),
+    NewCount is Count + 1,
+    asserta(count(NewCount)), 
+    position_to_board_list(Position, BoardList),
+    zobrist_hash_from_board_list(BoardList, Position, Color, Key),
+    lookup_evaluation(Key, Depth, Color, Alpha, Beta, ResultValue, ResultMove),
+    (   ResultValue \= none ->
+        Value = ResultValue,
+        Move = ResultMove
+    ;   generate_attack_data(board(Position, Color, Counter, Key), BoardList, AttackData),
+        (   (is_repeated(Key) ; is_fifty_move(Counter)) ->
+            Value is 0
+        ;   losing_value(Color, Worst),
+            push(move(64, 64, none, none, none), Worst, upper_bound),
+            not(get_best(Position, Color, Counter, Depth, Alpha, Beta, BoardList, AttackData)),
+            pop(Move, Value, Type),
+            store_evaluation(Key, Depth, Color, Value, Type, Move)
+        )
+    ), !.
+
+minimax_quiescence(Position, _Color, _Counter, 0, Value, _Alpha, _Beta) :-
+    Position = position(WhiteHalf, BlackHalf),
+    score(WhiteHalf, BlackHalf, Value), !.
+
+minimax_quiescence(Position, Color, Counter, Depth, Value, Alpha, Beta) :-
+    losing_value(Color, Worst),
+    push(move(64, 64, none, none, none), Worst, quiescence),
+    not(get_best_quiescence(Position, Color, Counter, Depth, Alpha, Beta)),
+    pop(_Move, Value, _Type), !.
+
+get_best_quiescence(Position, Color, Counter, Depth, Alpha, Beta) :-
+    update_depth(Depth, NewDepth),
+    Position = position(WhiteHalf, BlackHalf),
+    score(WhiteHalf, BlackHalf, Eval),
+    compare_move(move(64, 64, none, none, none), Eval, Color),
+    (prune(Eval, Color, Alpha, Beta) -> !, fail ; true),
+    invert(Color, Op),
+    position_to_board_list(Position, BoardList),
+    % Calculate zobrist key for attack data generation
+    zobrist_hash_from_board_list(BoardList, Position, Color, Key),
+    generate_attack_data(board(Position, Color, Counter, Key), BoardList, AttackData),
+    AttackData = attack_data(
+        InCheck, 
+        _InDoubleCheck, 
+        _PinExist, 
+        _CheckRay, 
+        _PinRay, 
+        _OpponentKnightAttacks, 
+        _OpponentAttackMapNoPawns,
+        _OpponentAttackMap, 
+        _OpponentPawnAttackMap, 
+        _OpponentSlidingAttackMap
+    ),   
+
+    get_all_noisy_pseudo_legal_moves(Position, Color, MoveList, BoardList, AttackData),
+    quicksort(MoveList, SortedMoveList,AttackData),
+    simulate_new_position_from_move_list(SortedMoveList, Move, Color, Position, NewPosition, BoardList, AttackData),
+
+    update_alpha_beta(Color, Alpha, NewAlpha, Beta, NewBeta),
+    (   SortedMoveList = [] ->
+        (   InCheck = false ->
+            Value is 0
+        ;   losing_value(Color, Value)
+        )
+    ;   minimax_quiescence(NewPosition, Op, Counter, NewDepth, Value, NewAlpha, NewBeta)
+    ),
+    compare_move(Move, Value, Color),
+    prune(Value, Color, Alpha, Beta), !, fail.
 
 
 % =================================
 % Minimax value stack
 % =================================
-push(Move, Value) :-
+push(Move, Value, Type) :-
     top_depth(Depth),
     NewDepth is Depth + 1,
-    asserta(stack(Move, Value, NewDepth)), !.
-pop(Move,Value) :-
+    asserta(stack(Move, Value, Type, NewDepth)), !.
+pop(Move, Value, Type) :-
    top_depth(Depth),
-   retract(stack(Move, Value, Depth)), !.
+   retract(stack(Move, Value, Type, Depth)), !.
 
 get(Move, Value) :-
     top_depth(Depth),
-    stack(Move, Value, Depth), !.
+    stack(Move, Value, _, Depth), !.
 
 top_depth(Depth) :-
-    (   stack(_, _, Depth) -> true
+    (   stack(_, _, _, Depth) -> true
     ;   Depth = 0
     ), !.
 
 replace(Move, Value) :-
     top_depth(Depth),
-    retract(stack(_, _, Depth)),
-    asserta(stack(Move, Value, Depth)), !.
+    retract(stack(_, _, Type, Depth)),
+    asserta(stack(Move, Value, Type, Depth)), !.
+
+replace(Type) :-
+    top_depth(Depth),
+    retract(stack(Move, Value, _, Depth)),
+    asserta(stack(Move, Value, Type, Depth)), !.
