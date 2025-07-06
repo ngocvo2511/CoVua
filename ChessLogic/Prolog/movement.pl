@@ -97,7 +97,7 @@ legal_move_for_piece(queen, From, To, Color, Position, BoardList, AttackData) :-
         _OpponentSlidingAttackMap
     ),
 	(not(is_pinned(From, PinExist, PinRay)); is_moving_along_ray(Position, Color, From, To)),
-	(InCheck = false; square_is_in_check_ray(To, InCheck, CheckRay)),
+	(InCheck = false; square_is_in_check_ray(To, InCheck, CheckRay)).
 
 legal_move_for_piece(king, From, To, Color, Position, BoardList, AttackData) :-
 	short_move(king, From, Color, Position, To, BoardList, AttackData),
