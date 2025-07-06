@@ -60,26 +60,32 @@ namespace ChessUI
             control.DrawBoard(control.gameState.Board);
             if (control.gameState is GameStateAI && color == Player.Black)
             {
-                
-                var result = PrologEngine.AiMove();
-                if (result.HasValue)
+                // Thêm delay để người chơi có thể thấy bàn cờ ban đầu trước khi máy đi
+                Task.Delay(500).ContinueWith(_ =>
                 {
-                    var (status, from, to) = result.Value;
-                    control.gameState.MakeMove(new NormalMove(Position.IntToPosition(from), Position.IntToPosition(to)));
-                    control.gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
-                    control.isRedTurn = !control.isRedTurn;
-                    if (control.redTimer != null) control.SwitchTurn();
-                    control.WarningTextBlock.Text = status == "CHECK" ? "Chiếu tướng!" : null;
-                    control.TurnTextBlock.Text = control.gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
-                    control.DrawCapturedGrid(control.gameState.CapturedPiece);
-                    control.DrawBoard(control.gameState.Board);
-                    control.ShowPrevMove(control.gameState.Moved.First().Item1);
-                    Sound.PlayMoveSound();
-                }
-                else
-                {
-                    Console.WriteLine("Không thể thực hiện bot_move.");
-                }
+                    control.Dispatcher.Invoke(() =>
+                    {
+                        var result = PrologEngine.AiMove();
+                        if (result.HasValue)
+                        {
+                            var (status, from, to) = result.Value;
+                            control.gameState.MakeMove(new NormalMove(Position.IntToPosition(from), Position.IntToPosition(to)));
+                            control.gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
+                            control.isRedTurn = !control.isRedTurn;
+                            if (control.redTimer != null) control.SwitchTurn();
+                            control.WarningTextBlock.Text = status == "CHECK" ? "Chiếu tướng!" : null;
+                            control.TurnTextBlock.Text = control.gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
+                            control.DrawCapturedGrid(control.gameState.CapturedPiece);
+                            control.DrawBoard(control.gameState.Board);
+                            control.ShowPrevMove(control.gameState.Moved.First().Item1);
+                            Sound.PlayMoveSound();
+                        }
+                        else
+                        {
+                            Console.WriteLine("Không thể thực hiện bot_move.");
+                        }
+                    });
+                });
             }
             return control;
         }
