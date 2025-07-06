@@ -6,15 +6,6 @@
 :- dynamic zobrist_en_passant/2. % zobrist_en_passant(File, Value)
 :- dynamic zobrist_side_to_move/1. % zobrist_side_to_move(Value)
 
-% Helper predicate to read all characters from a stream
-read_chars(Stream, Chars) :-
-    get_char(Stream, Char),
-    (   Char = end_of_file ->
-        Chars = []
-    ;   Chars = [Char|RestChars],
-        read_chars(Stream, RestChars)
-    ).
-
 % Read random numbers from RandomNumbers.txt file
 read_random_numbers :-
     % Clear any existing random numbers
@@ -22,24 +13,23 @@ read_random_numbers :-
     
     % Read the file
     open('RandomNumbers.txt', read, Stream),
-    read_chars(Stream, Chars),
+    read_stream_to_codes(Stream, Codes),
     close(Stream),
-    atom_chars(Atom, Chars),
-    atom_string(Atom, NumberString),
     
-    % Split by commas and convert to numbers
-    split_string(NumberString, ',', '', NumberStrings),
+    % Convert codes to atom, then split by commas
+    atom_codes(Atom, Codes),
+    atomic_list_concat(NumberAtoms, ',', Atom),
     
     % Store each number with its index
-    store_random_numbers(NumberStrings, 0).
+    store_random_numbers_atoms(NumberAtoms, 0).
 
-% Helper predicate to store numbers with indices
-store_random_numbers([], _).
-store_random_numbers([NumberString|Rest], Index) :-
-    number_string(Number, NumberString),
+% Helper predicate to store numbers with indices (using atoms)
+store_random_numbers_atoms([], _).
+store_random_numbers_atoms([NumberAtom|Rest], Index) :-
+    atom_number(NumberAtom, Number),
     assertz(random_number(Index, Number)),
     NextIndex is Index + 1,
-    store_random_numbers(Rest, NextIndex).
+    store_random_numbers_atoms(Rest, NextIndex).
 
 % Get a random number by index
 get_random_number(Index, Number) :-
