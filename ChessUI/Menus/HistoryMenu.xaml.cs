@@ -92,7 +92,7 @@ namespace ChessUI.Menus
             switch (r.Reason)
             {
                 case "Checkmate":
-                    reason += "Đối thủ bị hiếu bí";
+                    reason += "Đối thủ bị chiếu bí";
                     break;
                 case "Stalemate":
                     reason += "Đối thủ hết nước đi";

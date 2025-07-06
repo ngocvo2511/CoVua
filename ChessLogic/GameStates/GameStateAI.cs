@@ -8,18 +8,21 @@ namespace ChessLogic.GameStates.GameState
     public class GameStateAI : GameState
     {
         public int depth { get; set; }
+        public bool isAIFirst { get; set; } = false;
         public Piece AiCapturedPiece { get; protected set; }
-        public GameStateAI(Player player, Board board, int depth, int timeLimit) : base(player, board, timeLimit)
+        public GameStateAI(Player player, Board board, int depth, int timeLimit, bool isAIFirst) : base(player, board, timeLimit)
         {
             this.depth = depth;
+            this.isAIFirst = isAIFirst;
         }
         public GameStateAI(GameStateForLoad gameState, Board board) : base(gameState.CurrentPlayer, board, gameState.timeRemainingWhite, gameState.timeRemainingBlack,gameState.Moved,gameState.CapturedWhitePiece,gameState.CapturedBlackPiece)
         {
             this.depth = gameState.depth;
+            this.isAIFirst = gameState.isAIFirst;
         }
         public override void UndoMove()
         {
-            if (Moved.Count <= 1 || CurrentPlayer == Player.Black) return;
+            if (Moved.Count <= 1) return;
             for (int i = 0; i < 2; i++)
             {
                 var undo = Moved.Pop();
@@ -34,7 +37,6 @@ namespace ChessLogic.GameStates.GameState
                 else CapturedPiece = undo.Item2.Item1;
                 CurrentPlayer = CurrentPlayer.Opponent();
             }
-            CurrentPlayer = Player.White;
         }
     }
 }

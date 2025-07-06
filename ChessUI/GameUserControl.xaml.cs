@@ -37,11 +37,11 @@ namespace ChessUI
         private Stack<Tuple<Move, Tuple<Piece, string>>> moveList;
         private bool isReview = false;
 
-        public GameUserControl(int timeLimit, bool isAI, int difficult = 1)
+        public GameUserControl(int timeLimit, bool isAI, bool isAIFirst,int difficult = 1)
         {
             InitializeComponent();
             InitializeBoard();
-            if (isAI == true) gameState = new GameStateAI(Player.White, Board.Initial(), difficult, timeLimit);
+            if (isAI == true) gameState = new GameStateAI(Player.White, Board.Initial(), difficult, timeLimit, isAIFirst);
             else gameState = new GameState2P(Player.White, Board.Initial(), timeLimit);
             ShowGameInformation(difficult);
             if (timeLimit != 0)
@@ -50,16 +50,17 @@ namespace ChessUI
                 SwitchTurn();
             }
         }
-        public static GameUserControl Create(Player color, int timeLimit, bool isAI, int difficult = 1)
+        public static GameUserControl Create(Player color, int timeLimit, bool isAI, bool isAIFirst, int difficult = 1)
         {
-            var control = new GameUserControl(timeLimit, isAI, difficult);
+            var control = new GameUserControl(timeLimit, isAI, isAIFirst, difficult);
             string rootPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\.."));
             string prologPath = System.IO.Path.Combine(rootPath, "ChessLogic", "Prolog", "chess.pl");
             PrologEngine.Initialize(prologPath);
             control.gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
             control.DrawBoard(control.gameState.Board);
-            if (control.gameState is GameStateAI && color == Player.Black)
+            if (control.gameState is GameStateAI && isAIFirst)
             {
+                control.UnableClick();
                 // Thêm delay để người chơi có thể thấy bàn cờ ban đầu trước khi máy đi
                 Task.Delay(500).ContinueWith(_ =>
                 {
@@ -86,6 +87,7 @@ namespace ChessUI
                         }
                     });
                 });
+                control.AbleClick();
             }
             return control;
         }
@@ -137,7 +139,7 @@ namespace ChessUI
             {
                 control.gameState = new GameState2P(startPlayer, board);
             }
-            else control.gameState = new GameStateAI(startPlayer, board, historyRecord.Depth,0);
+            else control.gameState = new GameStateAI(startPlayer, board, historyRecord.Depth,0,historyRecord.isAIFirst);
             control.ShowGameInformation(historyRecord.Depth);
             control.DrawBoard(control.gameState.Board);
             control.isReview = true;
@@ -410,7 +412,8 @@ namespace ChessUI
             if (newBoard[moveList.Peek().Item1.FromPos].Color == Player.Black) startPlayer = Player.Black;
             else startPlayer = Player.White;
             if(gameState.Moved.Count>0) HidePrevMove(gameState.Moved.Peek().Item1);
-            if(gameState is GameStateAI AI) gameState = new GameStateAI(startPlayer, Board.Initial(), AI.depth, 0); 
+            bool isAIFirst = gameState is GameStateAI Ai && Ai.isAIFirst;
+            if (gameState is GameStateAI AI) gameState = new GameStateAI(startPlayer, Board.Initial(), AI.depth, 0,isAIFirst); 
             else gameState = new GameState2P(startPlayer, Board.Initial());
             TurnTextBlock.Text = (startPlayer == Player.Black) ? "Đen" : "Trắng";
             BlackCapturedGrid.Children.Clear();
@@ -430,6 +433,7 @@ namespace ChessUI
         private void UndoButton_Click(object sender, RoutedEventArgs e)
         {
             Sound.PlayButtonClickSound();
+            if (gameState is GameStateAI Ai && Ai.Moved.Count <= 1 && isReview == false) return;
             if (gameState.Moved.Count != 0) HidePrevMove(gameState.Moved.First().Item1);
             OnToPositionSelected(selectedPos);
             if (isReview == true)
@@ -549,7 +553,7 @@ namespace ChessUI
                 PlayButton.Visibility = Visibility.Collapsed;
                 SaveButton.IsEnabled = true;            
                 CellGrid.IsEnabled = true;
-                if(gameState is GameStateAI AI && gameState.CurrentPlayer == Player.Black)
+                if(gameState is GameStateAI AI && gameState.CurrentPlayer == Player.White && AI.isAIFirst)
                 {
                     UnableClick();
                     await Task.Delay(500); // Delay to simulate thinking time

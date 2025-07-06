@@ -40,6 +40,7 @@ namespace ChessLogic
             GameStateForSave gameStateForSave = new GameStateForSave();
             gameStateForSave.GameType = gameState is GameState2P ? "GameState2P" : "GameStateAI";
             gameStateForSave.depth = (int)((gameState is GameStateAI) ? PrologEngine.GetDepth() : 0);
+            gameStateForSave.isAIFirst = (gameState is GameStateAI) ? ((GameStateAI)gameState).isAIFirst : false;
             gameStateForSave.CurrentPlayer = (PrologEngine.GetCurrentPlayer() == Player.White) ? "White" : "Black";
             gameStateForSave.timeRemainingWhite = gameState.timeRemainingWhite;
             gameStateForSave.timeRemainingBlack = gameState.timeRemainingBlack;
@@ -55,6 +56,7 @@ namespace ChessLogic
             GameStateForLoad gameStateForLoad = new GameStateForLoad();
             gameStateForLoad.GameType = gameStateForSave.GameType;
             gameStateForLoad.depth = gameStateForSave.depth;
+            gameStateForLoad.isAIFirst = gameStateForSave.isAIFirst;
             gameStateForLoad.CurrentPlayer = (gameStateForSave.CurrentPlayer == "White") ? Player.White : Player.Black;
             gameStateForLoad.timeRemainingWhite = gameStateForSave.timeRemainingWhite;
             gameStateForLoad.timeRemainingBlack = gameStateForSave.timeRemainingBlack;
@@ -101,7 +103,8 @@ namespace ChessLogic
             string gameMode = (gameState is GameState2P) ? "2P" : "AI";
             string historyString = PrologEngine.GetRawHistory();
             int depth = (int)((gameState is GameStateAI) ? PrologEngine.GetDepth() : 0);
-            HistoryRecord historyRecord = new HistoryRecord(gameMode, gameState.Result, historyString, depth);
+            bool isAIFirst = (gameState is GameStateAI) ? ((GameStateAI)gameState).isAIFirst : false;
+            HistoryRecord historyRecord = new HistoryRecord(gameMode, gameState.Result, historyString, depth, isAIFirst);
             string fileName = $"{gameMode}_{DateTime.Now:yyyyMMdd_HHmmss}.History";
             string json = JsonSerializer.Serialize(historyRecord, new JsonSerializerOptions { WriteIndented = true });
             string projectRoot = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\");
