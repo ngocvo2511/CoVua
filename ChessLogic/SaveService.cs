@@ -41,7 +41,7 @@ namespace ChessLogic
             gameStateForSave.GameType = gameState is GameState2P ? "GameState2P" : "GameStateAI";
             gameStateForSave.depth = (int)((gameState is GameStateAI) ? PrologEngine.GetDepth() : 0);
             gameStateForSave.CurrentPlayer = (PrologEngine.GetCurrentPlayer() == Player.White) ? "White" : "Black";
-            gameStateForSave.timeRemainingWhite = gameState.timeRemainingRed;
+            gameStateForSave.timeRemainingWhite = gameState.timeRemainingWhite;
             gameStateForSave.timeRemainingBlack = gameState.timeRemainingBlack;
             gameStateForSave.historyBoard = PrologEngine.GetRawHistory();
             gameStateForSave.CapturedWhitePiece = new List<string>();

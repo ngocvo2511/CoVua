@@ -51,6 +51,7 @@ namespace ChessUI
         {
             try
             {
+                Sound.PlayButtonClickSound();
                 CreateHistoryMenu();
                 string rootPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\.."));
                 string prologPath = System.IO.Path.Combine(rootPath, "ChessLogic", "Prolog", "test.pl");
@@ -74,11 +75,7 @@ namespace ChessUI
             Sound.PlayButtonClickSound();
             CreateInstructionMenu();
         }
-        //private void MainMenu_HistoryButtonClicked(object sender, RoutedEventArgs e)
-        //{
-        //    Sound.PlayButtonClickSound();
-        //    CreateHistoryMenu();
-        //}
+
 
         private void MainMenu_LoadButton_Clicked(object sender, RoutedEventArgs e)
         {
@@ -250,7 +247,7 @@ namespace ChessUI
             onGame = true;
             if (gameUserControl != null) gameUserControl.ResetTimer();
             color = settingsModel.HumanFirst ? Player.White : Player.Black;
-            gameUserControl = GameUserControl.Create(color, settingsModel.IsTimeLimit ? settingsModel.TimeLimit * 60 : 0, true, difficulty);
+            gameUserControl = GameUserControl.Create(color, 0, true, difficulty);
             gameUserControl.PauseButtonClicked += PauseButtonClicked;
             gameUserControl.SaveButtonClicked += SaveButtonClicked;
             gameUserControl.GameOver += OnGameOver;

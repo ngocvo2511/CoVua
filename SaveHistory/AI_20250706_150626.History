@@ -1,0 +1,7 @@
+{
+  "GameMode": "AI",
+  "Reason": "Checkmate",
+  "Winner": "White",
+  "HistoryString": "[move(64,64,none,none,none),move(6,21,knight,none,none),move(51,35,pawn,none,none),move(1,18,knight,none,none),move(35,27,pawn,none,none),move(18,28,knight,none,none),move(27,19,pawn,none,none),move(12,19,pawn,pawn,none),move(52,44,pawn,none,none),move(21,38,knight,none,none),move(60,52,king,none,none),move(3,21,queen,none,none),move(52,51,king,none,none),move(38,53,knight,pawn,none),move(51,52,king,none,none),move(53,59,knight,queen,none),move(52,59,king,knight,none),move(21,61,queen,bishop,none),move(59,51,king,none,none),move(61,54,queen,pawn,none),move(51,42,king,none,none),move(54,63,queen,rook,none),move(42,35,king,none,none),move(63,62,queen,knight,none),move(35,27,king,none,none),move(62,58,queen,bishop,none),move(27,35,king,none,none),move(58,49,queen,pawn,none),move(35,36,king,none,none),move(49,56,queen,rook,none),move(36,27,king,none,none),move(56,57,queen,knight,none),move(27,35,king,none,none),move(57,50,queen,pawn,none),move(35,27,king,none,none),move(50,43,queen,none,none)]",
+  "Depth": 3
+}

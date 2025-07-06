@@ -1,10 +1,18 @@
 {
-  "GameType": "GameState2P",
-  "depth": 0,
+  "GameType": "GameStateAI",
+  "depth": 3,
   "CurrentPlayer": "White",
-  "timeRemainingWhite": 599,
-  "timeRemainingBlack": 600,
-  "historyBoard": "[move(64,64,none,none,none)]",
-  "CapturedWhitePiece": [],
-  "CapturedBlackPiece": []
+  "timeRemainingWhite": 0,
+  "timeRemainingBlack": 0,
+  "historyBoard": "[move(64,64,none,none,none),move(9,25,pawn,none,none),move(57,42,knight,none,none),move(10,26,pawn,none,none),move(42,25,knight,pawn,none),move(11,27,pawn,none,none),move(62,45,knight,none,none),move(12,28,pawn,none,none),move(45,28,knight,pawn,none),move(13,29,pawn,none,none),move(28,43,knight,none,none),move(15,31,pawn,none,none),move(25,42,knight,none,none),move(14,30,pawn,none,none),move(52,44,pawn,none,none),move(8,16,pawn,none,none),move(59,45,queen,none,none),move(3,19,queen,none,none),move(42,27,knight,pawn,none),move(5,12,bishop,none,none),move(27,12,knight,bishop,none),move(4,12,king,knight,none),move(45,0,queen,rook,none),move(19,10,queen,none,none),move(61,52,bishop,none,none),move(6,21,knight,none,none),move(60,62,king,none,none)]",
+  "CapturedWhitePiece": [
+    "wP",
+    "wP",
+    "wP",
+    "wB",
+    "wR"
+  ],
+  "CapturedBlackPiece": [
+    "bKn"
+  ]
 }

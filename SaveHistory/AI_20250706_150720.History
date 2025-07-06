@@ -1,0 +1,7 @@
+{
+  "GameMode": "AI",
+  "Reason": "Checkmate",
+  "Winner": "Black",
+  "HistoryString": "[move(64,64,none,none,none),move(10,26,pawn,none,none),move(62,45,knight,none,none),move(12,28,pawn,none,none),move(45,28,knight,pawn,none),move(11,19,pawn,none,none),move(28,43,knight,none,none),move(4,12,king,none,none),move(57,42,knight,none,none),move(12,20,king,none,none),move(42,36,knight,none,none),move(20,27,king,none,none),move(36,42,knight,none,none),move(27,35,king,none,none),move(52,44,pawn,none,none),move(35,34,king,none,none),move(49,41,pawn,none,none)]",
+  "Depth": 3
+}

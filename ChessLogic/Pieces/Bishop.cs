@@ -12,12 +12,5 @@ namespace ChessLogic
         {
             Color = color;
         }
-
-        public override Piece Copy()
-        {
-            Bishop copy = new Bishop(Color);
-            copy.HasMoved = HasMoved;
-            return copy;
-        }
     }
 }

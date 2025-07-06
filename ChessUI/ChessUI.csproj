@@ -276,10 +276,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Menus\SearchingMatchMenu.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="Menus\SelectGameModeMenu.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -321,9 +317,6 @@
     </Compile>
     <Compile Include="Menus\PauseMenu.xaml.cs">
       <DependentUpon>PauseMenu.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Menus\SearchingMatchMenu.xaml.cs">
-      <DependentUpon>SearchingMatchMenu.xaml</DependentUpon>
     </Compile>
     <Compile Include="Menus\SelectGameModeMenu.xaml.cs">
       <DependentUpon>SelectGameModeMenu.xaml</DependentUpon>
