@@ -30,7 +30,7 @@ namespace ChessUI
         private Position selectedPos = null;
         private DispatcherTimer redTimer;
         private DispatcherTimer blackTimer;
-        private bool isRedTurn = true;
+        private bool isWhiteTurn = true;
         private Brush redBrush = new SolidColorBrush(Colors.Red);
         private Brush blackBrush = new SolidColorBrush(Colors.Black);
         private CancellationTokenSource cts = new CancellationTokenSource();
@@ -71,7 +71,7 @@ namespace ChessUI
                             var (status, from, to) = result.Value;
                             control.gameState.MakeMove(new NormalMove(Position.IntToPosition(from), Position.IntToPosition(to)));
                             control.gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
-                            control.isRedTurn = !control.isRedTurn;
+                            control.isWhiteTurn = !control.isWhiteTurn;
                             if (control.redTimer != null) control.SwitchTurn();
                             control.WarningTextBlock.Text = status == "CHECK" ? "Chiếu tướng!" : null;
                             control.TurnTextBlock.Text = control.gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
@@ -107,6 +107,7 @@ namespace ChessUI
             else control.gameState = new GameState2P(gameStateForLoad, board);
             control.ShowGameInformation(gameStateForLoad.depth);
             control.DrawBoard(control.gameState.Board);
+            control.isWhiteTurn = control.gameState.CurrentPlayer == Player.White;
             foreach (var piece in control.gameState.CapturedWhitePiece) control.DrawCapturedGrid(piece);
             foreach (var piece in control.gameState.CapturedBlackPiece) control.DrawCapturedGrid(piece);
             if (control.gameState.Moved.Any()) control.ShowPrevMove(control.gameState.Moved.First().Item1);
@@ -149,10 +150,12 @@ namespace ChessUI
         }
         private void InitializeTimer()
         {
-            int minutes = gameState.timeRemainingWhite / 60;
-            int seconds = gameState.timeRemainingWhite % 60;
-            redClock.Text = $"{minutes:D2}:{seconds:D2}";
-            blackClock.Text = $"{minutes:D2}:{seconds:D2}";
+            int minuteWhite = gameState.timeRemainingWhite / 60;
+            int secondWhite = gameState.timeRemainingWhite % 60;
+            redClock.Text = $"{minuteWhite:D2}:{secondWhite:D2}";
+            int minuteBlack = gameState.timeRemainingBlack / 60;
+            int secondBlack = gameState.timeRemainingBlack % 60;
+            blackClock.Text = $"{minuteBlack:D2}:{secondBlack:D2}";
 
             redTimer = new DispatcherTimer();
             redTimer.Interval = TimeSpan.FromSeconds(1);
@@ -218,7 +221,7 @@ namespace ChessUI
             if (redTimer == null) return;
             if (!gameState.IsGameOver())
             {
-                if (isRedTurn)
+                if (isWhiteTurn)
                 {
                     redTimer.Start();
                 }
@@ -248,7 +251,7 @@ namespace ChessUI
             redTimer.Stop();
             blackTimer.Stop();
 
-            if (isRedTurn)
+            if (isWhiteTurn)
             {
                 redTimer.Start();
             }
@@ -294,7 +297,7 @@ namespace ChessUI
         }
         private async void HandleMove(Move move, string status)
         {
-            isRedTurn = !isRedTurn;
+            isWhiteTurn = !isWhiteTurn;
             if (redTimer != null) SwitchTurn();
             Sound.PlayMoveSound();
             UnableClick();
@@ -350,7 +353,7 @@ namespace ChessUI
                     var (status1, from, to) = result1.Value;
                     gameState.MakeMove(new NormalMove(Position.IntToPosition(from), Position.IntToPosition(to)));
                     gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
-                    isRedTurn = !isRedTurn;
+                    isWhiteTurn = !isWhiteTurn;
                     if (redTimer != null) SwitchTurn();
                     DrawCapturedGrid(gameState.CapturedPiece);
                     DrawBoard(gameState.Board);
@@ -482,7 +485,7 @@ namespace ChessUI
                 UndoCapturedGrid(gameState.CapturedPiece);
                 if (gameState is GameStateAI AI)
                     UndoAiCapturedGrid(AI.AiCapturedPiece);
-                isRedTurn = gameState.CurrentPlayer == Player.White;
+                isWhiteTurn = gameState.CurrentPlayer == Player.White;
                 if (redTimer != null) SwitchTurn();
             }
         }
@@ -557,7 +560,7 @@ namespace ChessUI
                         var (status1, from, to) = result1.Value;
                         gameState.MakeMove(new NormalMove(Position.IntToPosition(from), Position.IntToPosition(to)));
                         gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
-                        isRedTurn = !isRedTurn;
+                        isWhiteTurn = !isWhiteTurn;
                         if (redTimer != null) SwitchTurn();
                         DrawCapturedGrid(gameState.CapturedPiece);
                         DrawBoard(gameState.Board);
