@@ -1,9 +1,19 @@
 init :-
-	retractall(board(_,_,_)),
+	retractall(board(_,_,_,_)),
 	retractall(state(_)),
 	retractall(history(_)),
 	retractall(depth(_)),
 	retractall(stack(_,_,_)),
+	retractall(attack_bitboard(_, _, _)),
+	retractall(attack_bitboard(_, _, _, _)),
+	retractall(move_direction(_, _)),
+	retractall(king_distance(_, _, _)),
+	retractall(orthogonal_distance(_, _, _)),
+	retractall(centre_manhattan_distance(_, _)),
+	clear_table,
+	initialize_zobrist_tables,
+	precompute_move,
+	calculate_distances,
 	set_position(begin),
 	% Initialize default depth if not set
 	asserta(depth(3)).
@@ -14,45 +24,64 @@ initial_pos(position(H1,H2)):-
 	PawnBlack = [48,49,50,51,52,53,54,55],
 	H2 = half_position(PawnBlack,[56,63],[57,62],[58,61],[59],[60],[queenside,kingside],[]).
 
+set_depth(Depth) :-
+	retract(depth(_)),
+	asserta(depth(Depth)), !.
+
 set_position(begin) :-
-	retractall(board(_,_,_)),
+	retractall(board(_,_,_,_)),
 	initial_pos(Position),
-	asserta(board(Position, white, 0)),
-	init_history(Position, white),!.
+	position_to_board_list(Position, BoardList),
+	zobrist_hash_from_board_list(BoardList, Position, white, Key),
+	asserta(board(Position, white, 0, Key)),
+	init_history(Position, white, Key),!.
 
 set_position(Position, Color) :- 
-	retractall(board(_,_,_)),
-	asserta(board(Position,Color,0)),
-	init_history(Position,Color),!.
+	retractall(board(_,_,_,_)),
+	position_to_board_list(Position, BoardList),
+	zobrist_hash_from_board_list(BoardList, Position, Color, Key),
+	asserta(board(Position,Color,0,Key)),
+	init_history(Position,Color,Key),!.
 
 skip_turn:- 
-	board(Position, Color, Counter),
+	board(Position, Color, Counter, Key),
 	invert(Color, NextColor),
-	retract(board(Position, Color, Counter)),
-	asserta(board(Position, NextColor, Counter)), !.
+	retract(board(Position, Color, Counter, Key)),
+	asserta(board(Position, NextColor, Counter, Key)), !.
 
 reset:-	
 	retractall(human(_)),
-	retractall(board(_,_,_)),
-	retractall(history(_)).
+	retractall(board(_,_,_,_)),
+	retractall(history(_)),
+	retractall(attack_bitboard(_, _, _)),
+	retractall(attack_bitboard(_, _, _, _)),
+	retractall(move_direction(_, _)),
+	retractall(king_distance(_, _, _)),
+	retractall(orthogonal_distance(_, _, _)),
+	retractall(centre_manhattan_distance(_, _)).
 		
-check_game_status(Position, Color, Counter, Status) :-
-    (   is_checkmate(Position, Color) ->
+check_game_status(Position, Color, Counter, Key, Status) :-
+	position_to_board_list(Position, BoardList),
+	Board = board(Position, Color, Counter, Key),
+	generate_attack_data(Board, BoardList, AttackData),
+    (   is_checkmate(Position, Color, BoardList, AttackData) ->
         Status = checkmate
-    ;   is_stalemate(Position, Color) ->
+    ;   is_stalemate(Position, Color, BoardList, AttackData) ->
         Status = stalemate
-    ;   in_check(Position, Color) ->
+    ;   in_check(Position, Color, BoardList, AttackData) ->
         Status = check
     ;	is_threefold_repetition(Position, Color) ->
-        Status = threefoldrepetition
+        Status = draw
     ;	is_fifty_move(Counter) ->
-        Status = fiftymoverule
+        Status = draw
+	;	is_insufficient_material(Position) ->
+		Status = insufficient
     ;	Status = safe
     ).
 
 % Get the current board postion
 get_current_board(Position, Color, Counter) :-
-	board(TempPosition, Color, Counter),
+	board(TempPosition, Color, Counter, _),
 	% Extract all the information from the position predicate in board to return only in list, no extra funtor
 	TempPosition = position(H1, H2),
 	% Convert the half positions to lists
@@ -61,25 +90,5 @@ get_current_board(Position, Color, Counter) :-
 	% Create the final position list
 	Position = [[PawnWhite, RookWhite, KnightWhite, BishopWhite, QueenWhite, KingWhite],
 	                    [PawnBlack, RookBlack, KnightBlack, BishopBlack, QueenBlack, KingBlack]].
-
-% Helper to get piece at a position
-get_piece_at(position(WhiteHalf, BlackHalf), Pos, Piece) :-
-    WhiteHalf = half_position(WhitePawns, WhiteRooks, WhiteKnights, WhiteBishops, WhiteQueens, WhiteKings, _, _),
-    BlackHalf = half_position(BlackPawns, BlackRooks, BlackKnights, BlackBishops, BlackQueens, BlackKings, _, _),
-    
-    (   member(Pos, WhitePawns) -> Piece = pawn
-    ;   member(Pos, WhiteRooks) -> Piece = rook
-    ;   member(Pos, WhiteKnights) -> Piece = knight
-    ;   member(Pos, WhiteBishops) -> Piece = bishop
-    ;   member(Pos, WhiteQueens) -> Piece = queen
-    ;   member(Pos, WhiteKings) -> Piece = king
-    ;   member(Pos, BlackPawns) -> Piece = pawn
-    ;   member(Pos, BlackRooks) -> Piece = rook
-    ;   member(Pos, BlackKnights) -> Piece = knight
-    ;   member(Pos, BlackBishops) -> Piece = bishop
-    ;   member(Pos, BlackQueens) -> Piece = queen
-    ;   member(Pos, BlackKings) -> Piece = king
-    ;   Piece = empty
-    ).
 
 debugging.
