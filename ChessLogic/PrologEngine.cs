@@ -32,6 +32,7 @@ namespace ChessLogic
             // Khởi tạo bàn cờ
             if (!PlQuery.PlCall("user:init."))
             {
+                
                 throw new Exception("Không thể khởi tạo bàn cờ.");
             }
             if (depth != 0) SetDepth(depth);
