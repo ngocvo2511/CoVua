@@ -113,14 +113,20 @@
     <None Include="Prolog\board.pl" />
     <None Include="Prolog\chess.pl" />
     <None Include="Prolog\evaluation.pl" />
+    <None Include="Prolog\fen.pl" />
     <None Include="Prolog\helper.pl" />
     <None Include="Prolog\history.pl" />
     <None Include="Prolog\minimax.pl" />
     <None Include="Prolog\movement.pl" />
+    <None Include="Prolog\move_ordering.pl" />
+    <None Include="Prolog\precomputation.pl" />
     <None Include="Prolog\test.pl" />
+    <None Include="Prolog\transposition.pl" />
+    <None Include="Prolog\zobrist.pl" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Prolog\PFAvF.png" />
+    <Content Include="Prolog\RandomNumbers.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
