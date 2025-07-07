@@ -43,7 +43,7 @@ namespace ChessUI
             InitializeBoard();
             if (isAI == true) gameState = new GameStateAI(Player.White, Board.Initial(), difficult, timeLimit, isAIFirst);
             else gameState = new GameState2P(Player.White, Board.Initial(), timeLimit);
-            ShowGameInformation(difficult);
+            ShowGameInformation(difficult, gameState is GameStateAI AI ? AI.isAIFirst : false);
             if (timeLimit != 0)
             {
                 InitializeTimer();
@@ -107,7 +107,7 @@ namespace ChessUI
             gameStateForLoad.Moved = PrologEngine.ParseHistory(gameStateForLoad.historyBoard);
             if (gameStateForLoad.GameType == "GameStateAI") control.gameState = new GameStateAI(gameStateForLoad, board);
             else control.gameState = new GameState2P(gameStateForLoad, board);
-            control.ShowGameInformation(gameStateForLoad.depth);
+            control.ShowGameInformation(gameStateForLoad.depth,control.gameState is GameStateAI AI ? AI.isAIFirst : false);
             control.DrawBoard(control.gameState.Board);
             control.isWhiteTurn = control.gameState.CurrentPlayer == Player.White;
             foreach (var piece in control.gameState.CapturedWhitePiece) control.DrawCapturedGrid(piece);
@@ -140,7 +140,7 @@ namespace ChessUI
                 control.gameState = new GameState2P(startPlayer, board);
             }
             else control.gameState = new GameStateAI(startPlayer, board, historyRecord.Depth, 0, historyRecord.isAIFirst);
-            control.ShowGameInformation(historyRecord.Depth);
+            control.ShowGameInformation(historyRecord.Depth,historyRecord.isAIFirst);
             control.DrawBoard(control.gameState.Board);
             control.isReview = true;
             control.SaveButton.IsEnabled = false;
@@ -262,24 +262,48 @@ namespace ChessUI
                 blackTimer.Start();
             }
         }
-        private void ShowGameInformation(int difficult)
+        private void ShowGameInformation(int difficult, bool isAIFirst)
         {
-            switch (difficult)
+            if (isAIFirst)
             {
-                case 1:
-                    blackInfo.Text = "Máy (Độ khó: Dễ)";
-                    break;
-                case 2:
-                    blackInfo.Text = "Máy (Độ khó: Thường)";
-                    break;
-                case 3:
-                    blackInfo.Text = "Máy (Độ khó: Khó)";
-                    break;
-                default:
-                    blackInfo.Text = "Người chơi 2";
-                    break;
+                switch (difficult)
+                {
+                    case 1:
+                        redInfo.Text = "Máy (Độ khó: Dễ)";
+                        blackInfo.Text = "Người chơi";
+                        break;
+                    case 2:
+                        redInfo.Text = "Máy (Độ khó: Thường)";
+                        blackInfo.Text = "Người chơi";
+                        break;
+                    case 3:
+                        redInfo.Text = "Máy (Độ khó: Khó)";
+                        blackInfo.Text = "Người chơi";
+                        break;
+                    default:
+                        blackInfo.Text = "Người chơi 2";
+                        break;
+                }
             }
-            TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
+            else
+            {
+                switch (difficult)
+                {
+                    case 1:
+                        blackInfo.Text = "Máy (Độ khó: Dễ)";
+                        break;            
+                    case 2:               
+                        blackInfo.Text = "Máy (Độ khó: Thường)";
+                        break;            
+                    case 3:               
+                        blackInfo.Text = "Máy (Độ khó: Khó)";
+                        break;            
+                    default:              
+                        blackInfo.Text = "Người chơi 2";
+                        break;
+                }
+            }
+                TurnTextBlock.Text = gameState.CurrentPlayer == Player.White ? "Trắng" : "Đen";
         }
 
 
