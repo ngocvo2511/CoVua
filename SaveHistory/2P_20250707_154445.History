@@ -1,0 +1,8 @@
+{
+  "GameMode": "2P",
+  "Reason": "ThreefoldRepetition",
+  "Winner": "None",
+  "HistoryString": "[move(64,64,none,none,none),move(1,18,knight,none,none),move(57,42,knight,none,none),move(18,1,knight,none,none),move(42,57,knight,none,none),move(1,18,knight,none,none),move(57,42,knight,none,none),move(18,1,knight,none,none),move(42,57,knight,none,none)]",
+  "Depth": 0,
+  "isAIFirst": false
+}
