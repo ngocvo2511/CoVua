@@ -1,0 +1,17 @@
+{
+  "GameType": "GameStateAI",
+  "depth": 2,
+  "isAIFirst": false,
+  "CurrentPlayer": "White",
+  "timeRemainingWhite": 0,
+  "timeRemainingBlack": 0,
+  "historyBoard": "[move(64,64,none,none,none),move(11,27,pawn,none,none),move(62,45,knight,none,none),move(27,35,pawn,none,none),move(52,36,pawn,none,none),move(35,44,pawn,pawn,none),move(51,44,pawn,pawn,none),move(3,59,queen,queen,none),move(60,59,king,queen,none)]",
+  "CapturedWhitePiece": [
+    "wP",
+    "wQ"
+  ],
+  "CapturedBlackPiece": [
+    "bP",
+    "bQ"
+  ]
+}

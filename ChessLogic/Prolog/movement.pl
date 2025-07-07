@@ -1,6 +1,3 @@
-% Import zobrist hashing functionality
-:- ensure_loaded('zobrist.pl').
-
 % =================================
 % Legal move
 % =================================
@@ -8,10 +5,10 @@
 is_legal_move(From, To, Color, Position, BoardList, AttackData) :-
 	% First check if the basic move is valid
 	nth0(From, BoardList, [Type, _]),
-	legal_move_for_piece(Type, From, To, Color, Position, BoardList, AttackData),
+	legal_move_for_piece(Type, From, To, Color, Position, BoardList, AttackData).
 	% Then simulate the move and check if king is still safe
-	simulate_move(From, To, Color, Position, NewPosition, _MovedPiece, _CapturedPiece, _PromotedPiece, BoardList, AttackData, 0, _NewKey),
-	not(in_check(NewPosition, Color, BoardList, AttackData)).
+	% simulate_move(From, To, Color, Position, NewPosition, _MovedPiece, _CapturedPiece, _PromotedPiece, BoardList, AttackData, 0, _NewKey),
+	% not(in_check(NewPosition, Color, BoardList, AttackData)).
 
 % legal_move_for_piece: generate individual legal moves based on piece type
 legal_move_for_piece(pawn, From, To, Color, Position, BoardList, AttackData) :-	
@@ -740,7 +737,7 @@ update_zobrist_for_castling_rights(From, To, Color, Position, NewPosition, Key, 
     ;   NewKey = Key
     ).
 
-% Calculate new castling rights after a move (following C# logic)
+% Calculate new castling rights after a move
 calculate_new_castling_rights(From, To, Color, Position, NewPosition) :-
     Position = position(WhiteHalf, BlackHalf),
     
@@ -756,7 +753,7 @@ calculate_new_castling_rights(From, To, Color, Position, NewPosition) :-
     NewBlackHalf = half_position(BP, BR, BN, BB, BQ, BK, NewBlackCastling, BEP),
     NewPosition = position(NewWhiteHalf, NewBlackHalf).
 
-% Update castling rights when pieces move (following C# logic)
+% Update castling rights when pieces move
 update_castling_for_piece_move(From, To, Color, WhiteCastling, BlackCastling, NewWhiteCastling, NewBlackCastling) :-
     % King move removes all castling rights for that color
     (   (From = 4, Color = white) ->  % White king moved
