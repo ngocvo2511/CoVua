@@ -27,7 +27,7 @@
 pick_piece(Pos, LegalMoves) :-
 	board(Position, CurrentColor, _, _),
 	position_to_board_list(Position, BoardList),
-	Board = board(Position, CurrentColor, 0, 0),
+	Board = board(Position, CurrentColor, _, _),
 	generate_attack_data(Board, BoardList, AttackData),
 	(   nth0(Pos, BoardList, [_, PieceColor]) ->
 	    % There is a piece at this position
@@ -49,7 +49,6 @@ place_piece(From, To, Status, PromotedPiece) :-
 	% Check if it's a legal move
 	nth0(From, BoardList, [Type, _PieceColor]),
 	legal_move_for_piece(Type, From, To, Color, Position, BoardList, AttackData),
-	% Make the move, wrap this with state(place) to make sure only this allow to print to screen
 	simulate_move(From, To, Color, Position, NewPosition, MovedPiece, CapturedPiece, PromotedPiece, BoardList, AttackData, Key, NewKey),
 
 	position_to_board_list(NewPosition, NewBoardList),

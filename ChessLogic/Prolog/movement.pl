@@ -1,6 +1,3 @@
-% Import zobrist hashing functionality
-:- ensure_loaded('zobrist.pl').
-
 % =================================
 % Legal move
 % =================================
@@ -740,7 +737,7 @@ update_zobrist_for_castling_rights(From, To, Color, Position, NewPosition, Key, 
     ;   NewKey = Key
     ).
 
-% Calculate new castling rights after a move (following C# logic)
+% Calculate new castling rights after a move
 calculate_new_castling_rights(From, To, Color, Position, NewPosition) :-
     Position = position(WhiteHalf, BlackHalf),
     
@@ -756,7 +753,7 @@ calculate_new_castling_rights(From, To, Color, Position, NewPosition) :-
     NewBlackHalf = half_position(BP, BR, BN, BB, BQ, BK, NewBlackCastling, BEP),
     NewPosition = position(NewWhiteHalf, NewBlackHalf).
 
-% Update castling rights when pieces move (following C# logic)
+% Update castling rights when pieces move
 update_castling_for_piece_move(From, To, Color, WhiteCastling, BlackCastling, NewWhiteCastling, NewBlackCastling) :-
     % King move removes all castling rights for that color
     (   (From = 4, Color = white) ->  % White king moved
