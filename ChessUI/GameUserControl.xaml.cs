@@ -55,7 +55,7 @@ namespace ChessUI
             var control = new GameUserControl(timeLimit, isAI, isAIFirst, difficult);
             string rootPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\.."));
             string prologPath = System.IO.Path.Combine(rootPath, "ChessLogic", "Prolog", "chess.pl");
-            PrologEngine.Initialize(prologPath,difficult);
+            PrologEngine.Initialize(prologPath, difficult);
             control.gameState.Board = Board.FromPrologPosition(PrologEngine.GetCurrentPosition());
             control.DrawBoard(control.gameState.Board);
             if (control.gameState is GameStateAI && isAIFirst)
@@ -409,14 +409,19 @@ namespace ChessUI
         }
         public void Review()
         {
+            int depth = 0;
+            if (gameState is GameStateAI AI1) depth = AI1.depth;
             PrologEngine.Reset();
+            string rootPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\.."));
+            string prologPath = System.IO.Path.Combine(rootPath, "ChessLogic", "Prolog", "chess.pl");
+            PrologEngine.Initialize(prologPath, depth);
             isReview = true;
             Board newBoard = Board.Initial();
             Player startPlayer;
             if (newBoard[moveList.Peek().Item1.FromPos].Color == Player.Black) startPlayer = Player.Black;
             else startPlayer = Player.White;
             if (gameState.Moved.Count > 0) HidePrevMove(gameState.Moved.Peek().Item1);
-            bool isAIFirst = gameState is GameStateAI Ai && Ai.isAIFirst;
+            bool isAIFirst = gameState is GameStateAI ai ? ai.isAIFirst : false;
             if (gameState is GameStateAI AI) gameState = new GameStateAI(startPlayer, Board.Initial(), AI.depth, 0, isAIFirst);
             else gameState = new GameState2P(startPlayer, Board.Initial());
             TurnTextBlock.Text = (startPlayer == Player.Black) ? "Đen" : "Trắng";
@@ -426,7 +431,6 @@ namespace ChessUI
             redClock.Text = null;
             blackClock.Text = null;
             WarningTextBlock.Text = null;
-            moveCache.Clear();
             ResetTimer();
             DrawBoard(gameState.Board);
             AbleClick();
@@ -509,14 +513,19 @@ namespace ChessUI
 
             if (PrologEngine.MakeMove(fromPos, toPos, out var status, out var needsPromotion))
             {
-                WarningTextBlock.Text = (status == "CHECK" || status == "CHECKMATE" || status == "STALEMATE") ? "Chiếu tướng!" : null;
+                WarningTextBlock.Text = (status == "CHECK" || status == "CHECKMATE") ? "Chiếu tướng!" : null;
             }
             else if (needsPromotion)
             {
-                Console.WriteLine("Piece: " + move.Item2.Item2);
-                if (PrologEngine.MakeMoveWithPromotion(fromPos, toPos, move.Item2.Item2, out var PromotedStatus))
+                Console.WriteLine("Piece: " + move.Item2.Item1 + " " + move.Item2.Item2);
+                string promotion = "";
+                if (move.Item1 is PawnPromotion pp)
                 {
-                    WarningTextBlock.Text = (PromotedStatus == "CHECK" || PromotedStatus == "CHECKMATE" || PromotedStatus == "STALEMATE") ? "Chiếu tướng!" : null;
+                    promotion = pp.newType.ToString().ToLower();
+                }
+                if (PrologEngine.MakeMoveWithPromotion(fromPos, toPos, promotion, out var PromotedStatus))
+                {
+                    WarningTextBlock.Text = (PromotedStatus == "CHECK" || PromotedStatus == "CHECKMATE") ? "Chiếu tướng!" : null;
                 }
             }
             if (move.Item2.Item1 != null)

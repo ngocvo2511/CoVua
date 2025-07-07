@@ -1,0 +1,8 @@
+{
+  "GameMode": "2P",
+  "Reason": "Checkmate",
+  "Winner": "Black",
+  "HistoryString": "[move(64,64,none,none,none),move(13,29,pawn,none,none),move(52,36,pawn,none,none),move(29,36,pawn,pawn,none),move(53,37,pawn,none,none),move(14,30,pawn,none,none),move(59,31,queen,none,none)]",
+  "Depth": 0,
+  "isAIFirst": false
+}
